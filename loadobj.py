@@ -4,17 +4,9 @@ all_verts = []
 all_normals = []
 all_uvs = []
 all_tris = []
-with open('R1Cherry1U.obj') as f:
-    row = None
+with open('resources/tofu.obj') as f:
     for line in f:
         line = line.strip()
-        # if line[:3] == 'o R' and 'Deform' not in line:
-        #     all_verts = []
-        #     all_normals = []
-        #     all_uvs = []
-        #     all_tris = []
-        #     row = int(line[3])
-        # elif row is not None:
         words = line.split(' ')
         if len(words) == 0:
             break
@@ -27,7 +19,7 @@ with open('R1Cherry1U.obj') as f:
         elif words[0] == 'vt':
             all_uvs.append([float(x) for x in data])
         elif words[0] == 'f':
-            split = [[int(x) for x in d.split('/')] for d in data]
+            split = [[int(x) - 1 for x in d.split('/')] for d in data]
             all_tris.append(split)
 
 verts = all_verts
@@ -37,16 +29,28 @@ tris = []
 for tri in all_tris:
     for v in tri:
         pi, ti, ni = v
-        uvs[pi - 1] = all_uvs[ti - 1]
-        norms[pi - 1] = all_normals[ni - 1]
+        uvs[pi] = all_uvs[ti]
+        norms[pi] = all_normals[ni]
 
     tris.append([v[0] for v in tri])
 
 x = json.dumps({
-    'vertexes': verts,
+    'vertices': verts,
     'normals': norms,
     'triangles': tris,
     'uvs': uvs
 })
-with open('r1cherry1u.json', 'w') as f:
+with open('resources/Case_tofu65.json', 'w') as f:
     f.write(x)
+
+
+
+with open('resources/test.obj', 'w') as f:
+    for v in verts:
+        f.write('v ' + ' '.join(map(str, v)) + '\n')
+    for n in norms:
+        f.write('vn ' + ' '.join(map(str, n)) + '\n')
+    for uv in uvs:
+        f.write('vt ' + ' '.join(map(str, uv)) + '\n')
+    for t in tris:
+        f.write('f ' + ' '.join(map(lambda x: str(x + 1), t)) + '\n')
