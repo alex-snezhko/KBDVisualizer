@@ -3,9 +3,7 @@
 let gl = null;
 
 let locs = {};
-let buffers = {};
-let keyLocations = null;
-let keys = null;
+let buffers = { keycapBuffers: {}, caseBuffer: {} };
 let eye = {
     position: vec3.fromValues(0, 8, 8),
     lookAt: vec3.normalize(vec3.create(), vec3.fromValues(0, -1, -1)),
@@ -14,114 +12,48 @@ let eye = {
 }
 let prevDragPos;
 let keyRenderInstructions = [];
-const NUM_UNITS = {
-    "Space_6.25U": 6.25,
-    "Space_6U": 6,
-    "Space_7U": 7,
-    "Numpad_Plus": 1,
-    "Numpad_Enter": 1,
-    1: 1,
-    1.25: 1.25,
-    1.5: 1.5,
-    1.75: 1.75,
-    2: 2,
-    2.25: 2.25,
-    2.75: 2.75
+
+// lookup table for all non-1-unit-wide keys. Logically, SPECIAL_NUM_UNITS[key] || 1 will get key size
+const SPECIAL_NUM_UNITS = {
+    "Backspace": 2,
+    "Tab": 1.5,
+    "\\": 1.5,
+    "Caps": 1.75,
+    "Enter": 2.25,
+    "LShift": 2.25,
+    "RShift1.75": 1.75,
+    "Ctrl1.25": 1.25,
+    "Win1.25": 1.25,
+    "Alt1.25": 1.25,
+    "Space_6.25U": 6.25
 }
+
+const SPECIAL_KEYCAP_IDENTIFIERS = new Set([
+    "Space_6.25U", "Space_6U", "Space_7U", "Numpad_Enter", "Numpad_Plus", "ISO_Enter"
+]);
+
+const ALPHAS = new Set([
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=",
+    "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\",
+    "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'",
+    "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/",
+]);
+
 
 // TODO store in DB
+
+// TODO checkbox for split space, split shifts, etc
+
 class Key {
-    constructor(kind, color, texture, legendColor) {
+    constructor(row, kind, keycapColor, legendTexture, legendColor) {
+        this.keycapIdentifier = row != null ? `R${row}_${kind}U` : kind;
         this.kind = kind;
-        this.color = color;
-        this.texture = texture;
+        this.color = keycapColor;
+        this.texture = legendTexture;
         this.legendColor = legendColor;
+        this.units = SPECIAL_NUM_UNITS[kind] ? SPECIAL_NUM_UNITS[kind] : 1;
     }
 }
-let ab = new Key(1, [0.8, 0.8, 0.8], null);
-let a = letter => Key(1, [0.8, 0.8, 0.8], "resources/legends/" + letter + ".png", [0, 0, 0]);
-let mc = [0.5, 0.5, 0.5];
-let m = {
-    1: new Key(1, mc, null),
-    1.25: new Key(1.25, mc, null),
-    1.5: new Key(1.5, mc, null),
-    1.75: new Key(1.75, mc, null),
-    2: new Key(2, mc, null),
-    2.25: new Key(2.25, mc, null),
-}
-let sp = new Key("Space_6.25U", [0.8, 0.8, 0.8], null);
-let ent = new Key(2.25, [0.6, 1, 0.6], null);
-let esc = new Key(1, [1, 0.6, 0.6], null);
-let keyboadInfo = {
-    tofu65: {
-        incline: 6,
-        color: [0.1, 0.1, 0.1],
-        keyGroups: [
-            {
-                rowNum: 1,
-                offset: [0, 0],
-                // TODO replace number with Key object (u, letter, isMod, etc)
-                keys: [esc, ab, ab, ab, ab, ab, ab, ab, ab, ab, ab, ab, ab, m[2], m[1]]
-            },
-            {
-                rowNum: 2,
-                offset: [0, 1],
-                keys: [m[1.5], a("Q"), a("W"), a("E"), a("R"), a("T"), a("Y"), a("U"), a("I"), a("O"), a("P"), ab, ab, m[1.5], m[1]]
-            },
-            {
-                rowNum: 3,
-                offset: [0, 2],
-                keys: [m[1.75], a("A"), a("S"), a("D"), a("F"), a("G"), a("H"), a("J"), a("K"), a("L"), ab, ab, ent, m[1]]
-            },
-            {
-                rowNum: 4,
-                offset: [0, 3],
-                keys: [m[2.25], a("Z"), a("X"), a("C"), a("V"), a("B"), a("N"), a("M"), ab, ab, ab, m[1.75], m[1], m[1]]
-            },
-            {
-                rowNum: 4,
-                offset: [0, 4],
-                keys: [m[1.25], m[1.25], m[1.25], sp, m[1], m[1], m[1], m[1], m[1], m[1]]
-            },
-        ]
-    }
-}
-// let keyboadInfo = {
-//     tofu65: {
-//         incline: 6,
-//         color: [0.1, 0.1, 0.1],
-//         keyGroups: [
-//             {
-//                 rowNum: 1,
-//                 offset: [0, 0],
-//                 // TODO replace number with Key object (u, letter, isMod, etc)
-//                 keys: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1]
-//             },
-//             {
-//                 rowNum: 2,
-//                 offset: [0, 1],
-//                 keys: [1.5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.5, 1]
-//             },
-//             {
-//                 rowNum: 3,
-//                 offset: [0, 2],
-//                 keys: [1.75, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2.25, 1]
-//             },
-//             {
-//                 rowNum: 4,
-//                 offset: [0, 3],
-//                 keys: [2.25, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.75, 1, 1]
-//             },
-//             {
-//                 rowNum: 4,
-//                 offset: [0, 4],
-//                 keys: [1.25, 1.25, 1.25, 6.25, 1, 1, 1, 1, 1, 1]
-//             },
-//         ]
-//     }
-// }
-
-
 
 function rotateView(ang, axis) {
     let rotationMat = mat4.fromRotation(mat4.create(), ang, axis);
@@ -146,94 +78,130 @@ function loadGLBuffers(glObjectBuffer, object) {
     glObjectBuffer.numTriangles = object.triangles.length;
 }
 
-function setupRenderInstructions(kbdInfo) {
-    // find total number of units horizontally and vertically
-    let numUnitsX = kbdInfo.keyGroups.reduce((maxNum, g) => {
-        let rightmostInGroup = g.keys.reduce((totalUnits, k) => totalUnits + NUM_UNITS[k.kind], g.offset[0]);
-        return Math.max(maxNum, rightmostInGroup);
-    }, 0);
-    let numUnitsY = kbdInfo.keyGroups.reduce((maxNum, g) => Math.max(maxNum, g.offset[1]), 0) + 1;
+function loadTexture(url) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    keyRenderInstructions = [];
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
+        gl.UNSIGNED_BYTE, new Uint8Array([0, 255, 255, 255]));
 
-    // define matrix used for rotating an object by the keyboard incline
-    const inclineRotationMat = mat4.fromRotation(mat4.create(), kbdInfo.incline * (Math.PI / 180), [1, 0, 0]);
-    // define matrix used for translating upwards constand amount (to give keyboard a certain height)
-    const HEIGHT = 1.2;
-    const heightTranslationMat = mat4.fromTranslation(mat4.create(), vec3.fromValues(0, HEIGHT, 0));
-    // define matrix for rotating an object and then moving it up to proper height
-    const heightInclineMat = mat4.multiply(mat4.create(), heightTranslationMat, inclineRotationMat);
+    const img = new Image();
+    img.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
-    // go through all keys and define matrixes for translating them to their world positions
-    for (let g of kbdInfo.keyGroups) {
-        // initialize position to beginning of row and increment after each key
-        let posXZ = [g.offset[0] - numUnitsX / 2, 0, g.offset[1] - numUnitsY / 2 + 0.5];
-        for (let key of g.keys) {
-            let keysize = NUM_UNITS[key.kind];
-            
-            // move key to middle of area dedicated for them
-            posXZ[0] += keysize / 2;
-            let toPositionMat = mat4.fromTranslation(mat4.create(), posXZ);
-            posXZ[0] += keysize / 2;
-
-            let finalTransformationMat = mat4.multiply(mat4.create(), heightInclineMat, toPositionMat);
-            keyRenderInstructions.push({
-                key,
-                row: typeof(key.kind) == "string" ? "special" : g.rowNum,
-                transformation: finalTransformationMat
-            })
+        const isPowerOf2 = x => (x & (x - 1)) == 0;
+        if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
+            gl.generateMipmap(gl.TEXTURE_2D);
+        } else {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         }
+    }
+    img.src = url;
+
+    return texture;
+}
+
+function getKeycapInfo(key, keycapsInfo) {
+    let legendTexture;
+    if (keycapsInfo.font == "std GMK") {
+        legendTexture = loadTexture("resources/legends/" + key + ".png");
+    } else {
+        alert("Problem loading keycap font");
+    }
+
+    const stdLayoutInfo = keycapsInfo.standard;
+
+    // first check if is alpha, then if is exception, otherwise use the 'others'
+    let keyInfo = ALPHAS.has(key) ? stdLayoutInfo.alphas :
+                  stdLayoutInfo.exceptions.find(e => e.key == key) ||
+                  stdLayoutInfo.others;
+
+    return {
+        legendTexture,
+        keycapColor: keyInfo.keycapColor,
+        legendColor: keyInfo.legendColor
     }
 }
 
-function loadModels(keycapProfile, kbd) {
-    let kbdInfo = keyboadInfo[kbd];
-    setupRenderInstructions(kbdInfo);
-    let keycapsNeeded = new Set();
-    // let allKeys = kbdInfo.keyGroups.forEach(kg => {
-    //     kg.keys.forEach(k => {
-    //         let identifier = typeof(k.kind) == "string" ? k.kind : `R${kg.row}_${k.kind}U`;
-    //         keycapsNeeded.add(identifier);
-    //     })
-    // })
+function loadModels(kbdName, keycapProfile, keycapSet) {
+    const fetchJson = filename => fetch("resources/" + filename + ".json").then(response => response.json());
 
-    buffers.keycapBuffers = { 1: {}, 2: {}, 3: {}, 4: {}, "special": {} };
-    buffers.caseBuffer = {};
+    let kbdInfo;
+    let keycapsInfo;
+    Promise.all([
+        fetchJson("keyboardInfo").then(allKbdInfo => kbdInfo = allKbdInfo[kbdName]),
+        fetchJson("keycapInfo").then(allKcInfo => keycapsInfo = allKcInfo[keycapProfile][keycapSet])
+    ]).then(() => {
+        // ---------------------------------------------------------------------------
+        // prepare all necessary information for setting up key rendering instructions
+        // ---------------------------------------------------------------------------
 
-    // list of promises to load each model (keycaps and keyboard case)
-    let modelLoadPromises = [];
+        keyRenderInstructions = [];
+        // list of promises to load each model (keycaps and keyboard case)
+        let resourceLoadPromises = [];
+        let keycapModelsVisited = new Set();
 
-    // load case
-    modelLoadPromises.push(fetch(`resources/Case_${kbd}.json`)
-        .then(response => response.json())
-        .then(trianglesInfo => loadGLBuffers(buffers.caseBuffer, trianglesInfo)));
+        // find total number of units horizontally and vertically
+        // to get number of units horizontally, find the keygroup that extends farthest right
+        const numUnitsX = kbdInfo.keyGroups.reduce(
+            (rightmostUnits, keyGroup) => Math.max(rightmostUnits, keyGroup.keys.reduce(
+                (numU, key) => numU + (SPECIAL_NUM_UNITS[key] || 1),
+                keyGroup.offset[0])),
+            0);
+        // to get number of units vertically, find the keygroup that extends farthest down
+        const numUnitsY = kbdInfo.keyGroups.reduce((max, kg) => Math.max(max, kg.offset[1]), 0) + 1;
 
-    // load all 'standard' keycaps
-    for (let row of [1, 2, 3, 4]) {
-        for (let units of [1, 1.25, 1.5, 1.75, 2, 2.25, 2.75]) {
-            modelLoadPromises.push(fetch(`resources/${keycapProfile}_R${row}_${units}U.json`)
-                .then(response => response.json())
-                .then(keycapModel => {
-                    buffers.keycapBuffers[row][units] = {};
-                    loadGLBuffers(buffers.keycapBuffers[row][units], keycapModel);
-                }));
+        const HEIGHT = 1.25;
+        // define matrix for rotating an object by the keyboard incline and then moving it up to proper height
+        const heightInclineMat = mat4.multiply(mat4.create(),
+            mat4.fromTranslation(mat4.create(), vec3.fromValues(0, HEIGHT, 0)), // translate upwards
+            mat4.fromRotation(mat4.create(), kbdInfo.incline * (Math.PI / 180), [1, 0, 0]) // incline
+        );
+
+        // -------------------------------------------------
+        // define instructions for rendering all needed keys
+        // -------------------------------------------------
+        for (let kg of kbdInfo.keyGroups) {
+            // initialize position to beginning of row and increment after each key
+            let posXZ = [kg.offset[0] - numUnitsX / 2, 0, kg.offset[1] - numUnitsY / 2 + 0.5];
+            for (let key of kg.keys) {
+                // if this key is not special (non-1u), then it must be 1 unit wide
+                let keysize = SPECIAL_NUM_UNITS[key] || 1;
+                let keycapIdentifier = SPECIAL_KEYCAP_IDENTIFIERS.has(key) ? key : `R${kg.row}_${keysize}U`;
+
+                // if a keycap with these dimensions has not been loaded yet, then load it
+                if (!keycapModelsVisited.has(keycapIdentifier)) {
+                    buffers.keycapBuffers[keycapIdentifier] = {};
+                    resourceLoadPromises.push(fetchJson(keycapProfile + "_" + keycapIdentifier)
+                        .then(keycapModel => loadGLBuffers(buffers.keycapBuffers[keycapIdentifier], keycapModel)));
+                    keycapModelsVisited.add(keycapIdentifier);
+                }
+
+                // move keycap to middle of keycap area
+                let toPosMat = mat4.fromTranslation(mat4.create(), [posXZ[0] + keysize / 2, 0, posXZ[2]]);
+                let finalTransformationMat = mat4.multiply(mat4.create(), heightInclineMat, toPosMat);
+                
+                keyRenderInstructions.push({
+                    keycapIdentifier,
+                    keycapInfo: getKeycapInfo(key, keycapsInfo),
+                    transformation: finalTransformationMat
+                })
+                posXZ[0] += keysize;
+            }
         }
-    }
 
-    // load special keycaps
-    for (let additional of ["Numpad_Plus", "Numpad_Enter", "Space_6U", "Space_6.25U", "Space_7U"]) {
-        modelLoadPromises.push(fetch(`resources/${keycapProfile}_${additional}.json`)
-            .then(response => response.json())
-            .then(keycapModel => {
-                buffers.keycapBuffers["special"][additional] = {};
-                loadGLBuffers(buffers.keycapBuffers["special"][additional], keycapModel);
-            }));
-    }
+        // load case
+        resourceLoadPromises.push(fetchJson("Case_" + kbdName)
+            .then(trianglesInfo => loadGLBuffers(buffers.caseBuffer, trianglesInfo)));
 
-    // render once all loaded
-    Promise.all(modelLoadPromises)
-        .then(() => renderScene())
-        .catch(err => alert("Error loading resource files: " + err))
+        // render once all loaded
+        Promise.all(resourceLoadPromises)
+            .then(() => renderScene())
+            .catch(err => alert("Error loading resource file: " + err));
+    });
 }
 
 function renderObject(glObjectBuffer) {
@@ -252,12 +220,12 @@ function renderScene() {
 
     const projMat = mat4.perspective(mat4.create(), Math.PI / 2, 2, 0.1, 1000);
     const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
-    const projViewMat = mat4.multiply(mat4.create(), projMat, viewMat);
+    const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
 
     gl.uniform3f(locs.uEyePositionLoc, eye.position[0], eye.position[1], eye.position[2]);
 
     // render case
-    gl.uniformMatrix4fv(locs.uPVMMatLoc, false, projViewMat);
+    gl.uniformMatrix4fv(locs.uMVPMatLoc, false, viewProjMat);
     gl.uniformMatrix4fv(locs.uModelMatLoc, false, mat4.create());
     gl.uniform3fv(locs.uColorLoc, [0.1, 0.1, 0.1]);
 
@@ -266,11 +234,16 @@ function renderScene() {
     // render keys
     for (let instr of keyRenderInstructions) {
         gl.uniformMatrix4fv(locs.uModelMatLoc, false, instr.transformation);
-        let projViewModelMat = mat4.multiply(mat4.create(), projViewMat, instr.transformation);
-        gl.uniformMatrix4fv(locs.uPVMMatLoc, false, projViewModelMat);
-        gl.uniform3fv(locs.uColorLoc, instr.key.color);
+        let modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
+        gl.uniformMatrix4fv(locs.uMVPMatLoc, false, modelViewProjMat);
+        gl.uniform3fv(locs.uColorLoc, instr.keycapInfo.keycapColor);
 
-        renderObject(buffers.keycapBuffers[instr.row][instr.key.kind]);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, instr.keycapInfo.legendTexture);
+        gl.uniform1f(locs.uLegendTextureLoc, 0);
+
+
+        renderObject(buffers.keycapBuffers[instr.keycapIdentifier]);
     }
 }
 
@@ -281,17 +254,16 @@ function setupShaders() {
         attribute vec3 aVertexNormal; // vertex normal
         
         uniform mat4 uModelMatrix; // model matrix
-        uniform mat4 uPVMMatrix; // projection-view-model matrix
+        uniform mat4 uMVPMatrix; // projection-view-model matrix
         
         varying vec3 vWorldPos; // interpolated world position of vertex
         varying vec3 vVertexNormal; // interpolated normal for frag shader
 
         void main(void) {
-            
             // vertex position
             vec4 vWorldPos4 = uModelMatrix * vec4(aVertexPosition, 1.0);
             vWorldPos = vec3(vWorldPos4.x,vWorldPos4.y,vWorldPos4.z);
-            gl_Position = uPVMMatrix * vec4(aVertexPosition, 1.0);
+            gl_Position = uMVPMatrix * vec4(aVertexPosition, 1.0);
 
             // vertex normal (assume no non-uniform scale)
             vec4 vWorldNormal4 = uModelMatrix * vec4(aVertexNormal, 0.0);
@@ -301,10 +273,10 @@ function setupShaders() {
     
     // define fragment shader in essl
     const fShaderSrc = `
-        precision mediump float; // set float to medium precision
+        precision mediump float;
 
-        // eye location
-        uniform vec3 uEyePosition; // the eye's position in world
+        // eye world position
+        uniform vec3 uEyePosition;
 
         uniform vec3 uColor;
         
@@ -380,7 +352,7 @@ function setupShaders() {
     locs.uColorLoc = gl.getUniformLocation(shaderProgram, "uColor");
     locs.uEyePositionLoc = gl.getUniformLocation(shaderProgram, "uEyePosition");
     locs.uModelMatLoc = gl.getUniformLocation(shaderProgram, "uModelMatrix");
-    locs.uPVMMatLoc = gl.getUniformLocation(shaderProgram, "uPVMMatrix");
+    locs.uMVPMatLoc = gl.getUniformLocation(shaderProgram, "uMVPMatrix");
 }
 
 // To-do list:
@@ -395,6 +367,8 @@ function setupShaders() {
 // use async await
 // send flattened lists to loadGLBuffers
 // only load keys necessary for this board
+// remove row field from keyboardInfo and allow deduction of row in code
+// store json files in DB
 function main() {
     // get WebGL context
     let canvas = $("#webGLCanvas")[0];
@@ -457,5 +431,5 @@ function main() {
 
     setupShaders();
 
-    loadModels("Cherry", "tofu65");
+    loadModels("tofu65", "cherry", "modern dolch light");
 }
