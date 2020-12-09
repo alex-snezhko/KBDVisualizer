@@ -1,0 +1,206 @@
+/* -------------- *\
+    Global style
+\* -------------- */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "Heebo", sans-serif;
+    background-color: #fcfcf8;
+}
+
+h4 {
+    margin-bottom: 3px;
+}
+
+table {
+    border-spacing: 0;
+}
+
+thead {
+    font-weight: 600;
+    text-align: left;
+}
+
+td {
+    border-top: 1px solid #ccc;
+}
+
+td, th {
+    padding: 20px 10px;
+}
+
+/* -------------- *\
+    Header style
+\* -------------- */
+
+header {
+    font-family: "Righteous", sans-serif;
+    width: 100%;
+    background-color: #2f3843;
+    display: flex;
+    align-items: center;
+}
+
+#header-inner {
+    display: flex;
+    align-items: center;
+    margin: 15px 30px;
+}
+
+header h1 {
+    margin: 0 0 0 30px;
+    color: #45a29e;
+    font-size: 50px;
+}
+
+#header-part {
+    color: #66fcf1;
+}
+
+/* Define style used by both selected item and new item selection tables */
+
+.item-image-cell {
+    width: 200px;
+}
+
+.item-name-cell {
+    width: 350px;
+}
+
+.item-price-cell {
+    width: 80px;
+}
+
+.item-image-container {
+    display: inline-block;
+    width: 150px;
+    height: 100px;
+    vertical-align: middle;
+    border: 1px solid #bbb;
+    background-color: white;
+    margin-right: 10px;
+    position: relative;
+}
+
+.item-name {
+    width: 150px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.item-image-container img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 150px;
+    max-height: 100px;
+}
+
+/* ----------------------------------------------- *\
+    Style for table which contains selected parts
+\* ----------------------------------------------- */
+
+#selected-item-table {
+    margin: 10px 40px;
+}
+
+/* Special class for selected parts that are in a kit */
+.part-in-kit td {
+    color: darkgray
+}
+
+/* Style button for selecting a part */
+
+.select-item-button {
+    background-color: #48f;
+    color: white;
+    border-radius: 8px;
+    border-width: 0;
+    padding: 5px 10px;
+    font-family: "Heebo", sans-serif;
+}
+
+.select-item-button:hover {
+    background-color: #36e;
+    cursor: pointer;
+}
+
+.select-item-button:disabled {
+    cursor: default;
+    background-color: #ccc;
+    color: #eee;
+}
+
+/* Style button for deleting a chosen part */
+
+.delete-button {
+    border-radius: 15px;
+    border-width: 0;
+    background-color: #faa;
+    font-size: 13px;
+    padding: 3px 7px 5px 7px;
+}
+
+.delete-button:hover {
+    background-color: #f66;
+}
+
+.delete-button * {
+    margin: 0;
+}
+
+/* ------------------------------------- *\
+    Style for table for selecting parts
+\* ------------------------------------- */
+
+#filters-box {
+    width: 200px;
+    margin-left: 40px;
+    float: left;
+}
+
+#select-item-table {
+    width: 100%;
+}
+
+/* Make select button cell width exactly fit button */
+.item-select-cell {
+    width: 1px;
+    white-space: nowrap;
+}
+
+.item-link {
+    text-decoration: none;
+    font-weight: bold;
+    color: black;
+}
+
+.item-link:hover {
+    color: #666;
+}
+
+
+
+
+
+
+
+
+/*.selected-image-col {
+    width: 200px;
+}
+
+.selected-item-col {
+    width: 300px;
+}
+
+.selected-price-col {
+    width: 100px;
+}
+
+.delete-selection-col {
+    width: 50px;
+}*/
+

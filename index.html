@@ -5,17 +5,24 @@
     <meta charset="UTF-8">
     <title>KBDVisualizer</title>
     
-    <link type="text/css" rel="stylesheet" href="rasterize.css">
-
-    <script type="text/javascript" src="jquery-3.5.1.js"></script>
-    <script type="text/javascript" src="gl-matrix-min.js"></script>
-    <script type="text/javascript" src="renderKeyboard.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Heebo&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="index.css">
 </head>
 
-<body onload="main();">
-    <canvas id="webGLCanvas"></canvas>
-    <p id="widthp"></p>
-    <script>$("#widthp").html(window.innerWidth)</script>
+<body>
+    <div id="root"></div>
+
+    <script src="jquery-3.5.1.js"></script>
+    <script src="gl-matrix-min.js"></script>
+    <!--<script src="renderKeyboard.js"></script>-->
+    
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script type="text/babel" src="index.js"></script>
 </body>
 
 </html>
