@@ -1,0 +1,172 @@
+[
+    {
+        "Name": "KBDFans 5° 60% Aluminum",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8b9cc7c9808a81fc8db0eaf67a4d79d7_0fe7f2bb-3143-483b-8075-6200c264ee2e_1800x1800.jpg?v=1601013261",
+        "Link": "https://kbdfans.com/collections/case/products/pre-orderkbdfans-5-60-case",
+        "Base Price": 88,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Black", "Grey", "Silver", "Red", "Purple", "Dark Blue", "Orange",
+            "Cyan", "Dark Green", "Chocolate", "Rose Gold", "Burgundy", "Dark Purple", "Ink Blue",
+            {"type": "E-White", "extra": 20}, {"type": "E-Yellow", "extra": 20}]}
+    },
+    {
+        "Name": "KBDFans 5° 60% Acrylic",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8_417f8363-522e-4582-b90f-1c00404a53a0_1800x1800.jpg?v=1584436645",
+        "Link": "https://kbdfans.com/collections/case/products/pre-order-kbdfans5-transparent-acrylic-cnc-60-case",
+        "Base Price": 88,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Acrylic",
+        "Primary Color": {"type": "selection", "options": ["Frosted", "Transparent"]}
+    },
+    {
+        "Name": "60% Bamboo Case",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_09f45ed2-421b-47a6-9b76-856a6609a280_1800x1800.jpg?v=1584436781",
+        "Link": "https://kbdfans.com/collections/case/products/60-bamboo-case",
+        "Base Price": 58,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Bamboo",
+        "Primary Color": "Wood"
+    },
+    {
+        "Name": "60% Wood Case w/ Wrist Wrest",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8_eb718286-cfe6-4c61-aa24-8abd87a75b19_1800x1800.jpg?v=1584437004",
+        "Link": "https://kbdfans.com/collections/case/products/60-walnut-case",
+        "Base Price": 58,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": {"type": "selection", "options": ["Bamboo", {"type": "Walnut", "extra": 9}]},
+        "Primary Color": "Wood"
+    },
+    {
+        "Name": "Tofu 60% Aluminum",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/2_9b1282f0-ecde-4f8d-8090-576c1fad09e4_1800x1800.jpg?v=1602839142",
+        "Link": "https://kbdfans.com/collections/case/products/kbdfans-tofu-60-aluminum-case?variant=13389974536250",
+        "Base Price": 88,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Black", "Grey", "Silver", "Mei Red", "Chocolate", "Cyan", "Purple", "Dark Green",
+            "Burgundy", "Air Force Blue", "Rose Gold", "Dark Purple", "Dark Cyan", "Dark Grey", "Sakura Pink",
+            {"type": "E-Orange", "extra": 20}, {"type": "E-White", "extra": 20}, {"type": "E-Yellow", "extra": 20}]}
+    },
+    {
+        "Name": "Tofu 60% Frosted Acrylic",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/11_e581f389-f843-4ca9-b01b-dcb2e2050aca_1800x1800.jpg?v=1584436788",
+        "Link": "https://kbdfans.com/collections/case/products/tofu-acrylic-frosted-60-case",
+        "Base Price": 88,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Acrylic",
+        "Primary Color": "Frosted"
+    },
+    {
+        "Name": "60% Low Profile Aluminum",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8b9cc7c9808a81fc8db0eaf67a4d79d7_28f1272f-0131-443c-b937-45f622baa0e1_1800x1800.jpg?v=1584436623",
+        "Link": "https://kbdfans.com/collections/case/products/customized-gh60-aluminum-case",
+        "Base Price": 45,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Red", "Orange", "Black", "Blue", "Silver", "Grey", "Cyan", "Pink", "Rose Gold", "Purple", "Magenta", "Green", "Chocolate"]}
+    },
+    {
+        "Name": "60% Low Profile Acrylic",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_228e8060-e01d-40d3-900e-1ce1127770a8_1800x1800.jpg?v=1584436650",
+        "Link": "https://kbdfans.com/collections/case/products/60-frosted-acrylic-mechanical-keyboard-case",
+        "Base Price": 40,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Acrylic",
+        "Primary Color": "Frosted"
+    },
+    {
+        "Name": "60% Plastic",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/17_21d62acb-7830-45c6-a586-2af33951212b_1800x1800.jpg?v=1601015673",
+        "Link": "https://kbdfans.com/collections/case/products/60-plastic-case?variant=36020991757",
+        "Base Price": 14.90,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Plastic",
+        "Primary Color": {"type": "selection", "options": ["Black", "White", "Light Purple", "Transparent", "Dark Blue"]}
+    },
+    {
+        "Name": "Anode Aluminum 60%",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/000878ce6144c05ffac949f66b05a18b_c8fdbed3-6730-486b-a44d-938e31102534_1800x1800.jpg?v=1584436526",
+        "Link": "https://kbdfans.com/collections/case/products/mechanical-keyboard-shell-anode-aluminum-shell-gh60-poker-60-mechanical-keyboard-shell",
+        "Base Price": 73,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Blue", "Grey", "Silver", "Purple", "Red", "Black", "Cyan", "Burgundy"]}
+    },
+    
+    
+
+    {
+        "Name": "Tofu 65% Aluminum",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8b9cc7c9808a81fc8db0eaf67a4d79d7_b3abc1fb-7837-45dd-bbca-f1b4202bc9e2_1800x1800.jpg?v=1584436794",
+        "Link": "https://kbdfans.com/collections/65-layout-case/products/in-stocktofu-65-aluminum-case",
+        "Base Price": 125,
+        "Form Factor": "65%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Silver", "Grey", "Black", "Chocolate", "Burgundy", "Purple", "Ink Blue", {"type": "E-White", "extra": 4}]}
+    },
+    {
+        "Name": "Tofu 65% Acrylic",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/2_43e95e7a-fee1-47a3-b951-d289e209b34b_1800x1800.jpg?v=1584436794",
+        "Link": "https://kbdfans.com/collections/65-layout-case/products/in-stocktofu-65-aluminum-case?variant=31779250700427",
+        "Base Price": 125,
+        "Form Factor": "65%",
+        "Mount Method": "Tray Mount",
+        "Material": "Acrylic",
+        "Primary Color": "Frosted"
+    },
+    {
+        "Name": "KBDFans 65% Low Profile",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/2_3ffb5850-0129-4085-909a-8ed7eca057a3_1800x1800.jpg?v=1584436647",
+        "Link": "https://kbdfans.com/collections/65-layout-case/products/kbdfans-tada68-aluminum-case",
+        "Base Price": 55,
+        "Form Factor": "65%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Silver", "Grey", "Black", "Chocolate", "Blue"]}
+    },
+    {
+        "Name": "Tada68",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/3_54fa7338-d980-4d40-b16e-78f77a14a490_1800x1800.jpg?v=1584436601",
+        "Link": "https://kbdfans.com/collections/65-layout-case/products/tada68-aluminum-case",
+        "Base Price": 99,
+        "Form Factor": "65%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Silver", "Grey", "Black", "Red", "Blue"]}
+    },
+
+
+    {
+        "Name": "KBDFans75",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/6_043b5f55-535c-4574-bc6d-1d5a4c298360_1800x1800.jpg?v=1584436630",
+        "Link": "https://kbdfans.com/collections/case/products/kbdfans75-aluminum-case-75-layout",
+        "Base Price": 110,
+        "Form Factor": "75%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Grey", "Blue", "Cyan", "Orange", "Black", "Silver", "Purple", "Red", "Sky Blue", "Light Grey"]}
+    },
+    {
+        "Name": "KBD75V2",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/845367ace54457c19ecc627ab38806d0_1800x1800.jpg?v=1597394691",
+        "Link": "https://kbdfans.com/collections/75-layout-case/products/kbd75v2-custom-keyboard-diy-kit-1",
+        "Base Price": 110,
+        "Form Factor": "75%",
+        "Mount Method": "Tray Mount",
+        "Material": "Aluminum",
+        "Primary Color": {"type": "selection", "options": ["Black", "Grey", "Top Silver, Bottom Grey", "Top Light Grey, Bottom Dark Grey",
+            "Top Dark Grey, Bottom Light Grey", "Red", "Silver", "Purple", "Blue"]}
+    }
+]

@@ -36,7 +36,6 @@ td, th {
 
 header {
     font-family: "Righteous", sans-serif;
-    width: 100%;
     background-color: #2f3843;
     display: flex;
     align-items: center;
@@ -60,12 +59,8 @@ header h1 {
 
 /* Define style used by both selected item and new item selection tables */
 
-.item-image-cell {
-    width: 200px;
-}
-
 .item-name-cell {
-    width: 350px;
+    min-width: 350px;
 }
 
 .item-price-cell {
@@ -84,7 +79,7 @@ header h1 {
 }
 
 .item-name {
-    width: 150px;
+    width: 180px;
     vertical-align: middle;
     display: inline-block;
 }
@@ -181,6 +176,26 @@ header h1 {
     color: #666;
 }
 
+.match-some-chosen-checkbox {
+    background-color: orange;
+}
+
+.match-all-chosen-checkbox {
+    background-color: green;
+}
+
+.numeric-range-input {
+    width: 50px;
+}
+
+.sort-by {
+    margin-top: 30px;
+    margin-left: 10px;
+}
+
+.sort-by select {
+    margin-left: 10px;
+}
 
 
 

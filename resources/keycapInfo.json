@@ -1,35 +1,33 @@
 {
-    "cherry": {
-        "modern dolch light": {
-            "font": "std GMK",
-            "standard": {
-                "alphas": {
-                    "keycapColor": [0.9, 0.9, 0.9],
-                    "legendColor": [0, 0, 0]
-                },
-                "others": {
-                    "keycapColor": [0.6, 0.6, 0.6],
-                    "legendColor": [0, 0, 0]
-                },
-                "exceptions": [
-                    {
-                        "key": "Enter",
-                        "keycapColor": [0.8, 1, 0.8],
-                        "legendColor": [0, 0, 0]
-                    },
-                    {
-                        "key": "Esc",
-                        "keycapColor": [1, 0.7, 0.7],
-                        "legendColor": [0, 0, 0]
-                    }
-                ]
+    "modern dolch light": {
+        "font": "std GMK",
+        "standard": {
+            "alphas": {
+                "keycapColor": [0.9, 0.9, 0.9],
+                "legendColor": [0, 0, 0]
             },
-            "extras": [
+            "others": {
+                "keycapColor": [0.6, 0.6, 0.6],
+                "legendColor": [0, 0, 0]
+            },
+            "exceptions": [
                 {
-                    "row": 1,
-                    "": ""
+                    "key": "Enter",
+                    "keycapColor": [0.8, 1, 0.8],
+                    "legendColor": [0, 0, 0]
+                },
+                {
+                    "key": "Esc",
+                    "keycapColor": [1, 0.7, 0.7],
+                    "legendColor": [0, 0, 0]
                 }
             ]
-        }
+        },
+        "extras": [
+            {
+                "row": 1,
+                "": ""
+            }
+        ]
     }
 }

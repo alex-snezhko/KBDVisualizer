@@ -2,31 +2,65 @@
 
 const money = (num) => "$" + num.toFixed(2);
 
-const NumericRangeFilter = (props) =>
-    <div>
-        <h4>{props.title}</h4>
-        <input type="text" onChange={e => props.onUpdateFilter(props.category, e)}></input>
-    </div>;
+function NumericRangeFilterComponent(props) {
+    const { field, low, high } = props.filter;
 
-const ItemSelectionFilters = (props) =>
+    const toMoney = (val, backup) =>
+        !isNaN(val) && String(val).length < Number(val).toFixed(2).length ? val : backup;
+
+    return (
+        <div>
+            <h4>{field}</h4>
+            $<input type="text" className="numeric-range-input" value={low}
+                onChange={e => props.onUpdateFilter([toMoney(e.target.value, low), high])} />
+            -
+            $<input type="text" className="numeric-range-input" value={high}
+                onChange={e => props.onUpdateFilter([low, toMoney(e.target.value, high)])} />
+        </div>
+    );
+}
+
+function SelectionFilterComponent(props) {
+    const { field, passAll, all, selected } = props.filter;
+
+    // TODO add 'alternate' field to items to describe a more general (say, color)
+    // TODO do 2 options for checkbox: must contain and can contain: maybe shift-click for other
+
+    return (
+        <div>
+            <h4>{field} {passAll && <em>(Match all)</em>}</h4>
+            {Array.from(all).map(opt =>
+                <div className="filter-option" key={opt}>
+                    <input
+                        type="checkbox"
+                        id={`filter-option-${field}-${opt}`}
+                        className={"match-" + (passAll ? "all" : "some") + "-chosen-checkbox"}
+                        checked={selected.has(opt)}
+                        onChange={() => props.onUpdateFilter(opt)}
+                    />
+                    <label htmlFor={`filter-option-${field}-${opt}`}>{opt}</label>
+                </div>
+            )}
+        </div>
+    );
+}
+
+const ItemSelectionFilters = (props) => (
     <div id="filters-box">
         <h2>Filters</h2>
-        <h4>Price</h4>
-        <input type="text"></input>
-        {Object.keys(props.filters).map(category => 
-            <div key={category} className="filter-category">
-                <h4>{category}</h4>
-                {Array.from(props.filters[category].all).map(opt =>
-                    <div className="filter-option" key={opt}>
-                        <input type="checkbox" id={`filter-option-${category}-${opt}`}
-                                checked={props.filters[category].selected.has(opt)}
-                                onChange={() => props.onUpdateFilter(category, opt)}/>
-                        <label htmlFor={`filter-option-${category}-${opt}`}>{opt}</label>
-                    </div>
-                )}
-            </div>
-        )}
-    </div>;
+
+        {props.filters.map(filter => {
+            const propsToPass = {
+                filter,
+                onUpdateFilter: val => props.onUpdateFilter(filter.field, val)
+            };
+
+            return filter instanceof SelectionFilter ?
+                <SelectionFilterComponent key={filter.field} {...propsToPass} /> :
+                <NumericRangeFilterComponent key={filter.field} {...propsToPass} />;
+        })}
+    </div>
+);
 
 // default value of select field if no option is selected
 const NO_SELECTION = "-- select an option --";
@@ -36,10 +70,13 @@ class ItemSelectionRow extends React.Component {
         super(props);
 
         this.state = {
-            selections: props.fields.reduce(
-                (obj, f) => Object.assign(obj,
-                    {[f]: Array.isArray(props.item[f]) ? NO_SELECTION : props.item[f]}),
-                {}),
+            selections: props.fields.reduce((obj, f) => {
+                const data = props.item[f];
+                obj[f] = data && data.type == "selection" ?
+                    NO_SELECTION :
+                    data;
+                return obj;
+            }, {})
         }
     }
 
@@ -49,31 +86,39 @@ class ItemSelectionRow extends React.Component {
     }
 
     handleSelectionChange(event, field) {
-        const val = this.props.item[field].find(x => this.display(x) == event.target.value);
+        const val = this.props.item[field].options.find(x => this.display(x) == event.target.value);
         this.setState(currState => {
             let newSelections = {
                 ...currState.selections,
                 [field]: val
             };
-            return {selections: newSelections}
+            return { selections: newSelections }
         });
     }
 
     renderTableData(field) {
         // the actual data of this item
-        const options = this.props.item[field];
+        const data = this.props.item[field];
 
         // the currently selected value of this field
         const selected = this.display(this.state.selections[field]);
 
-        return !Array.isArray(options) ?
-            options || <p style={{color: "gray"}}>N/A</p> :
-            <select value={selected} onChange={e => this.handleSelectionChange(e, field)}>
-                {[NO_SELECTION].concat(options).map(x => {
-                    const displayed = this.display(x);
-                    return <option key={displayed} value={displayed}>{displayed}</option>
-                })}
-            </select>;
+        if (data === undefined) {
+            return <p style={{ color: "gray" }}>N/A</p>
+        } else if (Array.isArray(data)) {
+            return data.join(", ");
+        } else if (data.type == "selection") {
+            return (
+                <select value={selected} onChange={e => this.handleSelectionChange(e, field)}>
+                    {[NO_SELECTION].concat(data.options).map(x => {
+                        const displayed = this.display(x);
+                        return <option key={displayed} value={displayed}>{displayed}</option>
+                    })}
+                </select>
+            );
+        } else {
+            return data;
+        }
     }
 
     render() {
@@ -82,10 +127,10 @@ class ItemSelectionRow extends React.Component {
             <tr className="select-item-row">
                 <td className="item-name-cell">
                     <a className="item-link" href={item["Link"]} target="_blank">
-                        <span className="item-image-container">
+                        <div className="item-image-container">
                             <img src={item["Image"]} alt={item["Name"]} />
-                        </span>
-                        <span className="item-name">{item["Name"]}</span>
+                        </div>
+                        <div className="item-name">{item["Name"]}</div>
                     </a>
                 </td>
                 <td className="item-price-cell">{money(item["Base Price"])}</td>
@@ -109,12 +154,68 @@ class ItemSelectionRow extends React.Component {
     }
 }
 
+class SelectionFilter {
+    constructor(field, allOptions, passAll) {
+        this.field = field;
+        this.all = allOptions;
+        this.selected = new Set();
+        this.passAll = passAll;
+    }
+
+    updateData(option) {
+        if (this.selected.has(option)) {
+            this.selected.delete(option);
+        } else {
+            this.selected.add(option);
+        }
+    }
+
+    passes(item) {
+        // if no options are selected for this filter then it is fine
+        if (this.selected.size == 0) {
+            return true;
+        }
+    
+        const fieldData = item[this.field];
+        if (this.passAll) { // ensure that the item meets at least one selected filter option
+            return Array.from(this.selected).every(selection => fieldData.includes(selection));
+        } else { // ensure that the item meets every selected filter option
+            // if there are several options make sure that one of them passes filter
+            return fieldData.type == "selection" ?
+                fieldData.options.some(option => this.selected.has(option.type || option)) :
+                this.selected.has(fieldData);
+        }
+        
+    }
+}
+
+class NumRangeFilter {
+    constructor(field, low, high) {
+        this.field = field;
+        this.low = low;
+        this.high = high;
+    }
+
+    updateData([low, high]) {
+        this.low = low;
+        this.high = high;
+    }
+
+    passes(item) {
+        const fieldData = item[this.field];
+        const low = this.low === "" ? 0 : Number(this.low);
+        const high = this.high === "" ? Infinity : Number(this.high)
+        return fieldData >= low && fieldData <= high;
+    }
+}
+
 class ItemSelection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             items: null,
-            filters: {}
+            filters: [],
+            sortBy: "alpha"
         };
 
         this.handleUpdateFilter = this.handleUpdateFilter.bind(this);
@@ -122,111 +223,110 @@ class ItemSelection extends React.Component {
 
     componentDidMount() {
         fetch("resources/items/" + this.props.itemType.toLowerCase() + ".json")
-            .then(response => response.json())
-            .then(items => this.loadItems(items));
+        .then(response => response.json())
+        .then(items => this.loadItems(items));
     }
 
     loadItems(items) {
-        for (const field of this.props.extraFields) {
-            const options = new Set();
-            
-            for (const item of items) {
-                const itemOptions = item[field];
-                if (Array.isArray(itemOptions)) {
-                    for (const itemOption of itemOptions) {
-                        options.add(itemOption.type || itemOption);
-                    }
-                } else if (itemOptions !== undefined) {
-                    options.add(item[field]);
-                }
-            }
+        const filters = [];
+        // generate filters from each field
+        for (const field of ["Base Price"].concat(this.props.extraFields)) {
+            // separate all data for this field
+            const fieldData = items.map(item => item[field]);
 
-            this.state.filters[field] = {
-                all: Array.from(options).sort(),
-                selected: new Set()
-            };
+            if (typeof fieldData[0] == "number") { // if items are numbers then generate high/low bound filter
+                const low = fieldData.reduce((min, x) => Math.min(min, x), Number.MAX_VALUE);
+                const high = fieldData.reduce((max, x) => Math.max(max, x), Number.MIN_VALUE);
+                filters.push(new NumRangeFilter(field, low, high));
+            } else { // otherwise generate filter matching selections
+                const options = new Set();
+
+                // determine if this is a field with many options or just one
+                const hasManyValues = Array.isArray(fieldData[0]);
+
+                // generate set of all options for this field
+                for (const data of fieldData) {
+                    if (data !== undefined) {
+                        if (hasManyValues) {
+                            data.forEach(val => options.add(val));
+                        } else {
+                            if (data.type == "selection") {
+                                data.options.forEach(x => options.add(x.type || x));
+                            } else {
+                                options.add(data);
+                            }
+                        }
+                    }
+                }
+
+                // create filter out of set of options; filter will match all selections if this field
+                //   contained arrays (meaning there are several values for the field for each item)
+                //   or at least one selection otherwise (meaning there is an option for some fields for some items)
+                filters.push(new SelectionFilter(
+                    field,
+                    Array.from(options).sort(),
+                    hasManyValues
+                ));
+            }
         }
         
-        this.setState({items: items.sort((x, y) => x["Name"].localeCompare(y["Name"]))});
+        items.sort((x, y) => x["Name"].localeCompare(y["Name"]));
+        this.setState({ items, filters });
     }
 
-    handleUpdateFilter(category, option) {
+    handleUpdateFilter(field, data) {
         this.setState(currState => {
-            let newFilters = {...currState.filters};
-
-            const selected = newFilters[category].selected;
-            if (selected.has(option)) {
-                selected.delete(option);
-            } else {
-                selected.add(option);
-            }
-            
-            return {filters: newFilters};
-        });
+            let newFilters = [...currState.filters];
+            newFilters.find(filter => filter.field == field).updateData(data);
+            return { filters: newFilters };
+        })
     }
 
     render() {
-        if (this.state.items == null) {
-            return null;
-        }
-
-        const filters = this.state.filters;
+        const { items, filters, sortBy } = this.state;
         const extraFields = this.props.extraFields;
-
         // first field blank because it represents image; not really necessary to show
         const allFields = ["Name", "Base Price"].concat(extraFields);
 
-        // only render rows that match selected filters
-        const itemsMatchingFilters = this.state.items.filter(item =>
-            extraFields.every(f => {
-                // if no options are selected for this filter then it is fine
-                if (filters[f].selected.size == 0) {
-                    return true;
-                }
+        if (items == null) {
+            return null;
+        }
 
-                const options = item[f];
-                // if there are several options make sure that one of them passes filter
-                if (Array.isArray(options)) {
-                    return options.some(option => filters[f].selected.has(option.type || option));
-                } else {
-                    return filters[f].selected.has(options);
-                }
-            })
+        // only render rows that match selected filters
+        const itemsMatchingFilters = items.filter(item =>
+            filters.every(filter => filter.passes(item))
         );
 
-
-        // TODO compatibility:
-        // Supported layouts: bar left of arrow keys for 65%, split spacebar, stepped caps, split backspace, etc
-        // All varieties:
-        // 60%: Standard; 5 1u left of spacebar, WKL
-
-
-        // Not super important for now but may be handy with rendering
-        // Possibly available to all layouts:
-        // split spacebar
-        // stepped caps
-        // split left shift
-        // split backspace
-        // ISO enter, | key
-        // split RShift (not 65%)
-
-        // Add
-        // XD87
-        // Kits from KBDFans
+        const sortItems =
+            sortBy == "low-high" ? xs => [...xs].sort((x, y) => x["Base Price"] - y["Base Price"]) :
+            sortBy == "high-low" ? xs => [...xs].sort((x, y) => y["Base Price"] - x["Base Price"]) :
+                                   xs => xs;
+        const itemsToDisplay = sortItems(itemsMatchingFilters);
+        
         return (
             <div>
                 <ItemSelectionFilters
                     filters={filters}
                     onUpdateFilter={this.handleUpdateFilter} />
 
+                
                 <div style={{margin: "10px 30px 10px 250px"}}>
-                    {itemsMatchingFilters.length == 0 && <h3>No Items Found To Match Filters</h3> ||
+                    <div className="sort-by">
+                        Sort By:
+                        <select value={sortBy} onChange={e => this.setState({ sortBy: e.target.value })}>
+                            <option value="alpha">Name (alphabetical)</option>
+                            <option value="low-high">Price (low to high)</option>
+                            <option value="high-low">Price (high to low)</option>
+                        </select>
+                    </div>
+
+                    {itemsToDisplay.length == 0 && <h3>No Items Found To Match Filters</h3> ||
                         <table id="select-item-table">
                             <thead>
                                 <tr>{allFields.map(f => <th key={f}>{f}</th>)}</tr>
                             </thead>
                             <tbody>
-                                {itemsMatchingFilters.map(item =>
+                                {itemsToDisplay.map(item =>
                                     <ItemSelectionRow
                                         key={item["Name"]}
                                         item={item}
@@ -250,21 +350,89 @@ class ItemManager extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectingItem: null,
             selectedItems: ["Kit"].concat(ALL_PARTS).reduce((obj, item) => {
                 obj[item] = null;
                 return obj;
             }, {}),
+            selectingItem: null,
             partsInKit: []
         };
 
         this.handleBrowseItem = this.handleBrowseItem.bind(this);
         this.handleSelectItem = this.handleSelectItem.bind(this);
         this.handleRemoveItem = this.handleRemoveItem.bind(this);
+
+
+
+        // this.state.selectedItems = {
+        //     "Kit": null,
+        //     "Case": {
+        //         "Name": "60% Bamboo Case",
+        //         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_09f45ed2-421b-47a6-9b76-856a6609a280_1800x1800.jpg?v=1584436781",
+        //         "Link": "https://kbdfans.com/collections/case/products/60-bamboo-case",
+        //         "Base Price": 58,
+        //         "Form Factor": "60%",
+        //         "Mount Method": "Tray Mount",
+        //         "Material": "Bamboo",
+        //         "Primary Color": "Wood",
+        //         price: 1
+        //     },
+        //     "Plate": {
+        //         "Name": "KBDPad MKII Brass Plate",
+        //         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8_d0a22ed5-026f-4709-b469-2cb6d618abb1_1800x1800.jpg?v=1601098440",
+        //         "Link": "https://kbdfans.com/collections/plate/products/kbdpad-mkii-brass-plate",
+        //         "Base Price": 18,
+        //         "Form Factor": "Numpad",
+        //         "Material": "Brass",
+        //         price: 1
+        //     },
+        //     "PCB": {
+        //         "Name": "DZ60 Rev 3.0 PCB",
+        //         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/c_1_1800x1800.jpg?v=1584436582",
+        //         "Link": "https://kbdfans.com/collections/pcb/products/dz60-60-pcb",
+        //         "Base Price": 38,
+        //         "Form Factor": "60%",
+        //         "Hot-swap": "No",
+        //         "Backlight": "RGB Underglow",
+        //         price: 1
+        //     },
+        //     "Switches": {
+        //         "Name": "Cherry MX Red",
+        //         "Image": "https://www.cherrymx.de/_Resources/Persistent/d4e5d661da4d28eb2c5d6321289c29ac2d6cbd56/img-productstage-mxRed%402x_100-368x368.png",
+        //         "Link": "https://www.cherrymx.de/en/mx-original/mx-red.html",
+        //         "Base Price": 1,
+        //         "Tactility": "Linear",
+        //         "Spring Weight": "46g",
+        //         "Actuation Distance": "2.0 mm",
+        //         "Bottom-out Distance": "4.0 mm",
+        //         price: 1
+        //     },
+        //     "Keycaps": {
+        //         "Name": "GMK White DarkGrey",
+        //         "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/whitedark-grey/kits_pics/base.png",
+        //         "Link": "https://geekhack.org/index.php?topic=48798.0",
+        //         "Base Price": 120,
+        //         "Colors": [
+        //             "Black",
+        //             "White"
+        //         ],
+        //         "Material": "ABS",
+        //         "Legends": "Doubleshot",
+        //         price: 1
+        //     },
+        //     "Stabilizers": {
+        //         "Name": "GMK Screw-in Stabilizers",
+        //         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/O1CN01MtwenC1amQ9FHFKxo__134583372_1800x1800.jpg?v=1598932169",
+        //         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/gmk-screw-in-stabilizers",
+        //         "Base Price": 19,
+        //         "Mount Method": "PCB Screw-in",
+        //         price: 1
+        //     }
+        // }
     }
 
     handleBrowseItem(itemType) {
-        this.setState({selectingItem: itemType});
+        this.setState({ selectingItem: itemType });
     }
 
     handleSelectItem(item, selections, itemType) {
@@ -294,7 +462,7 @@ class ItemManager extends React.Component {
                         0)
                 }
             };
-            return {selectingItem: null, selectedItems: newSelected, partsInKit};
+            return { selectingItem: null, selectedItems: newSelected, partsInKit };
         });
 
         return true;
@@ -302,7 +470,7 @@ class ItemManager extends React.Component {
 
     handleRemoveItem(itemType) {
         if (itemType == "Kit") {
-            this.setState({partsInKit: []})
+            this.setState({ partsInKit: [] })
         }
         this.setState(currState => ({
             selectedItems: {
@@ -325,33 +493,35 @@ class ItemManager extends React.Component {
     }
 
     render() {
+        const { selectedItems, selectingItem, partsInKit } = this.state;
         //const compatabilityFilters = this.state.partsInKit.length == 0 ? 
-        if (this.state.selectingItem) {
-            const extraFields = this.getExtraFields(this.state.selectingItem);
-            const howToRender = {
-
-            }
-
-            return <ItemSelection
-                itemType={this.state.selectingItem}
-                extraFields={this.getExtraFields(this.state.selectingItem)}
-                onSelect={this.handleSelectItem} />
-        }
-
-        return <SelectedItemTable
-            selectedItems={this.state.selectedItems}
-            partsInKit={this.state.partsInKit}
-            onSelect={this.handleBrowseItem}
-            onDelete={this.handleRemoveItem} />;
+        return selectingItem ?
+            <ItemSelection
+                itemType={selectingItem}
+                extraFields={this.getExtraFields(selectingItem)}
+                onSelect={this.handleSelectItem}
+            /> :
+            <SelectedItems
+                selectedItems={selectedItems}
+                partsInKit={partsInKit}
+                onSelect={this.handleBrowseItem}
+                onDelete={this.handleRemoveItem}
+            />;
     }
 }
+
+const SelectedItems = (props) => (
+    <React.Fragment>
+        <SelectedItemTable {...props} />
+        <KeyboardRender selectedItems={props.selectedItems} />
+    </React.Fragment>
+);
 
 const SelectedItemTable = (props) => (
     <table id="selected-item-table">
         <thead>
             <tr className="selected-item-row">
                 <th className="item-select-cell">Item</th>
-                <th className="item-image-cell"></th>
                 <th className="item-name-cell">Selected</th>
                 <th className="item-price-cell">Price</th>
                 <th></th>
@@ -369,13 +539,17 @@ const SelectedItemTable = (props) => (
                                 {itemType}
                             </button>
                         </td>
-                        <td className="item-image-cell">{(item && !partInKit) &&
-                            <div className="item-image-container">
-                                <img src={item["Image"]} alt={item["Name"]} />
-                            </div>}
-                        </td>
                         <td className="item-name-cell">
-                            {partInKit ? "Included in kit" : (item && item["Name"])}</td>
+                            {partInKit ? "Included in kit" :
+                                item &&
+                                <a className="item-link" href={item["Link"]} target="_blank">
+                                    <div className="item-image-container">
+                                        <img src={item["Image"]} alt={item["Name"]} />
+                                    </div>
+                                    <span className="item-name">{item["Name"]}</span>
+                                </a>
+                            }
+                        </td>
                         <td className="item-price-cell">{item && money(item.price)}</td>
                         <td>{item &&
                             <button className="delete-button" onClick={() => props.onDelete(itemType)}>
@@ -388,6 +562,17 @@ const SelectedItemTable = (props) => (
         </tbody>
     </table>
 );
+
+function KeyboardRender(props) {
+    const selected = props.selectedItems;
+    const canRender = ALL_PARTS.every(part => selected[part]);
+
+    return !canRender ? "Select all parts to view keyboard render" :
+        <div onLoad={loadModels("tofu65"/*selected["Case"]["Name"]*/,
+                "cherry"/*selected["Keycaps"].profile*/, "modern dolch light"/*selected["Keycaps"]["Name"]*/)}>
+            <canvas id="webGLCanvas"></canvas>
+        </div>;
+}
 
 class ImportExport extends React.Component {
     render() {

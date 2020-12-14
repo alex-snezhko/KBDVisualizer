@@ -1,0 +1,73 @@
+all:
+image
+name
+price
+status - re-stocking/group buy
+vendors
+
+switches:
+tactility - linear/clicky/tactile
+spring weight
+actuation distance
+
+keycaps:
+material - pbt/abs
+legends - dye-sub/lasered/double-shot
+
+filter by:
+varieties for each field
+
+sort by:
+price
+name - alpha
+
+
+
+Compatibility issues:
+PCB, Case, Plate form factor must match
+Stabilizers must be compatible with PCB, Plate
+Must have enough keycaps for entire KBD
+
+
+Some information may be incorrect; feel free to point out issues
+
+
+
+
+
+// TODO compatibility:
+// Supported layouts: bar left of arrow keys for 65%, split spacebar, stepped caps, split backspace, etc
+// All varieties:
+// 60%: Standard; 5 1u left of spacebar, WKL
+
+
+// Not super important for now but may be handy with rendering
+// Possibly available to all layouts:
+// split spacebar
+// stepped caps
+// split left shift
+// split backspace
+// ISO enter, | key
+// split RShift (not 65%)
+
+// Add
+// XD87
+// Kits from KBDFans
+
+
+
+
+
+
+
+
+RAL Standard
+RAL advanced - a few
+Pantone
+Standard GMK
+Signature plastics abs
+
+
+
+GMK alter: 209 20 15 -> 290 20 15
+GMK delta: RAL ? -> CR

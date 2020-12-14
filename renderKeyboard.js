@@ -66,7 +66,7 @@ class Key {
 }
 
 function rotateView(ang, axis) {
-    let rotationMat = mat4.fromRotation(mat4.create(), ang, axis);
+    const rotationMat = mat4.fromRotation(mat4.create(), ang, axis);
     eye.position = vec3.transformMat4(vec3.create(), eye.position, rotationMat);
     eye.lookAt = vec3.transformMat4(vec3.create(), eye.lookAt, rotationMat);
     eye.lookUp = vec3.transformMat4(vec3.create(), eye.lookUp, rotationMat);
@@ -131,7 +131,7 @@ function getKeycapInfo(key, keycapsInfo) {
     const stdLayoutInfo = keycapsInfo.standard;
 
     // first check if is alpha, then if is exception, otherwise use the 'others'
-    let keyInfo = ALPHAS.has(key) ? stdLayoutInfo.alphas :
+    const keyInfo = ALPHAS.has(key) ? stdLayoutInfo.alphas :
                   stdLayoutInfo.exceptions.find(e => e.key == key) ||
                   stdLayoutInfo.others;
 
@@ -143,6 +143,10 @@ function getKeycapInfo(key, keycapsInfo) {
 }
 
 function loadModels(kbdName, keycapProfile, keycapSet) {
+    if (gl == null) {
+        initKBRender();
+    }
+
     const fetchJson = filename => fetch("resources/" + filename + ".json").then(response => response.json());
 
     let kbdInfo;
@@ -180,25 +184,27 @@ function loadModels(kbdName, keycapProfile, keycapSet) {
         // -------------------------------------------------
         // define instructions for rendering all needed keys
         // -------------------------------------------------
-        for (let kg of kbdInfo.keyGroups) {
+        for (const kg of kbdInfo.keyGroups) {
             // initialize position to beginning of row and increment after each key
             let posXZ = [kg.offset[0] - numUnitsX / 2, 0, kg.offset[1] - numUnitsY / 2 + 0.5];
-            for (let key of kg.keys) {
+            for (const key of kg.keys) {
                 // if this key is not special (non-1u), then it must be 1 unit wide
-                let keysize = SPECIAL_NUM_UNITS[key] || 1;
-                let keycapIdentifier = SPECIAL_KEYCAP_IDENTIFIERS.has(key) ? key : `R${kg.row}_${keysize}U`;
+                const keysize = SPECIAL_NUM_UNITS[key] || 1;
+                const keycapIdentifier = SPECIAL_KEYCAP_IDENTIFIERS.has(key) ? key : `R${kg.row}_${keysize}U`;
 
                 // if a keycap with these dimensions has not been loaded yet, then load it
                 if (!keycapModelsVisited.has(keycapIdentifier)) {
-                    progsInfo.textured.buffers[keycapIdentifier] = {};
-                    resourceLoadPromises.push(fetchJson(keycapProfile + "_" + keycapIdentifier)
-                        .then(keycapModel => loadGLBuffers(progsInfo.textured.buffers[keycapIdentifier], keycapModel, true)));
+                    let bufs = progsInfo.textured.buffers;
+                    bufs[keycapIdentifier] = {};
+                    resourceLoadPromises.push(
+                        fetchJson(keycapProfile + "_" + keycapIdentifier)
+                        .then(keycapModel => loadGLBuffers(bufs[keycapIdentifier], keycapModel, true)));
                     keycapModelsVisited.add(keycapIdentifier);
                 }
 
                 // move keycap to middle of keycap area
-                let toPosMat = mat4.fromTranslation(mat4.create(), [posXZ[0] + keysize / 2, 0, posXZ[2]]);
-                let finalTransformationMat = mat4.multiply(mat4.create(), heightInclineMat, toPosMat);
+                const toPosMat = mat4.fromTranslation(mat4.create(), [posXZ[0] + keysize / 2, 0, posXZ[2]]);
+                const finalTransformationMat = mat4.multiply(mat4.create(), heightInclineMat, toPosMat);
                 
                 keyRenderInstructions.push({
                     keycapIdentifier,
@@ -211,13 +217,13 @@ function loadModels(kbdName, keycapProfile, keycapSet) {
 
         // load case
         progsInfo.untextured.buffers["case"] = {};
-        resourceLoadPromises.push(fetchJson("Case_" + kbdName)
+        resourceLoadPromises.push(
+            fetchJson("Case_" + kbdName)
             .then(trianglesInfo => loadGLBuffers(progsInfo.untextured.buffers["case"], trianglesInfo, false)));
 
         // render once all loaded
-        Promise.all(resourceLoadPromises)
-            .then(() => renderScene())
-            .catch(err => alert("Error loading resource file: " + err));
+        Promise.all(resourceLoadPromises).then(() => renderScene())
+        .catch(err => alert("Error loading resource file: " + err));
     });
 }
 
@@ -225,35 +231,36 @@ function renderObject(identifier, uniformsToSet) {
     const isTextured = progsInfo.textured.buffers[identifier] !== undefined;
 
     const progInfo = isTextured ? progsInfo.textured : progsInfo.untextured;
+    const { program, locs } = progInfo;
     const buffers = progInfo.buffers[identifier];
 
-    gl.useProgram(progInfo.program);
+    gl.useProgram(program);
 
     for (const uniform of uniformsToSet) {
         uniform.method(uniform.loc, ...uniform.params);
     }
 
-    gl.enableVertexAttribArray(progInfo.locs.aVertexPositionLoc);
+    gl.enableVertexAttribArray(locs.aVertexPositionLoc);
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertices);
-    gl.vertexAttribPointer(progInfo.locs.aVertexPositionLoc, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(locs.aVertexPositionLoc, 3, gl.FLOAT, false, 0, 0);
 
-    gl.enableVertexAttribArray(progInfo.locs.aVertexNormalLoc);
+    gl.enableVertexAttribArray(locs.aVertexNormalLoc);
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normals);
-    gl.vertexAttribPointer(progInfo.locs.aVertexNormalLoc, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(locs.aVertexNormalLoc, 3, gl.FLOAT, false, 0, 0);
 
     if (isTextured) {
-        gl.enableVertexAttribArray(progInfo.locs.aVertexUVLoc);
+        gl.enableVertexAttribArray(locs.aVertexUVLoc);
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers.uvs);
-        gl.vertexAttribPointer(progInfo.locs.aVertexUVLoc, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(locs.aVertexUVLoc, 2, gl.FLOAT, false, 0, 0);
     }
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.triangles);
     gl.drawElements(gl.TRIANGLES, buffers.numTriangles * 3, gl.UNSIGNED_SHORT, 0);
 
-    gl.disableVertexAttribArray(progInfo.locs.aVertexPositionLoc);
-    gl.disableVertexAttribArray(progInfo.locs.aVertexNormalLoc);
+    gl.disableVertexAttribArray(locs.aVertexPositionLoc);
+    gl.disableVertexAttribArray(locs.aVertexNormalLoc);
     if (isTextured) {
-        gl.disableVertexAttribArray(progInfo.locs.aVertexUVLoc);
+        gl.disableVertexAttribArray(locs.aVertexUVLoc);
     }
 }
 
@@ -281,7 +288,7 @@ function renderScene() {
     // gl.uniform3fv(utLocs.uColorLoc, [0.1, 0.1, 0.1]);
 
     const uniformsToSet = uniforms => uniforms.map(u => ({ loc: u[0], method: u[1].bind(gl), params: u[2] }));
-    let uniforms = uniformsToSet([
+    const uniforms = uniformsToSet([
         [utLocs.uEyePositionLoc, gl.uniform3f, [eye.position[0], eye.position[1], eye.position[2]]],
         [utLocs.uMVPMatLoc, gl.uniformMatrix4fv, [false, viewProjMat]],
         [utLocs.uModelMatLoc, gl.uniformMatrix4fv, [false, mat4.create()]],
@@ -300,9 +307,9 @@ function renderScene() {
     // // gl.enableVertexAttribArray(texturedLocs.aVertexNormalLoc);
     // // gl.enableVertexAttribArray(texturedLocs.aVertexUVLoc);
     // render keys
-    for (let instr of keyRenderInstructions) {
+    for (const instr of keyRenderInstructions) {
         // gl.uniformMatrix4fv(tLocs.uModelMatLoc, false, instr.transformation);
-        let modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
+        const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
         // gl.uniformMatrix4fv(tLocs.uMVPMatLoc, false, modelViewProjMat);
         // gl.uniform3fv(tLocs.uColorLoc, instr.keycapInfo.keycapColor);
 
@@ -312,12 +319,12 @@ function renderScene() {
 
         // gl.uniform3fv(tLocs.uTextureColorLoc, [0, 0, 0]);//instr.keycapInfo.legendColor);
 
-        // let a = gl.getVertexAttrib(0,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
-        // let b = gl.getVertexAttrib(1,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
-        // let c = gl.getVertexAttrib(2,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
-        // let d = gl.getVertexAttrib(3,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
+        // const a = gl.getVertexAttrib(0,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
+        // const b = gl.getVertexAttrib(1,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
+        // const c = gl.getVertexAttrib(2,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
+        // const d = gl.getVertexAttrib(3,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
 
-        let uniforms = uniformsToSet([
+        const uniforms = uniformsToSet([
             [tLocs.uEyePositionLoc, gl.uniform3f, [eye.position[0], eye.position[1], eye.position[2]]],
             [tLocs.uMVPMatLoc, gl.uniformMatrix4fv, [false, modelViewProjMat]],
             [tLocs.uModelMatLoc, gl.uniformMatrix4fv, [false, instr.transformation]],
@@ -588,16 +595,18 @@ function setupShaders() {
         }
     }
 
+    const { textured, untextured } = progsInfo;
+
     // create shader program and link
-    progsInfo.untextured.program = gl.createProgram();
-    gl.attachShader(progsInfo.untextured.program, vShaderUntextured);
-    gl.attachShader(progsInfo.untextured.program, fShaderUntextured);
+    untextured.program = gl.createProgram();
+    gl.attachShader(untextured.program, vShaderUntextured);
+    gl.attachShader(untextured.program, fShaderUntextured);
 
-    progsInfo.textured.program = gl.createProgram();
-    gl.attachShader(progsInfo.textured.program, vShaderTextured);
-    gl.attachShader(progsInfo.textured.program, fShaderTextured);
+    textured.program = gl.createProgram();
+    gl.attachShader(textured.program, vShaderTextured);
+    gl.attachShader(textured.program, fShaderTextured);
 
-    for (const program of [progsInfo.untextured.program, progsInfo.textured.program]) {
+    for (const program of [untextured.program, textured.program]) {
         gl.linkProgram(program);
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
             alert("Shader program linking error: " + gl.getProgramInfoLog(program));
@@ -605,30 +614,29 @@ function setupShaders() {
         }
     }
 
-    for (let progInfo of [progsInfo.untextured, progsInfo.textured]) {
-
-        gl.useProgram(progInfo.program);
+    for (const { locs, program } of [untextured, textured]) {
+        gl.useProgram(program);
 
         // locate and enable vertex attributes
-        progInfo.locs.aVertexPositionLoc = gl.getAttribLocation(progInfo.program, "aVertexPosition");
+        locs.aVertexPositionLoc = gl.getAttribLocation(program, "aVertexPosition");
         
-        progInfo.locs.aVertexNormalLoc = gl.getAttribLocation(progInfo.program, "aVertexNormal");
+        locs.aVertexNormalLoc = gl.getAttribLocation(program, "aVertexNormal");
         
         
         // locate uniforms
-        progInfo.locs.uColorLoc = gl.getUniformLocation(progInfo.program, "uColor");
-        progInfo.locs.uEyePositionLoc = gl.getUniformLocation(progInfo.program, "uEyePosition");
-        progInfo.locs.uModelMatLoc = gl.getUniformLocation(progInfo.program, "uModelMatrix");
-        progInfo.locs.uMVPMatLoc = gl.getUniformLocation(progInfo.program, "uMVPMatrix");
+        locs.uColorLoc = gl.getUniformLocation(program, "uColor");
+        locs.uEyePositionLoc = gl.getUniformLocation(program, "uEyePosition");
+        locs.uModelMatLoc = gl.getUniformLocation(program, "uModelMatrix");
+        locs.uMVPMatLoc = gl.getUniformLocation(program, "uMVPMatrix");
     }
 
-    gl.useProgram(progsInfo.textured.program);
+    gl.useProgram(textured.program);
 
-    progsInfo.textured.locs.aVertexUVLoc = gl.getAttribLocation(progsInfo.textured.program, "aVertexUV");
+    textured.locs.aVertexUVLoc = gl.getAttribLocation(textured.program, "aVertexUV");
     //gl.enableVertexAttribArray(progsInfo.textured.locs.aVertexUVLoc);
 
-    progsInfo.textured.locs.uTextureLoc = gl.getUniformLocation(progsInfo.textured.program, "uTexture");
-    progsInfo.textured.locs.uTextureColorLoc = gl.getUniformLocation(progsInfo.textured.program, "uTextureColor");
+    textured.locs.uTextureLoc = gl.getUniformLocation(textured.program, "uTexture");
+    textured.locs.uTextureColorLoc = gl.getUniformLocation(textured.program, "uTextureColor");
 }
 
 // To-do list:
@@ -648,10 +656,19 @@ function setupShaders() {
 // allow untextured keys and textured cases
 // refactor to make working with buffers easier
 // use webgl built in alpha blending (gl.enable(GL.BLEND))
-function main() {
+// change implementation such that resources are only loaded if needed
+
+// UI
+// implement in-stock/vendor tracking
+// implement efficient item search (maybe Suffix Tree)
+// Implement show all/hide for filters with many items
+// Implement different kinds of filters - numeric range, must contain all of, must contain one of
+// fix honeywell & co keycaps
+function initKBRender() {
     // get WebGL context
-    let canvas = $("#webGLCanvas")[0];
-    let w = window.innerWidth;
+    const $canvas = $("#webGLCanvas");
+    const canvas = $canvas[0];
+    const w = window.innerWidth;
     canvas.width = w;
     canvas.height = w / 2;
 
@@ -669,25 +686,25 @@ function main() {
     gl.enable(gl.DEPTH_TEST);
 
     // add mouse event for rotating view
-    $(document).on("mousedown", e => {
+    $canvas.on("mousedown", e => {
         prevDragPos = {x: e.pageX, y: e.pageY};
 
         // drag event handler; will be used for rotating view
         function drag(e) {
             console.log("moved");
             // find how much the mouse has moved since the last position
-            let dx = e.pageX - prevDragPos.x;
-            let dy = e.pageY - prevDragPos.y;
+            const dx = e.pageX - prevDragPos.x;
+            const dy = e.pageY - prevDragPos.y;
             if (dx != 0) {
                 rotateView(-dx / 100, vec3.fromValues(0, 1, 0));
             }
             if (dy != 0) {
                 // make it such that movement upwards is positive rotation
-                let rotateAngle = dy / 100;
+                const rotateAngle = dy / 100;
                 // if this rotation will surpass lowest allowed viewing angle then clamp it
                 const MIN_Y_ANG = 0.1;
                 const MAX_Y_ANG = Math.PI / 2;
-                let newAngle = Math.max(MIN_Y_ANG, Math.min(MAX_Y_ANG, eye.yAngle + rotateAngle));
+                const newAngle = Math.max(MIN_Y_ANG, Math.min(MAX_Y_ANG, eye.yAngle + rotateAngle));
                 rotateView(newAngle - eye.yAngle, vec3.cross(vec3.create(), eye.lookUp, eye.lookAt));
                 eye.yAngle = newAngle;
             }
@@ -696,23 +713,21 @@ function main() {
         }
 
         // enable drag event
-        $(document).on("mousemove", drag);
+        $canvas.on("mousemove", drag);
         // disable drag event when mouse click released
-        $(document).on("mouseup", () => $(document).off("mousemove", drag));
+        $canvas.on("mouseup", () => $canvas.off("mousemove", drag));
     });
 
-    $(document).on("wheel", e => {
-        let amtToMove = e.originalEvent.deltaY / 200;
-        let dist = vec3.length(eye.position);
+    $canvas.on("wheel", e => {
+        const amtToMove = e.originalEvent.deltaY / 200;
+        const dist = vec3.length(eye.position);
         // constrain the distance away from keyboard to [2, 10]
         const MIN_DIST = 4;
         const MAX_DIST = 20;
-        let newDist = Math.max(MIN_DIST, Math.min(MAX_DIST, dist + amtToMove));
+        const newDist = Math.max(MIN_DIST, Math.min(MAX_DIST, dist + amtToMove));
         eye.position = vec3.scale(vec3.create(), vec3.normalize(vec3.create(), eye.position), newDist);
         renderScene();
     })
 
     setupShaders();
-
-    loadModels("tofu65", "cherry", "modern dolch light");
 }

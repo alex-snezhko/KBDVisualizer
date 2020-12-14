@@ -1,0 +1,36 @@
+[
+    {
+        "Name": "Drop ALT",
+        "Image": "https://images-na.ssl-images-amazon.com/images/I/416GMvLaToL._AC_SY400_.jpg",
+        "Link": "https://drop.com/buy/drop-alt-mechanical-keyboard",
+        "Base Price": 200,
+        "Form Factor": "65%",
+        "Case": "Aluminum",
+        "Plate": "Aluminum",
+        "PCB": "Hot-swap RGB",
+        "Switches": {"type": "selection", "options": [
+            {"type": "Cherry MX Black", "extra": 20},
+            {"type": "Cherry MX Brown", "extra": 20},
+            "Halo True"
+        ]},
+        "Keycaps": "Shine-through Doubleshot PBT",
+        "Stabilizers": "Plate-mount"
+    },
+    {
+        "Name": "Vega",
+        "Image": "https://cdn.shopify.com/s/files/1/0509/7062/4178/products/image0_1_f731cf95-d8a3-4d0c-a084-ff8e3f0ee63f_1090x@2x.jpg?v=1605541773",
+        "Link": "https://typeplus.net/products/jdsklfjakfjsdkfjlasjklfaksldfjklasdjfklasdjfksjaldfjla",
+        "Base Price": 325,
+        "Form Factor": "65%",
+        "Case": {"type": "selection", "options": ["Black", "Gray", "White", "Blue", "Green", "Purple"]},
+        "Plate": {"type": "selection", "options": ["Aluminum", "Brass"]}
+    },
+    {
+        "Name": "ASDF",
+        "Image": "https://buffer.com/library/content/images/library/wp-content/uploads/2015/11/long-url.png",
+        "Base Price": 325,
+        "Form Factor": "65%",
+        "Case": {"type": "selection", "options": ["Black", "Gray", "White", "Blue", "Green", "Purple"]},
+        "Plate": {"type": "selection", "options": ["Aluminum", "Brass"]}
+    }
+]
