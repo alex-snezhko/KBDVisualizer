@@ -69,5 +69,7 @@ Signature plastics abs
 
 
 
-GMK alter: 209 20 15 -> 290 20 15
-GMK delta: RAL ? -> CR
+GMK Alter: 209 20 15 -> 290 20 15
+GMK Delta: RAL ? -> CR
+GMK Deep Navy: Pantone 282 C
+GMK Hero: 2 custom pantones, one RAL; no GMK colors

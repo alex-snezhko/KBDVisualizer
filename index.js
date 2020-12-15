@@ -364,71 +364,64 @@ class ItemManager extends React.Component {
 
 
 
-        // this.state.selectedItems = {
-        //     "Kit": null,
-        //     "Case": {
-        //         "Name": "60% Bamboo Case",
-        //         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_09f45ed2-421b-47a6-9b76-856a6609a280_1800x1800.jpg?v=1584436781",
-        //         "Link": "https://kbdfans.com/collections/case/products/60-bamboo-case",
-        //         "Base Price": 58,
-        //         "Form Factor": "60%",
-        //         "Mount Method": "Tray Mount",
-        //         "Material": "Bamboo",
-        //         "Primary Color": "Wood",
-        //         price: 1
-        //     },
-        //     "Plate": {
-        //         "Name": "KBDPad MKII Brass Plate",
-        //         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8_d0a22ed5-026f-4709-b469-2cb6d618abb1_1800x1800.jpg?v=1601098440",
-        //         "Link": "https://kbdfans.com/collections/plate/products/kbdpad-mkii-brass-plate",
-        //         "Base Price": 18,
-        //         "Form Factor": "Numpad",
-        //         "Material": "Brass",
-        //         price: 1
-        //     },
-        //     "PCB": {
-        //         "Name": "DZ60 Rev 3.0 PCB",
-        //         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/c_1_1800x1800.jpg?v=1584436582",
-        //         "Link": "https://kbdfans.com/collections/pcb/products/dz60-60-pcb",
-        //         "Base Price": 38,
-        //         "Form Factor": "60%",
-        //         "Hot-swap": "No",
-        //         "Backlight": "RGB Underglow",
-        //         price: 1
-        //     },
-        //     "Switches": {
-        //         "Name": "Cherry MX Red",
-        //         "Image": "https://www.cherrymx.de/_Resources/Persistent/d4e5d661da4d28eb2c5d6321289c29ac2d6cbd56/img-productstage-mxRed%402x_100-368x368.png",
-        //         "Link": "https://www.cherrymx.de/en/mx-original/mx-red.html",
-        //         "Base Price": 1,
-        //         "Tactility": "Linear",
-        //         "Spring Weight": "46g",
-        //         "Actuation Distance": "2.0 mm",
-        //         "Bottom-out Distance": "4.0 mm",
-        //         price: 1
-        //     },
-        //     "Keycaps": {
-        //         "Name": "GMK White DarkGrey",
-        //         "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/whitedark-grey/kits_pics/base.png",
-        //         "Link": "https://geekhack.org/index.php?topic=48798.0",
-        //         "Base Price": 120,
-        //         "Colors": [
-        //             "Black",
-        //             "White"
-        //         ],
-        //         "Material": "ABS",
-        //         "Legends": "Doubleshot",
-        //         price: 1
-        //     },
-        //     "Stabilizers": {
-        //         "Name": "GMK Screw-in Stabilizers",
-        //         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/O1CN01MtwenC1amQ9FHFKxo__134583372_1800x1800.jpg?v=1598932169",
-        //         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/gmk-screw-in-stabilizers",
-        //         "Base Price": 19,
-        //         "Mount Method": "PCB Screw-in",
-        //         price: 1
-        //     }
-        // }
+        this.state.selectedItems = {
+            "Kit": null,
+            "Case": {
+                "Name": "60% Bamboo Case",
+                "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_09f45ed2-421b-47a6-9b76-856a6609a280_1800x1800.jpg?v=1584436781",
+                "Link": "https://kbdfans.com/collections/case/products/60-bamboo-case",
+                "Base Price": 58,
+                "Form Factor": "60%",
+                "Mount Method": "Tray Mount",
+                "Material": "Bamboo",
+                "Primary Color": "Wood",
+                price: 1
+            },
+            "Plate": {
+                "Name": "KBDPad MKII Brass Plate",
+                "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8_d0a22ed5-026f-4709-b469-2cb6d618abb1_1800x1800.jpg?v=1601098440",
+                "Link": "https://kbdfans.com/collections/plate/products/kbdpad-mkii-brass-plate",
+                "Base Price": 18,
+                "Form Factor": "Numpad",
+                "Material": "Brass",
+                price: 1
+            },
+            "PCB": {
+                "Name": "DZ60 Rev 3.0 PCB",
+                "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/c_1_1800x1800.jpg?v=1584436582",
+                "Link": "https://kbdfans.com/collections/pcb/products/dz60-60-pcb",
+                "Base Price": 38,
+                "Form Factor": "60%",
+                "Hot-swap": "No",
+                "Backlight": "RGB Underglow",
+                price: 1
+            },
+            "Switches": {
+                "Name": "Cherry MX Red",
+                "Image": "https://www.cherrymx.de/_Resources/Persistent/d4e5d661da4d28eb2c5d6321289c29ac2d6cbd56/img-productstage-mxRed%402x_100-368x368.png",
+                "Link": "https://www.cherrymx.de/en/mx-original/mx-red.html",
+                "Base Price": 1,
+                "Tactility": "Linear",
+                "Spring Weight": "46g",
+                "Actuation Distance": "2.0 mm",
+                "Bottom-out Distance": "4.0 mm",
+                price: 1
+            },
+            "Keycaps": {
+                "Name": "GMK White DarkGrey",
+                "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/whitedark-grey/kits_pics/base.png",
+                "Link": "https://geekhack.org/index.php?topic=48798.0",
+                "Base Price": 120,
+                "Colors": [
+                    "Black",
+                    "White"
+                ],
+                "Material": "ABS",
+                "Legends": "Doubleshot",
+                price: 1
+            },
+            "Stabilizers": null
+        }
     }
 
     handleBrowseItem(itemType) {

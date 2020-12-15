@@ -669,8 +669,8 @@ function initKBRender() {
     const $canvas = $("#webGLCanvas");
     const canvas = $canvas[0];
     const w = window.innerWidth;
-    canvas.width = w;
-    canvas.height = w / 2;
+    // canvas.width = w;
+    // canvas.height = w / 2;
 
     canvas.style.width = w + "px";
     canvas.style.height = (w / 2) + "px";
