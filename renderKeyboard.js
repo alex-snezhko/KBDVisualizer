@@ -1,15 +1,41 @@
 "use strict";
 
 let gl = null;
+// let progsInfo = {
+//     textured: {
+//         program: null,
+//         locs: {},
+//         buffers: {}
+//     },
+//     untextured: {
+//         program: null,
+//         locs: {},
+//         buffers: {}
+//     },
+//     selection: {
+//         program: null,
+//         locs: {},
+//         buffers: {}
+//     }
+// }
+
 let progsInfo = {
     textured: {
         program: null,
-        locs: {},
+        attribs: {},
+        uniforms: {},
         buffers: {}
     },
     untextured: {
         program: null,
-        locs: {},
+        attribs: {},
+        uniforms: {},
+        buffers: {}
+    },
+    selection: {
+        program: null,
+        attribs: {},
+        uniforms: {},
         buffers: {}
     }
 }
@@ -27,43 +53,55 @@ let keyRenderInstructions = [];
 const SPECIAL_NUM_UNITS = {
     "Backspace": 2,
     "Tab": 1.5,
-    "\\": 1.5,
+    "Backslash": 1.5,
     "Caps": 1.75,
-    "Enter": 2.25,
+    "ANSIEnter": 2.25,
     "LShift": 2.25,
-    "RShift1.75": 1.75,
-    "Ctrl1.25": 1.25,
-    "Win1.25": 1.25,
-    "Alt1.25": 1.25,
-    "Space_6.25U": 6.25
+    "RShift1_75": 1.75,
+    "RShift2_75": 2.75,
+    "LCtrl1_25": 1.25,
+    "LWin1_25": 1.25,
+    "LAlt1_25": 1.25,
+    "LCtrl1_5": 1.5,
+    "LWin1_5": 1.5,
+    "LAlt1_5": 1.5,
+    "RCtrl1_25": 1.25,
+    "RWin1_25": 1.25,
+    "RAlt1_25": 1.25,
+    "RCtrl1_5": 1.5,
+    "RWin1_5": 1.5,
+    "RAlt1_5": 1.5,
+    "Fn1_25": 1.25,
+    "Fn1_5": 1.5,
+    "Space6": 6,
+    "Space6_25": 6.25,
+    "Space7": 7,
+    "Num0": 2
 }
 
 const SPECIAL_KEYCAP_IDENTIFIERS = new Set([
-    "Space_6.25U", "Space_6U", "Space_7U", "Numpad_Enter", "Numpad_Plus", "ISO_Enter"
+    "Space6_25", "Space6", "Space7", "NumEnter", "NumPlus", "ISOEnter"
 ]);
 
-const ALPHAS = new Set([
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=",
-    "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\",
-    "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'",
-    "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/",
-]);
+// , "Minus",
+//     "Equals", "Backspace", "OSqr", "CSqr", "Backspace", "Semicolon", "Apostrophe",
+//     "Comma", "Period", "Forwardslash"
 
 
 // TODO store in DB
 
 // TODO checkbox for split space, split shifts, etc
 
-class Key {
-    constructor(row, kind, keycapColor, legendTexture, legendColor) {
-        this.keycapIdentifier = row != null ? `R${row}_${kind}U` : kind;
-        this.kind = kind;
-        this.color = keycapColor;
-        this.texture = legendTexture;
-        this.legendColor = legendColor;
-        this.units = SPECIAL_NUM_UNITS[kind] ? SPECIAL_NUM_UNITS[kind] : 1;
-    }
-}
+// class Key {
+//     constructor(row, kind, keycapColor, legendTexture, legendColor) {
+//         this.modelIdentifier = row != null ? `R${row}_${kind}U` : kind;
+//         this.kind = kind;
+//         this.color = keycapColor;
+//         this.texture = legendTexture;
+//         this.legendColor = legendColor;
+//         this.units = SPECIAL_NUM_UNITS[kind] ? SPECIAL_NUM_UNITS[kind] : 1;
+//     }
+// }
 
 function rotateView(ang, axis) {
     const rotationMat = mat4.fromRotation(mat4.create(), ang, axis);
@@ -101,46 +139,71 @@ function loadTexture(url) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
         gl.UNSIGNED_BYTE, new Uint8Array([0, 255, 255, 0]));
 
-    const img = new Image();
-    img.onload = () => {
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    return {
+        texture,
+        loadTexturePromise: new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => {
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    
+                const isPowerOf2 = x => (x & (x - 1)) == 0;
+                if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
+                    gl.generateMipmap(gl.TEXTURE_2D);
+                } else {
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                }
+    
+                resolve(img);
+            }
+            img.src = url;
 
-        const isPowerOf2 = x => (x & (x - 1)) == 0;
-        if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
-            gl.generateMipmap(gl.TEXTURE_2D);
-        } else {
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        }
+            // TODO remove when working
+            resolve(img);
+        })
     }
-    img.src = url;
-
-    return texture;
 }
 
-function getKeycapInfo(key, keycapsInfo) {
-    let legendTexture;
-    if (keycapsInfo.font == "std GMK") {
-        legendTexture = loadTexture("resources/legends/" + key + ".png");
-    } else {
-        alert("Problem loading keycap font");
+const ALPHAS = new Set([
+    "Tilde", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Minus", "Equals",
+    "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "OSqr", "CSqr", "Backslash",
+    "A", "S", "D", "F", "G", "H", "J", "K", "L", "Semicolon", "Apostrophe",
+    "Z", "X", "C", "V", "B", "N", "M", "Comma", "Period", "Forwardslash", "Space6", "Space6_25", "Space7",
+    "Num0", "Num1", "Num2", "Num3", "Num4", "Num5", "Num6", "Num7", "Num8", "Num9", "NumPoint"
+]);
+
+const ACCENTS = new Set(["Esc", "ANSIEnter", "ISOEnter", "NumEnter"]);
+
+function getKeycapColorOptions(key, keycapsInfo) {
+    // keep a list of all possible color options available for this keycap
+    let colorOptions = [];
+
+    if (ACCENTS.has(key)) {
+        colorOptions.push(...keycapsInfo.accents);
     }
 
-    const stdLayoutInfo = keycapsInfo.standard;
+    let exception;
+    if (exception = keycapsInfo.exceptions.find(e => e.keys.includes(key))) {
+        colorOptions.push(exception);
+    } else if (ALPHAS.has(key)) {
+        colorOptions.push(keycapsInfo.alphas);
+    } else {
+        colorOptions.push(keycapsInfo.mods);
+    }
 
-    // first check if is alpha, then if is exception, otherwise use the 'others'
-    const keyInfo = ALPHAS.has(key) ? stdLayoutInfo.alphas :
-                  stdLayoutInfo.exceptions.find(e => e.key == key) ||
-                  stdLayoutInfo.others;
+    const extraOptions = keycapsInfo.extras.filter(e => e.keys.includes(key));
+    colorOptions.push(...extraOptions);
 
     return {
-        legendTexture,
-        keycapColor: keyInfo.keycapColor,
-        legendColor: keyInfo.legendColor
-    }
+        colorOptions,
+        optionSelected: 0
+    };
 }
+
+let keyToObjectId = {};
+let objectIdToKey = [];
 
 function loadModels(kbdName, keycapProfile, keycapSet) {
     if (gl == null) {
@@ -153,7 +216,7 @@ function loadModels(kbdName, keycapProfile, keycapSet) {
     let keycapsInfo;
     Promise.all([
         fetchJson("keyboardInfo").then(allKbdInfo => kbdInfo = allKbdInfo[kbdName]),
-        fetchJson("keycapInfo").then(allKcInfo => keycapsInfo = allKcInfo[keycapProfile][keycapSet])
+        fetchJson("keycapInfo").then(allKcInfo => keycapsInfo = allKcInfo[keycapSet])
     ]).then(() => {
         // ---------------------------------------------------------------------------
         // prepare all necessary information for setting up key rendering instructions
@@ -190,27 +253,42 @@ function loadModels(kbdName, keycapProfile, keycapSet) {
             for (const key of kg.keys) {
                 // if this key is not special (non-1u), then it must be 1 unit wide
                 const keysize = SPECIAL_NUM_UNITS[key] || 1;
-                const keycapIdentifier = SPECIAL_KEYCAP_IDENTIFIERS.has(key) ? key : `R${kg.row}_${keysize}U`;
+                const keysizeStr = keysize.toString().replace(".", "_");
+                const modelIdentifier = SPECIAL_KEYCAP_IDENTIFIERS.has(key) ? key : `R${kg.row}_${keysizeStr}U`;
 
                 // if a keycap with these dimensions has not been loaded yet, then load it
-                if (!keycapModelsVisited.has(keycapIdentifier)) {
+                if (!keycapModelsVisited.has(modelIdentifier)) {
                     let bufs = progsInfo.textured.buffers;
-                    bufs[keycapIdentifier] = {};
+                    bufs[modelIdentifier] = {};
                     resourceLoadPromises.push(
-                        fetchJson(keycapProfile + "_" + keycapIdentifier)
-                        .then(keycapModel => loadGLBuffers(bufs[keycapIdentifier], keycapModel, true)));
-                    keycapModelsVisited.add(keycapIdentifier);
+                        fetchJson(`models/keycaps/${keycapProfile}/${modelIdentifier}`)
+                        .then(keycapModel => loadGLBuffers(bufs[modelIdentifier], keycapModel, true)));
+                    keycapModelsVisited.add(modelIdentifier);
                 }
 
                 // move keycap to middle of keycap area
                 const toPosMat = mat4.fromTranslation(mat4.create(), [posXZ[0] + keysize / 2, 0, posXZ[2]]);
                 const finalTransformationMat = mat4.multiply(mat4.create(), heightInclineMat, toPosMat);
+
+                // load legend texture
+                const { loadTexturePromise, texture } = loadTexture("resources/legends/" + key + ".png");
+                resourceLoadPromises.push(loadTexturePromise);
+
+                // construct an object to represent all relevant information of a keycap for rendering
+                const keycapObj = {
+                    modelIdentifier,
+                    transformation: finalTransformationMat,
+                    legendTexture: texture,
+                    ...getKeycapColorOptions(key, keycapsInfo),
+                }
+
+                // find an appropriate object id for this key
+                const objectId = objectIdToKey.length;
+                objectIdToKey.push(keycapObj);
+                keyToObjectId[key] = objectId;
+                keycapObj.objectId = objectId;
                 
-                keyRenderInstructions.push({
-                    keycapIdentifier,
-                    keycapInfo: getKeycapInfo(key, keycapsInfo),
-                    transformation: finalTransformationMat
-                })
+                keyRenderInstructions.push(keycapObj);
                 posXZ[0] += keysize;
             }
         }
@@ -218,51 +296,69 @@ function loadModels(kbdName, keycapProfile, keycapSet) {
         // load case
         progsInfo.untextured.buffers["case"] = {};
         resourceLoadPromises.push(
-            fetchJson("Case_" + kbdName)
+            fetchJson("models/cases/tofu65" /* TODO + kbdName*/)
             .then(trianglesInfo => loadGLBuffers(progsInfo.untextured.buffers["case"], trianglesInfo, false)));
 
+        // load switches
+        progsInfo.untextured.buffers["switch"] = {};
+        resourceLoadPromises.push(
+            fetchJson("models/switch")
+            .then(switchInfo => loadGLBuffers(progsInfo.untextured.buffers["switch"], switchInfo, false)));
+
+        // load stabs
+        // progsInfo.untextured.buffers["stabilizer"] = {};
+        // resourceLoadPromises.push(
+        //     fetchJson("models/stabilizer")
+        //     .then(switchInfo => loadGLBuffers(progsInfo.untextured.buffers["stabilizer"], switchInfo, false)));
+
         // render once all loaded
-        Promise.all(resourceLoadPromises).then(() => renderScene())
-        .catch(err => alert("Error loading resource file: " + err));
+        Promise.all(resourceLoadPromises).then(() => resizeCanvas())
+        //.catch(err => alert("Error loading resource file: " + err));
     });
 }
 
-function renderObject(identifier, uniformsToSet) {
-    const isTextured = progsInfo.textured.buffers[identifier] !== undefined;
+function renderObject(progInfo, buffers, uniformVals) {
+    gl.useProgram(progInfo.program);
 
-    const progInfo = isTextured ? progsInfo.textured : progsInfo.untextured;
-    const { program, locs } = progInfo;
-    const buffers = progInfo.buffers[identifier];
-
-    gl.useProgram(program);
-
-    for (const uniform of uniformsToSet) {
-        uniform.method(uniform.loc, ...uniform.params);
+    for (const attribName in progInfo.attribs) {
+        const attrib = progInfo.attribs[attribName];
+        gl.enableVertexAttribArray(attrib.loc);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers[attrib.bufferName]);
+        gl.vertexAttribPointer(attrib.loc, ...attrib.vapParams);
     }
 
-    gl.enableVertexAttribArray(locs.aVertexPositionLoc);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertices);
-    gl.vertexAttribPointer(locs.aVertexPositionLoc, 3, gl.FLOAT, false, 0, 0);
-
-    gl.enableVertexAttribArray(locs.aVertexNormalLoc);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normals);
-    gl.vertexAttribPointer(locs.aVertexNormalLoc, 3, gl.FLOAT, false, 0, 0);
-
-    if (isTextured) {
-        gl.enableVertexAttribArray(locs.aVertexUVLoc);
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.uvs);
-        gl.vertexAttribPointer(locs.aVertexUVLoc, 2, gl.FLOAT, false, 0, 0);
+    for (const uniformName in uniformVals) {
+        const uniform = progInfo.uniforms[uniformName];
+        uniform.method(uniform.loc, ...uniformVals[uniformName]);
     }
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.triangles);
     gl.drawElements(gl.TRIANGLES, buffers.numTriangles * 3, gl.UNSIGNED_SHORT, 0);
 
-    gl.disableVertexAttribArray(locs.aVertexPositionLoc);
-    gl.disableVertexAttribArray(locs.aVertexNormalLoc);
-    if (isTextured) {
-        gl.disableVertexAttribArray(locs.aVertexUVLoc);
+    for (const attribName in progInfo.attribs) {
+        gl.disableVertexAttribArray(progInfo.attribs[attribName].loc);
     }
 }
+
+let blinkProportion = 0;
+let increasing = true;
+setInterval(() => {
+    if (highlightKeys) {
+        if (increasing) {
+            blinkProportion = Math.min(1, blinkProportion + 0.05);
+            if (blinkProportion == 1) {
+                increasing = false;
+            }
+        } else {
+            blinkProportion = Math.max(0, blinkProportion - 0.05);
+            if (blinkProportion == 0) {
+                increasing = true;
+            }
+        }
+
+        renderScene();
+    }
+}, 20);
 
 function renderScene() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -271,192 +367,127 @@ function renderScene() {
     const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
     const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
 
-    const utLocs = progsInfo.untextured.locs;
-    const tLocs = progsInfo.textured.locs;
+    renderObject(progsInfo.untextured, progsInfo.untextured.buffers["case"], {
+        uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
+        uMVPMat: [false, viewProjMat],
+        uModelMat: [false, mat4.create()],
+        uColor: [0.1, 0.1, 0.1]
+    });
 
-    // gl.useProgram(progsInfo.untextured.program);
-    // gl.enableVertexAttribArray(untexturedLocs.aVertexPositionLoc);
-    // gl.enableVertexAttribArray(untexturedLocs.aVertexNormalLoc);
-
-    
-
-    // gl.uniform3f(utLocs.uEyePositionLoc, eye.position[0], eye.position[1], eye.position[2]);
-
-    // // render case
-    // gl.uniformMatrix4fv(utLocs.uMVPMatLoc, false, viewProjMat);
-    // gl.uniformMatrix4fv(utLocs.uModelMatLoc, false, mat4.create());
-    // gl.uniform3fv(utLocs.uColorLoc, [0.1, 0.1, 0.1]);
-
-    const uniformsToSet = uniforms => uniforms.map(u => ({ loc: u[0], method: u[1].bind(gl), params: u[2] }));
-    const uniforms = uniformsToSet([
-        [utLocs.uEyePositionLoc, gl.uniform3f, [eye.position[0], eye.position[1], eye.position[2]]],
-        [utLocs.uMVPMatLoc, gl.uniformMatrix4fv, [false, viewProjMat]],
-        [utLocs.uModelMatLoc, gl.uniformMatrix4fv, [false, mat4.create()]],
-        [utLocs.uColorLoc, gl.uniform3f, [0.1, 0.1, 0.1]]
-    ]);
-    
-    renderObject("case", uniforms);
-
-    // gl.disableVertexAttribArray(untexturedLocs.aVertexPositionLoc);
-    // gl.disableVertexAttribArray(untexturedLocs.aVertexNormalLoc);
-
-    // gl.useProgram(progsInfo.textured.program);
-
-    // gl.uniform3f(tLocs.uEyePositionLoc, eye.position[0], eye.position[1], eye.position[2]);
-    // // gl.enableVertexAttribArray(texturedLocs.aVertexPositionLoc);
-    // // gl.enableVertexAttribArray(texturedLocs.aVertexNormalLoc);
-    // // gl.enableVertexAttribArray(texturedLocs.aVertexUVLoc);
     // render keys
     for (const instr of keyRenderInstructions) {
-        // gl.uniformMatrix4fv(tLocs.uModelMatLoc, false, instr.transformation);
         const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
-        // gl.uniformMatrix4fv(tLocs.uMVPMatLoc, false, modelViewProjMat);
-        // gl.uniform3fv(tLocs.uColorLoc, instr.keycapInfo.keycapColor);
+
+        // render keyswitch
+        renderObject(progsInfo.untextured, progsInfo.untextured.buffers["switch"], {
+            uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
+            uMVPMat: [false, modelViewProjMat],
+            uModelMat: [false, instr.transformation],
+            uColor: [0, 1, 0] /* TODO use switch color */
+        });
+
+        // render keycap
+
+        const colorData = instr.colorOptions[instr.optionSelected];
 
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, instr.keycapInfo.legendTexture);
-        // gl.uniform1f(tLocs.uTextureLoc, 0);
+        gl.bindTexture(gl.TEXTURE_2D, instr.legendTexture);
 
-        // gl.uniform3fv(tLocs.uTextureColorLoc, [0, 0, 0]);//instr.keycapInfo.legendColor);
-
-        // const a = gl.getVertexAttrib(0,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
-        // const b = gl.getVertexAttrib(1,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
-        // const c = gl.getVertexAttrib(2,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
-        // const d = gl.getVertexAttrib(3,gl.VERTEX_ATTRIB_ARRAY_ENABLED);
-
-        const uniforms = uniformsToSet([
-            [tLocs.uEyePositionLoc, gl.uniform3f, [eye.position[0], eye.position[1], eye.position[2]]],
-            [tLocs.uMVPMatLoc, gl.uniformMatrix4fv, [false, modelViewProjMat]],
-            [tLocs.uModelMatLoc, gl.uniformMatrix4fv, [false, instr.transformation]],
-            [tLocs.uColorLoc, gl.uniform3f, instr.keycapInfo.keycapColor],
-            [tLocs.uTexture, gl.uniform1f, [0]],
-            [tLocs.uTextureColorLoc, gl.uniform3f, [0, 0, 1]]
-        ]);
-
-        renderObject(instr.keycapIdentifier, uniforms);
-
-        // const glObjectBuffer = progsInfo.textured.buffers[instr.keycapIdentifier];
-
-        // gl.bindBuffer(gl.ARRAY_BUFFER, glObjectBuffer.vertices);
-        // gl.vertexAttribPointer(texturedLocs.aVertexPositionLoc, 3, gl.FLOAT, false, 0, 0);
-
-        // gl.bindBuffer(gl.ARRAY_BUFFER, glObjectBuffer.normals);
-        // gl.vertexAttribPointer(texturedLocs.aVertexNormalLoc, 3, gl.FLOAT, false, 0, 0);
-
-        // gl.bindBuffer(gl.ARRAY_BUFFER, glObjectBuffer.uvs);
-        // gl.vertexAttribPointer(texturedLocs.aVertexUVLoc, 2, gl.FLOAT, false, 0, 0);
-
-        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glObjectBuffer.triangles);
-        // gl.drawElements(gl.TRIANGLES, glObjectBuffer.numTriangles * 3, gl.UNSIGNED_SHORT, 0);
+        renderObject(progsInfo.textured, progsInfo.textured.buffers[instr.modelIdentifier], {
+            uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
+            uMVPMat: [false, modelViewProjMat],
+            uModelMat: [false, instr.transformation],
+            uColor: colorData.keycapColor,
+            uTexture: [0],
+            uTextureColor: colorData.legendColor,
+            uIsBlinking: [highlightKeys && instr.colorOptions.length > 1],
+            uBlinkProportion: [blinkProportion]
+        });
     }
 
     // TODO maybe refactor this to first drawing all textured items and then untextured
 }
 
+let highlightKeys = false;
+function toggleHighlightKeys() {
+    highlightKeys = !highlightKeys;
+    renderScene();
+}
+
+let fullCustom = false;
+function enableFullCustom() {
+    highlightKeys = false;
+    fullCustom = true;
+
+}
+
+function renderSelection() {
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    const projMat = mat4.perspective(mat4.create(), Math.PI / 2, 2, 0.1, 1000);
+    const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
+    const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
+
+    renderObject(progsInfo.selection, progsInfo.untextured.buffers["case"], {
+        uMVPMat: [false, viewProjMat],
+        uModelMat: [false, mat4.create()],
+        uObjectId: [0]
+    });
+
+    // render keys
+    for (const { transformation, objectId, modelIdentifier } of keyRenderInstructions) {
+        const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, transformation);
+
+        renderObject(progsInfo.selection, progsInfo.untextured.buffers["switch"], {
+            uMVPMat: [false, modelViewProjMat],
+            uModelMat: [false, transformation],
+            uObjectId: [0]
+        });
+
+        renderObject(progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], {
+            uMVPMat: [false, modelViewProjMat],
+            uModelMat: [false, transformation],
+            uObjectId: [objectId]
+        });
+    }
+}
+
+function canvasClicked(event) {
+    const { left, top, height } = event.target.getBoundingClientRect();
+
+    const x = event.clientX - left;
+    const y = height - (event.clientY - top);
+
+    renderSelection();
+
+    let pixelClicked = new Uint8Array(4);
+    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelClicked);
+
+    if (pixelClicked[1] == 255) {
+        const key = objectIdToKey[pixelClicked[0]];
+        key.optionSelected = (key.optionSelected + 1) % key.colorOptions.length;
+    }
+
+    renderScene();
+}
+
 function setupShaders() {
-    // // define vertex shader in essl
-    // const sharedVShaderSrcHeader = `
-    //     attribute vec3 aVertexPosition; // vertex position
-    //     attribute vec3 aVertexNormal; // vertex normal
-        
-    //     uniform mat4 uModelMatrix; // model matrix
-    //     uniform mat4 uMVPMatrix; // projection-view-model matrix
-        
-    //     varying vec3 vWorldPos; // interpolated world position of vertex
-    //     varying vec3 vVertexNormal; // interpolated normal for frag shader
-    // `;
-    // const sharedVShaderSrcMain = `
-    //     void main(void) {
-    //         // vertex position
-    //         vec4 vWorldPos4 = uModelMatrix * vec4(aVertexPosition, 1.0);
-    //         vWorldPos = vec3(vWorldPos4.x,vWorldPos4.y,vWorldPos4.z);
-    //         gl_Position = uMVPMatrix * vec4(aVertexPosition, 1.0);
+    // ------------------------------------------------------------------
+    // define source to be shared between untextured and textured shaders
+    // ------------------------------------------------------------------
 
-    //         // vertex normal (assume no non-uniform scale)
-    //         vec4 vWorldNormal4 = uModelMatrix * vec4(aVertexNormal, 0.0);
-    //         vVertexNormal = normalize(vec3(vWorldNormal4.x, vWorldNormal4.y, vWorldNormal4.z));
-    // `;
-
-    // const vShaderUntexturedSrc = sharedVShaderSrcHeader + sharedVShaderSrcMain + "}";
-    // const vShaderTexturedSrc = sharedVShaderSrcHeader + `
-    //         attribute vec2 aVertexUV;
-    //         varying vec2 vVertexUV;
-    //     ` + sharedVShaderSrcMain + "vVertexUV = aVertexUV; }";
-
-    // const sharedFShaderSrcHeader = `
-    //     precision mediump float;
-
-    //     // eye world position
-    //     uniform vec3 uEyePosition;
-
-    //     uniform vec3 uColor;
-        
-    //     // geometry properties
-    //     varying vec3 vWorldPos; // world xyz of fragment
-    //     varying vec3 vVertexNormal; // normal of fragment
-    // `;
-    // const sharedFShaderSrcMain = `
-    //     void main(void) {
-    //         vec3 ambient = uColor * 0.4;
-    //         vec3 kDiffuse = uColor * 0.4;
-    //         vec3 kSpecular = vec3(0.2, 0.2, 0.2);
-
-    //         vec3 normal = normalize(vVertexNormal); 
-
-    //         vec3 lightPos = vec3(5.0, 10.0, 10.0);
-
-    //         // compute diffuse term
-    //         vec3 toLight = normalize(lightPos - vWorldPos);
-    //         float lambert = max(0.0, dot(normal, toLight));
-    //         vec3 diffuse = kDiffuse * lambert;
-            
-    //         // compute specular term
-    //         vec3 toEye = normalize(uEyePosition - vWorldPos);
-    //         vec3 halfVec = normalize(toLight + toEye);
-    //         float highlight = pow(max(0.0, dot(normal, halfVec)), 3.0);
-    //         vec3 specular = kSpecular * highlight;
-            
-    //         // combine ambient, diffuse, specular to output color
-    //         vec3 colorOut = ambient + diffuse + specular;
-    // `;
-    
-    // const fShaderUntexturedSrc = sharedFShaderSrcHeader + sharedFShaderSrcMain +
-    //     "gl_FragColor = vec4(colorOut, 1.0); }";
-    // const fShaderTexturedSrc = sharedFShaderSrcHeader + `
-    //         varying vec2 vVertexUV;
-    //         uniform sampler2D uTexture;
-    //         uniform vec3 uTextureColor;
-    //     ` + sharedFShaderSrcMain + `
-    //         vec2 actualUV = vec2(1.0 - vVertexUV.s, 1.0 - vVertexUV.t);
-    //         vec4 colorFromTexture = texture2D(uTexture, actualUV);
-    //         gl_FragColor = vec4(colorOut, 1.0) * colorFromTexture; }
-    //     `;
-
-
-
-    const vShaderUntexturedSrc = `
+    const vShaderSharedHeader = `
         attribute vec3 aVertexPosition; // vertex position
         attribute vec3 aVertexNormal; // vertex normal
         
-        uniform mat4 uModelMatrix; // model matrix
-        uniform mat4 uMVPMatrix; // projection-view-model matrix
+        uniform mat4 uModelMat; // model matrix
+        uniform mat4 uMVPMat; // model-view-projection matrix
         
         varying vec3 vWorldPos; // interpolated world position of vertex
         varying vec3 vVertexNormal; // interpolated normal for frag shader
-
-        void main(void) {
-            // vertex position
-            vec4 vWorldPos4 = uModelMatrix * vec4(aVertexPosition, 1.0);
-            vWorldPos = vec3(vWorldPos4.x,vWorldPos4.y,vWorldPos4.z);
-            gl_Position = uMVPMatrix * vec4(aVertexPosition, 1.0);
-
-            // vertex normal (assume no non-uniform scale)
-            vec4 vWorldNormal4 = uModelMatrix * vec4(aVertexNormal, 0.0);
-            vVertexNormal = normalize(vec3(vWorldNormal4.x, vWorldNormal4.y, vWorldNormal4.z));
-        }
     `;
 
-    const fShaderUntexturedSrc = `
+    const fShaderSharedHeader = `
         precision mediump float;
 
         // eye world position
@@ -467,12 +498,21 @@ function setupShaders() {
         // geometry properties
         varying vec3 vWorldPos; // world xyz of fragment
         varying vec3 vVertexNormal; // normal of fragment
+    `;
 
-        void main(void) {
-            vec3 ambient = uColor * 0.4;
-            vec3 kDiffuse = uColor * 0.4;
-            vec3 kSpecular = vec3(0.2, 0.2, 0.2);
+    const vShaderSharedBody = `
+        // vertex position
+        vec4 vWorldPos4 = uModelMat * vec4(aVertexPosition, 1.0);
+        vWorldPos = vec3(vWorldPos4.x,vWorldPos4.y,vWorldPos4.z);
+        gl_Position = uMVPMat * vec4(aVertexPosition, 1.0);
 
+        // vertex normal (assume no non-uniform scale)
+        vec4 vWorldNormal4 = uModelMat * vec4(aVertexNormal, 0.0);
+        vVertexNormal = normalize(vec3(vWorldNormal4.x, vWorldNormal4.y, vWorldNormal4.z));
+    `;
+
+    const blinnPhongFunction = `
+        vec3 blinnPhong(vec3 ambient, vec3 kDiff, vec3 kSpec) {
             vec3 normal = normalize(vVertexNormal); 
 
             vec3 lightPos = vec3(5.0, 10.0, 10.0);
@@ -480,44 +520,57 @@ function setupShaders() {
             // compute diffuse term
             vec3 toLight = normalize(lightPos - vWorldPos);
             float lambert = max(0.0, dot(normal, toLight));
-            vec3 diffuse = kDiffuse * lambert;
+            vec3 diffuse = kDiff * lambert;
             
             // compute specular term
             vec3 toEye = normalize(uEyePosition - vWorldPos);
             vec3 halfVec = normalize(toLight + toEye);
             float highlight = pow(max(0.0, dot(normal, halfVec)), 3.0);
-            vec3 specular = kSpecular * highlight;
+            vec3 specular = kSpec * highlight;
             
             // combine ambient, diffuse, specular to output color
-            vec3 colorFromLighting = ambient + diffuse + specular;
+            return ambient + diffuse + specular;
+        }
+    `;
+
+    // ------------------------
+    // untextured shader source
+    // ------------------------
+
+    const vShaderUntexturedSrc = `
+        ${vShaderSharedHeader}
+
+        void main(void) {
+            ${vShaderSharedBody}
+        }
+    `;
+
+    const fShaderUntexturedSrc = `
+        ${fShaderSharedHeader}
+
+        ${blinnPhongFunction}
+
+        void main(void) {
+            vec3 colorFromLighting = blinnPhong(uColor * 0.4, uColor * 0.4, vec3(0.2, 0.2, 0.2));
             gl_FragColor = vec4(colorFromLighting, 1.0);
         }
     `;
 
+    // ----------------------
+    // textured shader source
+    // ----------------------
+
     const vShaderTexturedSrc = `
-        attribute vec3 aVertexPosition; // vertex position
-        attribute vec3 aVertexNormal; // vertex normal
-        
-        uniform mat4 uModelMatrix; // model matrix
-        uniform mat4 uMVPMatrix; // projection-view-model matrix
-        
-        varying vec3 vWorldPos; // interpolated world position of vertex
-        varying vec3 vVertexNormal; // interpolated normal for frag shader
+        ${vShaderSharedHeader}
 
         attribute vec2 aVertexUV;
         varying vec2 vVertexUV;
 
         void main(void) {
-            // vertex position
-            vec4 vWorldPos4 = uModelMatrix * vec4(aVertexPosition, 1.0);
-            vWorldPos = vec3(vWorldPos4.x,vWorldPos4.y,vWorldPos4.z);
-            gl_Position = uMVPMatrix * vec4(aVertexPosition, 1.0);
-
-            // vertex normal (assume no non-uniform scale)
-            vec4 vWorldNormal4 = uModelMatrix * vec4(aVertexNormal, 0.0);
-            vVertexNormal = normalize(vec3(vWorldNormal4.x, vWorldNormal4.y, vWorldNormal4.z));
+            ${vShaderSharedBody}
 
             vVertexUV = aVertexUV;
+            // TODO
             if (vVertexUV.x == 0.0 && vVertexUV.y == 0.0) {
                 vVertexUV = vec2(-10000.0, -10000.0);
             }
@@ -525,43 +578,25 @@ function setupShaders() {
     `;
 
     const fShaderTexturedSrc = `
-        precision mediump float;
-
-        // eye world position
-        uniform vec3 uEyePosition;
-
-        uniform vec3 uColor;
-        
-        // geometry properties
-        varying vec3 vWorldPos; // world xyz of fragment
-        varying vec3 vVertexNormal; // normal of fragment
+        ${fShaderSharedHeader}
 
         varying vec2 vVertexUV;
+
         uniform sampler2D uTexture;
         uniform vec3 uTextureColor;
 
+        uniform bool uIsBlinking;
+        uniform float uBlinkProportion;
+
+        ${blinnPhongFunction}
+
         void main(void) {
-            vec3 ambient = uColor * 0.4;
-            vec3 kDiffuse = uColor * 0.4;
-            vec3 kSpecular = vec3(0.2, 0.2, 0.2);
+            vec3 colorFromLighting = blinnPhong(uColor * 0.4, uColor * 0.4, vec3(0.2, 0.2, 0.2));
+            if (uIsBlinking) {
+                vec3 blinkColor = vec3(1.0, 1.0, 0.0);
+                colorFromLighting = uBlinkProportion * blinkColor + (1.0 - uBlinkProportion) * colorFromLighting;
+            }
 
-            vec3 normal = normalize(vVertexNormal); 
-
-            vec3 lightPos = vec3(5.0, 10.0, 10.0);
-
-            // compute diffuse term
-            vec3 toLight = normalize(lightPos - vWorldPos);
-            float lambert = max(0.0, dot(normal, toLight));
-            vec3 diffuse = kDiffuse * lambert;
-            
-            // compute specular term
-            vec3 toEye = normalize(uEyePosition - vWorldPos);
-            vec3 halfVec = normalize(toLight + toEye);
-            float highlight = pow(max(0.0, dot(normal, halfVec)), 3.0);
-            vec3 specular = kSpecular * highlight;
-            
-            // combine ambient, diffuse, specular to output color
-            vec3 colorFromLighting = ambient + diffuse + specular;
             vec2 actualUV = vec2(1.0 - vVertexUV.s, vVertexUV.t);
             if (actualUV.x < 0.0 || actualUV.y < 0.0) {
                 gl_FragColor = vec4(colorFromLighting, 1.0);
@@ -569,24 +604,60 @@ function setupShaders() {
                 vec4 colorFromTexture = vec4(uTextureColor, 1.0) * texture2D(uTexture, actualUV);
                 float alpha = colorFromTexture.a;
 
+                // TODO make it so that lighting gets applied to texture correctly as well
                 vec3 colorOut = alpha * colorFromTexture.rgb + (1.0 - alpha) * colorFromLighting;
                 gl_FragColor = vec4(colorOut, 1.0);
             }
+        }
+    `;
+
+    // --------------------------------------------------
+    // shader source for selecting an object in the scene
+    // --------------------------------------------------
+
+    const vShaderSelectionSrc = `
+        attribute vec3 aVertexPosition; // vertex position
+        
+        uniform mat4 uModelMat; // model matrix
+        uniform mat4 uMVPMat; // model-view-projection matrix
+
+        void main(void) {
+            gl_Position = uMVPMat * vec4(aVertexPosition, 1.0);
+        }
+    `;
+
+    const fShaderSelectionSrc = `
+        precision mediump float;
+
+        uniform int uObjectId;
+
+        void main(void) {
+            vec3 color = vec3(float(uObjectId) / 255.0, 1.0, 1.0);
+            gl_FragColor = vec4(color, 1.0);
         }
     `;
     
     // compile vertex shader
     const vShaderUntextured = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vShaderUntextured, vShaderUntexturedSrc);
-    const vShaderTextured = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vShaderTextured, vShaderTexturedSrc);
-
     const fShaderUntextured = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fShaderUntextured, fShaderUntexturedSrc);
+
+    const vShaderTextured = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vShaderTextured, vShaderTexturedSrc);
     const fShaderTextured = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fShaderTextured, fShaderTexturedSrc);
 
-    for (const shader of [vShaderUntextured, vShaderTextured, fShaderUntextured, fShaderTextured]) {
+    const vShaderSelection = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vShaderSelection, vShaderSelectionSrc);
+    const fShaderSelection = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fShaderSelection, fShaderSelectionSrc);
+
+    for (const shader of [
+        vShaderUntextured, fShaderUntextured,
+        vShaderTextured, fShaderTextured,
+        vShaderSelection, fShaderSelection
+    ]) {
         gl.compileShader(shader);
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
             alert("Shader compilation error: " + gl.getShaderInfoLog(shader));
@@ -595,7 +666,7 @@ function setupShaders() {
         }
     }
 
-    const { textured, untextured } = progsInfo;
+    const { textured, untextured, selection } = progsInfo;
 
     // create shader program and link
     untextured.program = gl.createProgram();
@@ -606,7 +677,11 @@ function setupShaders() {
     gl.attachShader(textured.program, vShaderTextured);
     gl.attachShader(textured.program, fShaderTextured);
 
-    for (const program of [untextured.program, textured.program]) {
+    selection.program = gl.createProgram();
+    gl.attachShader(selection.program, vShaderSelection);
+    gl.attachShader(selection.program, fShaderSelection);
+
+    for (const program of [untextured.program, textured.program, selection.program]) {
         gl.linkProgram(program);
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
             alert("Shader program linking error: " + gl.getProgramInfoLog(program));
@@ -614,29 +689,63 @@ function setupShaders() {
         }
     }
 
-    for (const { locs, program } of [untextured, textured]) {
-        gl.useProgram(program);
+    function assignLocations(progInfo, attribs, uniforms) {
+        for (const attribName in attribs) {
+            const attribInfo = attribs[attribName];
+            progInfo.attribs[attribName] = {
+                loc: gl.getAttribLocation(progInfo.program, attribName),
+                ...attribInfo
+            }
+        }
 
-        // locate and enable vertex attributes
-        locs.aVertexPositionLoc = gl.getAttribLocation(program, "aVertexPosition");
-        
-        locs.aVertexNormalLoc = gl.getAttribLocation(program, "aVertexNormal");
-        
-        
-        // locate uniforms
-        locs.uColorLoc = gl.getUniformLocation(program, "uColor");
-        locs.uEyePositionLoc = gl.getUniformLocation(program, "uEyePosition");
-        locs.uModelMatLoc = gl.getUniformLocation(program, "uModelMatrix");
-        locs.uMVPMatLoc = gl.getUniformLocation(program, "uMVPMatrix");
+        for (const uniformName in uniforms) {
+            progInfo.uniforms[uniformName] = {
+                loc: gl.getUniformLocation(progInfo.program, uniformName),
+                method: uniforms[uniformName].bind(gl)
+            }
+        }
     }
 
-    gl.useProgram(textured.program);
+    // vapParams: the parameters that will be passed into gl.vertexAttribPointer when buffer binding
+    const V_INFO = { bufferName: "vertices", vapParams: [3, gl.FLOAT, false, 0, 0] };
+    const N_INFO = { bufferName: "normals", vapParams: [3, gl.FLOAT, false, 0, 0] };
+    const UV_INFO = { bufferName: "uvs", vapParams: [2, gl.FLOAT, false, 0, 0] };
 
-    textured.locs.aVertexUVLoc = gl.getAttribLocation(textured.program, "aVertexUV");
-    //gl.enableVertexAttribArray(progsInfo.textured.locs.aVertexUVLoc);
+    assignLocations(untextured, { aVertexPosition: V_INFO, aVertexNormal: N_INFO },
+        { uColor: gl.uniform3f, uEyePosition: gl.uniform3f, uModelMat: gl.uniformMatrix4fv, uMVPMat: gl.uniformMatrix4fv });
 
-    textured.locs.uTextureLoc = gl.getUniformLocation(textured.program, "uTexture");
-    textured.locs.uTextureColorLoc = gl.getUniformLocation(textured.program, "uTextureColor");
+    assignLocations(textured, { aVertexPosition: V_INFO, aVertexNormal: N_INFO, aVertexUV: UV_INFO },
+        { uColor: gl.uniform3f, uEyePosition: gl.uniform3f, uModelMat: gl.uniformMatrix4fv,
+            uMVPMat: gl.uniformMatrix4fv, uTexture: gl.uniform1i, uTextureColor: gl.uniform3f,
+            uIsBlinking: gl.uniform1i, uBlinkProportion: gl.uniform1f });
+
+    assignLocations(selection, { aVertexPosition: V_INFO },
+        { uModelMat: gl.uniformMatrix4fv, uMVPMat: gl.uniformMatrix4fv, uObjectId: gl.uniform1i });
+}
+
+let prevWidth = 0;
+function resizeCanvas() {
+    const $container = $("#render-container");
+    const $canvas = $("#webGLCanvas");
+    if ($container != null && $canvas.length > 0) {
+        const left = $container.offset().left;
+        const rightBound = $(window).width() - $container.css("marginRight").replace("px", "");
+        const w = Math.max(600, rightBound - left);
+        const h = Math.floor(w / 2);
+
+        if (prevWidth != w) {
+            const canvas = $canvas[0];
+            canvas.width = w;
+            canvas.height = h;
+
+            gl.viewport(0, 0, w, h);
+
+            renderScene();
+            prevWidth = w;
+        }
+
+        setupShaders();
+    }
 }
 
 // To-do list:
@@ -644,8 +753,6 @@ function setupShaders() {
 // different profiles
 // different textures
 
-// smooth scroll
-// invert spacebar
 // stepped caps
 // use async await
 // send flattened lists to loadGLBuffers
@@ -658,33 +765,35 @@ function setupShaders() {
 // use webgl built in alpha blending (gl.enable(GL.BLEND))
 // change implementation such that resources are only loaded if needed
 
+// highlight all keys that can be changed color
+// Test: Future funk, lunar, high voltage, metropolis, dmg, hallyu
+// fonts: pixel, dots, etc
+
 // UI
 // implement in-stock/vendor tracking
 // implement efficient item search (maybe Suffix Tree)
 // Implement show all/hide for filters with many items
-// Implement different kinds of filters - numeric range, must contain all of, must contain one of
-// fix honeywell & co keycaps
+// finish describing subjective colors
+// allow selection for different base kits of same set (e.g. Modern dolch)
 function initKBRender() {
     // get WebGL context
     const $canvas = $("#webGLCanvas");
     const canvas = $canvas[0];
-    const w = window.innerWidth;
-    // canvas.width = w;
-    // canvas.height = w / 2;
 
-    canvas.style.width = w + "px";
-    canvas.style.height = (w / 2) + "px";
     gl = canvas.getContext("webgl");
     if (gl == null) {
         alert("Error in fetching GL context. Please ensure that your browser support WebGL.");
         return;
     }
 
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
     // enable gl attributes: use z-buffering, make background black
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
 
+    // TODO make into react events
     // add mouse event for rotating view
     $canvas.on("mousedown", e => {
         prevDragPos = {x: e.pageX, y: e.pageY};
@@ -727,7 +836,10 @@ function initKBRender() {
         const newDist = Math.max(MIN_DIST, Math.min(MAX_DIST, dist + amtToMove));
         eye.position = vec3.scale(vec3.create(), vec3.normalize(vec3.create(), eye.position), newDist);
         renderScene();
-    })
+        return false;
+    });
+
+    window.onresize = resizeCanvas;
 
     setupShaders();
 }

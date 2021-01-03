@@ -104,7 +104,7 @@ class ItemSelectionRow extends React.Component {
         const selected = this.display(this.state.selections[field]);
 
         if (data === undefined) {
-            return <p style={{ color: "gray" }}>N/A</p>
+            return null;
         } else if (Array.isArray(data)) {
             return data.join(", ");
         } else if (data.type == "selection") {
@@ -367,14 +367,14 @@ class ItemManager extends React.Component {
         this.state.selectedItems = {
             "Kit": null,
             "Case": {
-                "Name": "60% Bamboo Case",
-                "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_09f45ed2-421b-47a6-9b76-856a6609a280_1800x1800.jpg?v=1584436781",
-                "Link": "https://kbdfans.com/collections/case/products/60-bamboo-case",
-                "Base Price": 58,
-                "Form Factor": "60%",
+                "Name": "Tofu 65% Aluminum",
+                "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8b9cc7c9808a81fc8db0eaf67a4d79d7_b3abc1fb-7837-45dd-bbca-f1b4202bc9e2_1800x1800.jpg?v=1584436794",
+                "Link": "https://kbdfans.com/collections/65-layout-case/products/in-stocktofu-65-aluminum-case",
+                "Base Price": 125,
+                "Form Factor": "65%",
                 "Mount Method": "Tray Mount",
-                "Material": "Bamboo",
-                "Primary Color": "Wood",
+                "Material": "Aluminum",
+                "Primary Color": {"type": "selection", "options": ["Silver", "Grey", "Black", "Chocolate", "Burgundy", "Purple", "Ink Blue", {"type": "E-White", "extra": 4}]},
                 price: 1
             },
             "Plate": {
@@ -408,17 +408,19 @@ class ItemManager extends React.Component {
                 price: 1
             },
             "Keycaps": {
-                "Name": "GMK White DarkGrey",
-                "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/whitedark-grey/kits_pics/base.png",
-                "Link": "https://geekhack.org/index.php?topic=48798.0",
-                "Base Price": 120,
+                "Name": "GMK Modern Dolch",
+                "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/Hanami-Dango/kits_pics/base.jpg",
+                "Link": "https://geekhack.org/index.php?topic=110049.0",
+                "Base Price": 134.99,
                 "Colors": [
-                    "Black",
-                    "White"
+                    "Beige",
+                    "Green",
+                    "Red"
                 ],
                 "Material": "ABS",
                 "Legends": "Doubleshot",
-                price: 1
+                price: 1,
+                profile: "cherry"
             },
             "Stabilizers": null
         }
@@ -503,12 +505,66 @@ class ItemManager extends React.Component {
     }
 }
 
-const SelectedItems = (props) => (
-    <React.Fragment>
-        <SelectedItemTable {...props} />
-        <KeyboardRender selectedItems={props.selectedItems} />
-    </React.Fragment>
-);
+function CollapseSelectedItems(props) {
+    return (
+        <div id="collapse-selected-items">
+            <div className="vertical-line"></div>
+            <div id="show-hide-arrow-container" onClick={props.onClick}>
+                {props.collapsed ?
+                    <React.Fragment>
+                        <div id="vertical-show">Show</div>
+                        <div id="arrow">&#x3009;</div>
+                    </React.Fragment> :
+                    <React.Fragment>
+                        <div id="arrow">&#x3008;</div>
+                        <div id="vertical-hide">Hide</div>
+                    </React.Fragment>
+                }
+            </div>
+            <div className="vertical-line"></div>
+        </div>
+    );
+}
+
+class SelectedItems extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            selectedItemsCollapsed: false
+        };
+
+        this.handleCollapseItems = this.handleCollapseItems.bind(this);
+    }
+    
+    handleCollapseItems() {
+        this.setState(currState => ({ selectedItemsCollapsed: !currState.selectedItemsCollapsed }));
+    }
+
+    componentDidUpdate(_, prevState) {
+        if (prevState.selectedItemsCollapsed != this.state.selectedItemsCollapsed) {
+            resizeCanvas();
+        }
+    }
+
+    render() {
+        const collapsed = this.state.selectedItemsCollapsed;
+        const canRenderKeyboard = ALL_PARTS.every(part => this.props.selectedItems[part]);
+
+        return (
+            <div id="selected-items-container">
+                {!collapsed && <div><SelectedItemTable {...this.props} /></div>}
+                <CollapseSelectedItems collapsed={collapsed} onClick={this.handleCollapseItems} />
+                <div id="rightmost">
+                    <div id="render-container">
+                        {canRenderKeyboard ? <KeyboardRender selectedItems={this.props.selectedItems} /> :
+                            <h3>Select all parts to view keyboard render</h3>}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+}
 
 const SelectedItemTable = (props) => (
     <table id="selected-item-table">
@@ -527,8 +583,8 @@ const SelectedItemTable = (props) => (
                 return (
                     <tr key={itemType} className={partInKit ? "part-in-kit" : undefined}>
                         <td className="item-select-cell">
-                            <button className="select-item-button" disabled={partInKit}
-                                    onClick={() => props.onSelect(itemType)}>
+                            <button className={"select-item-button" + (itemType == "Kit" ? " kit-item-button" : "")}
+                                    disabled={partInKit} onClick={() => props.onSelect(itemType)}>
                                 {itemType}
                             </button>
                         </td>
@@ -536,7 +592,7 @@ const SelectedItemTable = (props) => (
                             {partInKit ? "Included in kit" :
                                 item &&
                                 <a className="item-link" href={item["Link"]} target="_blank">
-                                    <div className="item-image-container">
+                                    <div className="item-image-container selected-item-image-container">
                                         <img src={item["Image"]} alt={item["Name"]} />
                                     </div>
                                     <span className="item-name">{item["Name"]}</span>
@@ -556,15 +612,49 @@ const SelectedItemTable = (props) => (
     </table>
 );
 
-function KeyboardRender(props) {
-    const selected = props.selectedItems;
-    const canRender = ALL_PARTS.every(part => selected[part]);
+class KeyboardRender extends React.Component {
+    constructor(props) {
+        super(props);
 
-    return !canRender ? "Select all parts to view keyboard render" :
-        <div onLoad={loadModels("tofu65"/*selected["Case"]["Name"]*/,
-                "cherry"/*selected["Keycaps"].profile*/, "modern dolch light"/*selected["Keycaps"]["Name"]*/)}>
-            <canvas id="webGLCanvas"></canvas>
-        </div>;
+        this.state = {
+            keycapColor: "#000000",
+            legendColor: "#ffffff"
+        }
+    }
+
+    componentDidMount() {
+        const selected = this.props.selectedItems;
+
+        const kbdName = selected["Case"]["Name"];
+        const kcProfile = selected["Keycaps"].profile;
+        const keycaps = selected["Keycaps"]["Name"];
+        loadModels(kbdName, kcProfile, keycaps);
+    }
+
+    render() {
+        return (
+            <React.Fragment>
+                <input type="checkbox" id="highlight-changeable" onChange={toggleHighlightKeys} />
+                <label htmlFor="highlight-changeable">Highlight Changeable Keys</label>
+                <button onClick={enableFullCustom}>Customize</button>
+                <div>
+                    <div className="color-picker">
+                        <input type="color" id="keycap-color" value={this.state.keycapColor}
+                            onChange={e => this.setState({ keycapColor: e.target.value })} />
+                        <label htmlFor="keycap-color">Keycap Color</label>
+                    </div>
+                    <div className="color-picker">
+                        <input type="color" id="legend-color" value={this.state.legendColor}
+                            onChange={e => this.setState({ legendColor: e.target.value })} />
+                        <label htmlFor="legend-color">Legend Color</label>
+                    </div>
+                </div>
+                <div id="keyboard-render">
+                    <canvas id="webGLCanvas" onClick={canvasClicked} />
+                </div>
+            </React.Fragment>
+        );
+    }
 }
 
 class ImportExport extends React.Component {

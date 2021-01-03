@@ -166,7 +166,6 @@
         "Form Factor": "75%",
         "Mount Method": "Tray Mount",
         "Material": "Aluminum",
-        "Primary Color": {"type": "selection", "options": ["Black", "Grey", "Top Silver, Bottom Grey", "Top Light Grey, Bottom Dark Grey",
-            "Top Dark Grey, Bottom Light Grey", "Red", "Silver", "Purple", "Blue"]}
+        "Primary Color": {"type": "selection", "options": ["Black", "Grey", "Red", "Silver", "Purple", "Blue"]}
     }
 ]

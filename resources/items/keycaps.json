@@ -1,5 +1,18 @@
 [
     {
+        "Name": "GMK Gregory",
+        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/Gregory/kits_pics/base.jpg",
+        "Link": "https://geekhack.org/index.php?topic=110101.0",
+        "Base Price": 134.99,
+        "Colors": [
+            "Yellow",
+            "White",
+            "Black"
+        ],
+        "Material": "ABS",
+        "Legends": "Doubleshot"
+    },
+    {
         "Name": "GMK Hanami Dango",
         "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/Hanami-Dango/kits_pics/base.jpg",
         "Link": "https://geekhack.org/index.php?topic=110049.0",
@@ -81,7 +94,7 @@
         "Link": "https://geekhack.org/index.php?topic=109910.0",
         "Base Price": 139.99,
         "Colors": [
-            "Purple*",
+            "Purple",
             "White"
         ],
         "Material": "ABS",
@@ -120,8 +133,7 @@
         "Base Price": 120,
         "Colors": [
             "Black",
-            "White",
-            "*"
+            "White"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -132,7 +144,7 @@
         "Link": "https://matrixzj.github.io/docs/gmk-keycaps/Yuri-R2/",
         "Base Price": 120,
         "Colors": [
-            "Red**",
+            "Orange",
             "Blue"
         ],
         "Material": "ABS",
@@ -144,7 +156,7 @@
         "Link": "https://matrixzj.github.io/docs/gmk-keycaps/Yuri-R2/",
         "Base Price": 130,
         "Colors": [
-            "Red**",
+            "Orange",
             "Blue"
         ],
         "Material": "ABS",
@@ -157,7 +169,7 @@
         "Base Price": 139.99,
         "Colors": [
             "Purple",
-            "White**"
+            "White"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -258,7 +270,7 @@
         "Link": "https://geekhack.org/index.php?topic=109094.0",
         "Base Price": 104.99,
         "Colors": [
-            "Grey*",
+            "Grey",
             "Red",
             "Black"
         ],
@@ -273,7 +285,7 @@
         "Colors": [
             "White",
             "Blue",
-            "Lime"
+            "Yellow"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -298,7 +310,6 @@
         "Base Price": 134.99,
         "Colors": [
             "Blue",
-            "Cyan*",
             "Yellow"
         ],
         "Material": "ABS",
@@ -403,7 +414,8 @@
             "Green",
             "Orange",
             "Red",
-            "Blue**"
+            "Blue",
+            "*"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -415,8 +427,7 @@
         "Base Price": 140,
         "Colors": [
             "Blue",
-            "Orange",
-            "*"
+            "Orange"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -443,7 +454,7 @@
         "Colors": [
             "White",
             "Brown",
-            "Blue**"
+            "Blue"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -455,7 +466,7 @@
         "Base Price": 139.99,
         "Colors": [
             "White",
-            "Blue*",
+            "Blue",
             "Pink"
         ],
         "Material": "ABS",
@@ -501,7 +512,7 @@
         "Legends": "Doubleshot"
     },
     {
-        "Name": "GMK HammerHead",
+        "Name": "GMK HammerHead Dark",
         "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/hammerhead/kits_pics/base-dark.jpg",
         "Link": "https://geekhack.org/index.php?topic=101037.0",
         "Base Price": 125,
@@ -534,7 +545,7 @@
         "Colors": [
             "Blue",
             "White",
-            "Red*"
+            "Pink"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -823,8 +834,7 @@
         "Base Price": 120,
         "Colors": [
             "Grey",
-            "White",
-            "*"
+            "White"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -837,7 +847,7 @@
         "Colors": [
             "Grey",
             "White",
-            "Blue*",
+            "Blue",
             "Red"
         ],
         "Material": "ABS",
@@ -850,7 +860,7 @@
         "Base Price": 109.99,
         "Colors": [
             "Grey",
-            "Blue*"
+            "Blue"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -873,19 +883,7 @@
         "Base Price": 129.99,
         "Colors": [
             "Black",
-            "Yellow*"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK Redacted",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/redacted/kits_pics/clearance.jpg",
-        "Link": "https://geekhack.org/index.php?topic=106200.0",
-        "Base Price": 124.99,
-        "Colors": [
-            "White",
-            "Black"
+            "Yellow"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -952,10 +950,10 @@
     {
         "Name": "GMK Wild",
         "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/wild/kits_pics/all.jpg",
-        "Link": "#price",
+        "Link": "https://matrixzj.github.io/docs/gmk-keycaps/Wild/",
         "Base Price": 211.36,
         "Colors": [
-            "Grey*",
+            "Grey",
             "Beige",
             "Green",
             "Red"
@@ -982,8 +980,7 @@
         "Base Price": 125,
         "Colors": [
             "Black",
-            "Purple",
-            "*"
+            "Purple"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1008,7 +1005,6 @@
         "Base Price": 115,
         "Colors": [
             "Blue",
-            "Cyan*",
             "Yellow"
         ],
         "Material": "ABS",
@@ -1020,7 +1016,7 @@
         "Link": "https://drop.com/buy/drop-mito-gmk-belafonte-custom-keycap-set",
         "Base Price": 120,
         "Colors": [
-            "Blue*",
+            "Blue",
             "White",
             "Yellow"
         ],
@@ -1110,8 +1106,7 @@
         "Colors": [
             "Beige",
             "Green",
-            "Orange",
-            "*"
+            "Orange"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1137,8 +1132,7 @@
             "Purple",
             "Yellow",
             "Black",
-            "Cyan",
-            "*"
+            "Cyan"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1187,8 +1181,7 @@
         "Base Price": 119.99,
         "Colors": [
             "Black",
-            "Yellow",
-            "*"
+            "Yellow"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1203,8 +1196,7 @@
             "Blue",
             "Grey",
             "Red",
-            "Yellow",
-            "*"
+            "Yellow"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1218,8 +1210,7 @@
             "Blue",
             "White",
             "Red",
-            "Yellow",
-            "*"
+            "Yellow"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1374,7 +1365,7 @@
         "Base Price": 130,
         "Colors": [
             "Red",
-            "Black*",
+            "Black",
             "White"
         ],
         "Material": "ABS",
@@ -1386,7 +1377,7 @@
         "Link": "https://matrixzj.github.io/docs/gmk-keycaps/Moon-Dust/",
         "Base Price": 134.99,
         "Colors": [
-            "Beige*",
+            "White",
             "Purple"
         ],
         "Material": "ABS",
@@ -1411,7 +1402,7 @@
         "Base Price": 125,
         "Colors": [
             "Grey",
-            "Lime"
+            "Yellow"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1436,7 +1427,7 @@
         "Base Price": 135,
         "Colors": [
             "Green",
-            "Grey*"
+            "Black"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1471,7 +1462,7 @@
         "Legends": "Doubleshot"
     },
     {
-        "Name": "GMK Olivia++",
+        "Name": "GMK Olivia++ Light",
         "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/olivia++/kits_pics/light.jpg",
         "Link": "https://novelkeys.xyz/collections/frontpage/products/gmk-oliviaplusplus-gb",
         "Base Price": 110,
@@ -1553,7 +1544,7 @@
         "Base Price": 129.99,
         "Colors": [
             "Grey",
-            "White*"
+            "White"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1645,8 +1636,7 @@
         "Colors": [
             "Blue",
             "Grey",
-            "Red",
-            "*"
+            "Red"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1658,9 +1648,7 @@
         "Base Price": 130,
         "Colors": [
             "Purple",
-            "Brown",
-            "White",
-            "*"
+            "White"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1673,7 +1661,7 @@
         "Colors": [
             "White",
             "Red",
-            "Blue*"
+            "Blue"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1684,7 +1672,8 @@
         "Link": "https://www.originativeco.com/products/honeywell-co",
         "Base Price": 139,
         "Colors": [
-            "*"
+            "White",
+            "Grey"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1740,8 +1729,7 @@
         "Colors": [
             "White",
             "Brown",
-            "Beige",
-            "*"
+            "Black"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1752,11 +1740,9 @@
         "Link": "https://geekhack.org/index.php?topic=102667.0",
         "Base Price": 119.99,
         "Colors": [
-            "Grey",
             "Blue",
             "Orange",
-            "Purple",
-            "*"
+            "Purple"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1823,24 +1809,12 @@
         "Legends": "Doubleshot"
     },
     {
-        "Name": "GMK WoB Hiragana",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/wobhiragana/kits_pics/base.png",
-        "Link": "https://novelkeys.xyz/products/gmk-wob-hiragana",
-        "Base Price": 95,
-        "Colors": [
-            "Black",
-            "White"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
         "Name": "GMK Fro.Yo",
         "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/fro.yo/kits_pics/shoppe.jpg",
         "Link": "https://matrixzj.github.io/docs/gmk-keycaps/Fro.Yo/",
         "Base Price": 135,
         "Colors": [
-            "Beige",
+            "White",
             "Blue",
             "Purple",
             "Orange",
@@ -1871,7 +1845,7 @@
         "Base Price": 139,
         "Colors": [
             "Black",
-            "Lime",
+            "Yellow",
             "Purple"
         ],
         "Material": "ABS",
@@ -1953,8 +1927,7 @@
         "Colors": [
             "Purple",
             "Blue",
-            "Pink",
-            "*"
+            "Pink"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -1994,10 +1967,8 @@
         "Base Price": 129,
         "Colors": [
             "Blue",
-            "Grey",
             "Yellow",
-            "Red",
-            "*"
+            "Red"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2012,7 +1983,7 @@
             "Purple",
             "Green",
             "Orange",
-            "Clue",
+            "Blue",
             "Red",
             "*"
         ],
@@ -2028,19 +1999,6 @@
             "Beige",
             "Black",
             "Green"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK Red Samurai MD MD",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/redsamurair2/kits_pics/tkl.jpg",
-        "Link": "https://drop.com/buy/drop-redsuns-gmk-red-samurai-keycap-set",
-        "Base Price": 85,
-        "Colors": [
-            "Red",
-            "Black",
-            "Yellow"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2100,7 +2058,7 @@
         "Link": "https://www.massdrop.com/buy/massdrop-x-t0mb3ry-gmk-eclipse-custom-keycap-set",
         "Base Price": 120,
         "Colors": [
-            "Grey*",
+            "Black",
             "Blue"
         ],
         "Material": "ABS",
@@ -2112,7 +2070,7 @@
         "Link": "https://geekhack.org/index.php?topic=100074.0",
         "Base Price": 129,
         "Colors": [
-            "Grey*",
+            "Grey",
             "White"
         ],
         "Material": "ABS",
@@ -2125,7 +2083,7 @@
         "Base Price": 119.99,
         "Colors": [
             "Green",
-            "Grey*"
+            "Black"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2137,7 +2095,6 @@
         "Base Price": 135,
         "Colors": [
             "Blue",
-            "Black*",
             "Red",
             "Yellow"
         ],
@@ -2177,7 +2134,7 @@
         "Colors": [
             "Black",
             "Magenta",
-            "Blue*"
+            "Cyan"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2190,22 +2147,6 @@
         "Colors": [
             "White",
             "Cyan"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK Paperwork",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/paperwork/kits_pics/base.jpeg",
-        "Link": "https://olkb.com/parts/gmk-paperwork",
-        "Base Price": 100,
-        "Colors": [
-            "Grey",
-            "Blue",
-            "Green",
-            "Yellow",
-            "Purple",
-            "*"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2257,19 +2198,6 @@
         "Colors": [
             "Red",
             "White"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK KA 2019 Valentine 2019",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/ka2019valentine/kits_pics/base1.JPG",
-        "Link": "https://geekhack.org/index.php?topic=99498.0",
-        "Base Price": 193.52,
-        "Colors": [
-            "White",
-            "Pink",
-            "Blue"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2358,8 +2286,8 @@
         "Link": "https://geekhack.org/index.php?topic=98153.0",
         "Base Price": 169,
         "Colors": [
+            "White",
             "Grey",
-            "Beige*",
             "Magenta",
             "Purple"
         ],
@@ -2456,26 +2384,12 @@
         "Legends": "Doubleshot"
     },
     {
-        "Name": "GMK N6TU1CR",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/n6tu1-cr/kits_pics/base.png",
-        "Link": "https://thevankeyboards.com/products/pre-order-gmk-n6tu1-cr",
-        "Base Price": 90,
-        "Colors": [
-            "White",
-            "Grey",
-            "Yellow",
-            "Blue"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
         "Name": "GMK Necro",
         "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/necro/kits_pics/all.jpg",
         "Link": "https://geekhack.org/index.php?topic=94937.450",
         "Base Price": 180,
         "Colors": [
-            "White*",
+            "White",
             "Grey",
             "Blue"
         ],
@@ -2489,7 +2403,7 @@
         "Base Price": 159,
         "Colors": [
             "Grey",
-            "Lime"
+            "Green"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2513,7 +2427,7 @@
         "Base Price": 165,
         "Colors": [
             "Red",
-            "Grey*",
+            "Grey",
             "White"
         ],
         "Material": "ABS",
@@ -2526,7 +2440,7 @@
         "Base Price": 159.99,
         "Colors": [
             "Grey",
-            "Green*"
+            "Green"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2550,7 +2464,7 @@
         "Base Price": 139.99,
         "Colors": [
             "White",
-            "Yellow*",
+            "Yellow",
             "Black"
         ],
         "Material": "ABS",
@@ -2577,7 +2491,7 @@
         "Colors": [
             "White",
             "Black",
-            "Peach"
+            "Pink"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2678,7 +2592,7 @@
         "Base Price": 148.87,
         "Colors": [
             "White",
-            "Grey*",
+            "Grey",
             "Pink",
             "Green"
         ],
@@ -2692,19 +2606,6 @@
         "Base Price": 139,
         "Colors": [
             "Black",
-            "Red*"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK Originative Cyrillic",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/originativecyrillic/kits_pics/base.png",
-        "Link": "https://www.originativeco.com/products/originative-cyrillic",
-        "Base Price": 199,
-        "Colors": [
-            "Black",
-            "White",
             "Red"
         ],
         "Material": "ABS",
@@ -2717,20 +2618,7 @@
         "Base Price": 147,
         "Colors": [
             "White",
-            "Black*"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK Red Honey Cyrillic",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/redhoneycyrillic/kits_pics/base.png",
-        "Link": "https://www.originativeco.com/products/red-honey-cyrillic",
-        "Base Price": 199,
-        "Colors": [
-            "White",
-            "Grey",
-            "Red*"
+            "Black"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2743,7 +2631,7 @@
         "Colors": [
             "White",
             "Grey",
-            "Red*"
+            "Red"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2756,20 +2644,6 @@
         "Colors": [
             "White",
             "Green"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK Classic Retro Cyrillic",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/classicretrocyrillic/kits_pics/base.png",
-        "Link": "https://www.originativeco.com/products/classic-retro-cyrillic",
-        "Base Price": 199,
-        "Colors": [
-            "White",
-            "Grey*",
-            "Black",
-            "Red*"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2819,8 +2693,7 @@
         "Colors": [
             "White",
             "Grey",
-            "Blue",
-            "*"
+            "Blue"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2841,12 +2714,11 @@
     },
     {
         "Name": "GMK Solarized Dark",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/solarizeddark/kits_pics/all.jpg",
+        "Image": "http://i.imgur.com/CKYz72N.png",
         "Link": "https://geekhack.org/index.php?topic=90192.0",
         "Base Price": 135,
         "Colors": [
-            "Blue",
-            "*"
+            "Blue"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2872,7 +2744,7 @@
         "Colors": [
             "Black",
             "Cyan",
-            "Pink*"
+            "Magenta"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -2883,7 +2755,7 @@
         "Link": "https://www.massdrop.com/buy/massdrop-x-t0mb3ry-gmk-yuri-custom-keycap-set",
         "Base Price": 119.99,
         "Colors": [
-            "Blue*",
+            "Blue",
             "Orange"
         ],
         "Material": "ABS",
@@ -2980,13 +2852,12 @@
     },
     {
         "Name": "GMK Corsa Auto",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/corsaauto/kits_pics/base.jpeg",
+        "Image": "https://cdn.shopify.com/s/files/1/1674/0405/products/5_1024x1024.jpg?v=1486430982",
         "Link": "http://www.zfrontier.com/m/3386",
         "Base Price": 137,
         "Colors": [
-            "Yellow",
-            "Blue",
-            "*"
+            "Beige",
+            "Blue"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -3010,7 +2881,7 @@
         "Link": "https://www.originativeco.com/products/penumbra",
         "Base Price": 170,
         "Colors": [
-            "Beige*",
+            "Beige",
             "Blue",
             "*"
         ],
@@ -3025,19 +2896,6 @@
         "Colors": [
             "Grey",
             "Black",
-            "Green"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK Griseann GP",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/griseann/kits_pics/base.jpg",
-        "Link": "https://en.zfrontier.com/products/gmk-griseann",
-        "Base Price": 129.07,
-        "Colors": [
-            "Black",
-            "White",
             "Green"
         ],
         "Material": "ABS",
@@ -3218,21 +3076,19 @@
         "Colors": [
             "Beige",
             "Orange",
-            "Brown*"
+            "Grey"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
     },
     {
         "Name": "GMK Skeletor R1",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/skeletor/kits_pics/base.png",
+        "Image": "https://cdn.shopify.com/s/files/1/0267/1905/products/R_1041_2020-05-20_V2.1_1_1024x1024.png?v=1593550167",
         "Link": "https://www.originativeco.com/products/skeletor",
-        "Base Price": 125,
+        "Base Price": 180,
         "Colors": [
             "Cyan",
-            "Purple",
-            "Green",
-            "Yellow"
+            "Purple"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -3244,7 +3100,7 @@
         "Base Price": 100,
         "Colors": [
             "White",
-            "Black*"
+            "Black"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -3297,18 +3153,6 @@
             "White",
             "Grey",
             "Black"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK TA Royal Alpha 610 Typewriter R1",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/taroyalalpha610typewriterr1/kits_pics/base.png",
-        "Link": "https://drop.com/buy/gmk-ta-royal-alpha-typewriter-keycap-set-2",
-        "Base Price": 104.99,
-        "Colors": [
-            "White",
-            "Green"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -3368,8 +3212,7 @@
         "Base Price": 99,
         "Colors": [
             "White",
-            "Blue",
-            "*"
+            "Blue"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"
@@ -3395,7 +3238,7 @@
         "Base Price": 127.5,
         "Colors": [
             "White",
-            "Beige*",
+            "Beige",
             "Blue"
         ],
         "Material": "ABS",
@@ -3408,7 +3251,7 @@
         "Base Price": 127.5,
         "Colors": [
             "White",
-            "Beige*",
+            "Beige",
             "Red"
         ],
         "Material": "ABS",
@@ -3434,20 +3277,6 @@
         "Colors": [
             "Grey",
             "White"
-        ],
-        "Material": "ABS",
-        "Legends": "Doubleshot"
-    },
-    {
-        "Name": "GMK Cyrillic",
-        "Image": "https://matrixzj.github.io/assets/images/gmk-keycaps/cyrillic/kits_pics/base.jpeg",
-        "Link": "unknown",
-        "Base Price": 130,
-        "Colors": [
-            "White",
-            "Black",
-            "Red",
-            "*"
         ],
         "Material": "ABS",
         "Legends": "Doubleshot"

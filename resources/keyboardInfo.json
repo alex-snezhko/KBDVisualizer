@@ -1,32 +1,133 @@
 {
-    "tofu65": {
+    "Tofu 65% Aluminum": {
         "incline": 6,
         "color": [0.1, 0.1, 0.1],
         "keyGroups": [
             {
                 "row": 1,
                 "offset": [0, 0],
-                "keys": ["Esc", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace", "Del"]
+                "keys": ["Esc", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Minus", "Equals", "Backspace", "Delete"]
             },
             {
                 "row": 2,
                 "offset": [0, 1],
-                "keys": ["Tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\", "Home"]
+                "keys": ["Tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "OSqr", "CSqr", "Backslash", "Home"]
             },
             {
                 "row": 3,
                 "offset": [0, 2],
-                "keys": ["Caps", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'", "Enter", "PgUp"]
+                "keys": ["Caps", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Semicolon", "Apostrophe", "ANSIEnter", "PgUp"]
             },
             {
                 "row": 4,
                 "offset": [0, 3],
-                "keys": ["LShift", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/", "RShift1.75", "Up", "PgDn"]
+                "keys": ["LShift", "Z", "X", "C", "V", "B", "N", "M", "Comma", "Period", "Forwardslash", "RShift1_75", "UArrow", "PgDn"]
             },
             {
                 "row": 4,
                 "offset": [0, 4],
-                "keys": ["Ctrl1.25", "Win1.25", "Alt1.25", "Space_6.25U", "Alt1", "Fn1", "Ctrl1", "Left", "Down", "Right"]
+                "keys": ["LCtrl1_25", "LWin1_25", "LAlt1_25", "Space6_25", "RAlt1", "Fn1", "RCtrl1", "LArrow", "DArrow", "RArrow"]
+            }
+        ]
+    },
+    "**Tofu 65% Aluminum": {
+        "incline": 6,
+        "color": [0.1, 0.1, 0.1],
+        "keyGroups": [
+            {
+                "row": 1,
+                "offset": [0, 0],
+                "keys": ["Esc"]
+            },
+            {
+                "row": 1,
+                "offset": [2, 0],
+                "keys": ["F1", "F2", "F3", "F4"]
+            },
+            {
+                "row": 1,
+                "offset": [6.5, 0],
+                "keys": ["F5", "F6", "F7", "F8"]
+            },
+            {
+                "row": 1,
+                "offset": [11, 0],
+                "keys": ["F9", "F10", "F11", "F12"]
+            },
+            {
+                "row": 1,
+                "offset": [15.5, 0],
+                "keys": ["PrtScr", "ScrlLck", "Pause"]
+            },
+            {
+                "row": 1,
+                "offset": [0, 1.5],
+                "keys": ["Tilde", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Minus", "Equals", "Backspace"]
+            },
+            {
+                "row": 1,
+                "offset": [15.5, 1.5],
+                "keys": ["Insert", "Home", "PgUp"]
+            },
+            {
+                "row": 1,
+                "offset": [19, 1.5],
+                "keys": ["NumLck", "NumDivide", "NumMultiply", "NumMinus"]
+            },
+            {
+                "row": 2,
+                "offset": [0, 2.5],
+                "keys": ["Tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "OSqr", "CSqr", "Backslash"]
+            },
+            {
+                "row": 2,
+                "offset": [15.5, 2.5],
+                "keys": ["Delete", "End", "PgDn"]
+            },
+            {
+                "row": 2,
+                "offset": [19, 2.5],
+                "keys": ["Num7", "Num8", "Num9"]
+            },
+            {
+                "row": 3,
+                "offset": [0, 3.5],
+                "keys": ["Caps", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Semicolon", "Apostrophe", "ANSIEnter"]
+            },
+            {
+                "row": 3,
+                "offset": [19, 3.5],
+                "keys": ["Num4", "Num5", "Num6", "NumPlus"]
+            },
+            {
+                "row": 4,
+                "offset": [0, 4.5],
+                "keys": ["LShift", "Z", "X", "C", "V", "B", "N", "M", "Comma", "Period", "Forwardslash", "RShift2_75"]
+            },
+            {
+                "row": 4,
+                "offset": [16.5, 4.5],
+                "keys": ["UArrow"]
+            },
+            {
+                "row": 4,
+                "offset": [19, 4.5],
+                "keys": ["Num1", "Num2", "Num3"]
+            },
+            {
+                "row": 4,
+                "offset": [0, 5.5],
+                "keys": ["LCtrl1_25", "LWin1_25", "LAlt1_25", "Space6_25", "RAlt1_25", "RWin1_25", "Fn1_25", "RCtrl1_25"]
+            },
+            {
+                "row": 4,
+                "offset": [15.5, 5.5],
+                "keys": ["LArrow", "DArrow", "RArrow"]
+            },
+            {
+                "row": 4,
+                "offset": [19, 5.5],
+                "keys": ["Num0", "NumPoint", "NumEnter"]
             }
         ]
     }

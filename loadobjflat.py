@@ -4,7 +4,7 @@ all_verts = []
 all_normals = []
 all_uvs = []
 all_tris = []
-with open('resources/tofu.obj') as f:
+with open('resources/switch.obj') as f:
     for line in f:
         line = line.strip()
         words = line.split(' ')
@@ -19,7 +19,7 @@ with open('resources/tofu.obj') as f:
         elif words[0] == 'vt':
             all_uvs.append([float(x) for x in data])
         elif words[0] == 'f':
-            split = [[int(x) - 1 for x in d.split('/')] for d in data]
+            split = [[int(x) - 1 for x in d.split('//')] for d in data]
             all_tris.append(split)
 
 # verts = all_verts
@@ -30,11 +30,12 @@ norms = []
 uvs = []
 tris = []
 for i, tri in enumerate(all_tris):
-    ni = tri[0][2]
+    ni = tri[0][1]
     for v in tri:
-        pi, ti, _ = v
+        #pi, ti, _ = v
+        pi = v[0]
         verts.append(all_verts[pi])
-        uvs.append(all_uvs[ti])
+        #uvs.append(all_uvs[ti])
         norms.append(all_normals[ni])
 
     tris.append([i * 3 + x for x in range(3)])
@@ -43,9 +44,9 @@ x = json.dumps({
     'vertices': verts,
     'normals': norms,
     'triangles': tris,
-    'uvs': uvs
+    #'uvs': uvs
 })
-with open('resources/Case_tofu65.json', 'w') as f:
+with open('resources/switch.json', 'w') as f:
     f.write(x)
 
 
@@ -55,7 +56,7 @@ with open('resources/test.obj', 'w') as f:
         f.write('v ' + ' '.join(map(str, v)) + '\n')
     for n in norms:
         f.write('vn ' + ' '.join(map(str, n)) + '\n')
-    for uv in uvs:
-        f.write('vt ' + ' '.join(map(str, uv)) + '\n')
+    # for uv in uvs:
+    #     f.write('vt ' + ' '.join(map(str, uv)) + '\n')
     for t in tris:
         f.write('f ' + ' '.join(map(lambda x: str(x + 1), t)) + '\n')

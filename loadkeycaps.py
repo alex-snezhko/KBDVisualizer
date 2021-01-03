@@ -48,13 +48,13 @@ with open('resources/capstogethercopy.obj') as f:
                 })
 
                 if row in string.digits:
-                    with open(f'resources/cherry_R{row}_{units}U.json', 'w') as f:
+                    with open(f'resources/models/keycaps/cherry/R{row}_{units}U.json', 'w') as f:
                         f.write(x)
                 else:
-                    with open(f'resources/cherry_{row}.json', 'w') as f:
+                    with open(f'resources/models/keycaps/cherry/{row}.json', 'w') as f:
                         f.write(x)
 
-                with open(f'resources/cherry_{row}_{units}U_test.obj', 'w') as f:
+                with open(f'resources/models/keycaps/cherry/{row}_{units}U_test.obj', 'w') as f:
                     for v in verts:
                         f.write('v ' + ' '.join(map(str, v)) + '\n')
                     for n in norms:
