@@ -1,7 +1,9 @@
-"use strict";
+import React from "react";
+import ReactDOM from "react-dom";
+import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
 
-const Router = window.ReactRouter;
-const { RouteHandler, Route, DefaultRoute } = Router;
+import { KeyboardRender } from "./renderKeyboard";
+import "./style.scss";
 
 const money = (num) => "$" + num.toFixed(2);
 
@@ -80,7 +82,7 @@ class ItemSelectionRow extends React.Component {
             selections: props.extraFieldInfo.reduce((obj, fieldInfo) => {
                 const fieldName = fieldInfo.name;
                 const fieldData = props.item[fieldName];
-                obj[fieldName] = fieldData && fieldData.type == "selection" ? NO_SELECTION : fieldData;
+                obj[fieldName] = fieldData && fieldData.type === "selection" ? NO_SELECTION : fieldData;
                 return obj;
             }, {})
         }
@@ -92,7 +94,7 @@ class ItemSelectionRow extends React.Component {
     }
 
     handleSelectionChange(event, field) {
-        const val = this.props.item[field].options.find(x => this.displayOption(x) == event.target.value);
+        const val = this.props.item[field].options.find(x => this.displayOption(x) === event.target.value);
         this.setState(currState => ({ selections: { ...currState.selections, [field]: val } }));
     }
 
@@ -106,7 +108,7 @@ class ItemSelectionRow extends React.Component {
             return null;
         } else if (Array.isArray(data)) {
             return data.join(", ");
-        } else if (data.type == "selection") {
+        } else if (data.type === "selection") {
             // the currently selected value of this field
             const selected = this.displayOption(fieldInfo.display(this.state.selections[fieldName]));
             return (
@@ -127,7 +129,7 @@ class ItemSelectionRow extends React.Component {
         return (
             <tr className="select-item-row">
                 <td className="item-name-cell">
-                    <a className="item-link" href={item["Link"]} target="_blank">
+                    <a className="item-link" href={item["Link"]} target="_blank" rel="noreferrer">
                         <div className="item-image-container">
                             <img src={item["Image"]} alt={item["Name"]} />
                         </div>
@@ -162,7 +164,7 @@ class CompatibilityFilter {
 
     passes(item) {
         const fieldData = item[this.field];
-        return fieldData.type == "selection" ?
+        return fieldData.type === "selection" ?
                 fieldData.options.some(option => this.accepts.includes(option.type || option)) :
                 this.accepts.includes(fieldData);
     }
@@ -185,7 +187,7 @@ class NumRangeFilter {
         const fieldData = item[this.field];
         const low = this.low === "" ? 0 : Number(this.low);
         const high = this.high === "" ? Infinity : Number(this.high)
-        return fieldData.type == "selection" ?
+        return fieldData.type === "selection" ?
             fieldData.options.some(option => option >= low && option <= high) :
             fieldData >= low && fieldData <= high;
     }
@@ -209,7 +211,7 @@ class SelectionFilter {
 
     passes(item) {
         // if no options are selected for this filter then it is fine
-        if (this.selected.size == 0) {
+        if (this.selected.size === 0) {
             return true;
         }
     
@@ -218,7 +220,7 @@ class SelectionFilter {
             return Array.from(this.selected).every(selection => fieldData.includes(selection));
         } else { // ensure that the item meets at least one selected filter option
             // if there are several options make sure that one of them passes filter
-            return fieldData.type == "selection" ?
+            return fieldData.type === "selection" ?
                 fieldData.options.some(option => this.selected.has(option.type || option)) :
                 this.selected.has(fieldData);
         }
@@ -265,7 +267,7 @@ class ItemSelection extends React.Component {
     handleUpdateFilter(field, data) {
         this.setState(currState => {
             let newFilters = [...currState.filters];
-            newFilters.find(filter => filter.field == field).updateData(data);
+            newFilters.find(filter => filter.field === field).updateData(data);
             return { filters: newFilters };
         })
     }
@@ -274,7 +276,7 @@ class ItemSelection extends React.Component {
         const { items, filters, sortBy } = this.state;
         const { extraFieldInfo, compatibilityFilters, itemType } = this.props;
 
-        if (items == null) {
+        if (items === null) {
             return null;
         }
 
@@ -284,9 +286,9 @@ class ItemSelection extends React.Component {
         );
 
         const sortItems =
-            sortBy == "low-high" ? xs => [...xs].sort((x, y) => x["Base Price"] - y["Base Price"]) :
-            sortBy == "high-low" ? xs => [...xs].sort((x, y) => y["Base Price"] - x["Base Price"]) :
-                                   xs => xs;
+            sortBy === "low-high" ? xs => [...xs].sort((x, y) => x["Base Price"] - y["Base Price"]) :
+            sortBy === "high-low" ? xs => [...xs].sort((x, y) => y["Base Price"] - x["Base Price"]) :
+                                    xs => xs;
         const itemsToDisplay = sortItems(itemsMatchingFilters);
         
         return (
@@ -306,10 +308,10 @@ class ItemSelection extends React.Component {
                         </select>
                     </div>
 
-                    {compatibilityFilters.length != 0 &&
+                    {compatibilityFilters.length !== 0 &&
                         <h4 style={{ color: "red" }}>Note: only items compatible with currently selected parts are shown</h4>}
 
-                    {itemsToDisplay.length == 0 ? <h3>No Items Found To Match Filters</h3> : (
+                    {itemsToDisplay.length === 0 ? <h3>No Items Found To Match Filters</h3> : (
                         <table id="select-item-table">
                             <thead>
                                 <tr>{["Name", "Base Price"].concat(extraFieldInfo.map(fieldInfo => fieldInfo.name)).map(f => <th key={f}>{f}</th>)}</tr>
@@ -339,23 +341,14 @@ class ItemManager extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedItems: ["Kit"].concat(ALL_PARTS).reduce((obj, item) => {
-                obj[item] = null;
-                return obj;
-            }, {}),
+            selectedItems: ["Kit"].concat(ALL_PARTS).reduce((o, part) => Object.assign(o, { [part]: null }), {}),
             selectingItem: null,
             partsInKit: [],
-            compatibilityFilters: ALL_PARTS.reduce((obj, item) => {
-                obj[item] = [];
-                return obj;
-            }, {})
+            compatibilityFilters: ALL_PARTS.reduce((o, part) => Object.assign(o, { [part]: [] }), {})
         };
 
-        this.handleBrowseItem = this.handleBrowseItem.bind(this);
         this.handleSelectItem = this.handleSelectItem.bind(this);
         this.handleRemoveItem = this.handleRemoveItem.bind(this);
-
-
 
         this.state.selectedItems = {
             "Kit": null,
@@ -428,37 +421,33 @@ class ItemManager extends React.Component {
         }
     }
 
-    handleBrowseItem(itemType) {
-        this.setState({ selectingItem: itemType });
-    }
-
     handleSelectItem(item, selections, itemType) {
         const selectedValues = Object.values(selections).filter(x => x !== undefined);
-        if (selectedValues.some(val => val == NO_SELECTION)) {
+        if (selectedValues.some(val => val === NO_SELECTION)) {
             return false;
         }
 
         this.setState(currState => {
             // a part which does not have an undefined value is considered part of the kit
-            const partsInKit = itemType == "Kit" ?
+            const partsInKit = itemType === "Kit" ?
                 ALL_PARTS.filter(part => selections[part]) :
                 currState.partsInKit;
 
             // TODO actually look up and get references to items if this is a kit
             
-            // if (itemType == "Case" || itemType == "Plate" || itemType == "PCB") {
+            // if (itemType === "Case" || itemType === "Plate" || itemType == "PCB") {
             //     // TODO handle compatibility
             // }
 
             let compatibility = currState.compatibilityFilters;
             const ff = new CompatibilityFilter("Form Factor", itemType, [selections["Form Factor"]]);
-            if (itemType == "Case") {
+            if (itemType === "Case") {
                 compatibility["PCB"].push(ff);
                 compatibility["Plate"].push(ff);
-            } else if (itemType == "Plate") {
+            } else if (itemType === "Plate") {
                 compatibility["Case"].push(ff);
                 compatibility["PCB"].push(ff);
-            } else if (itemType == "PCB") {
+            } else if (itemType === "PCB") {
                 compatibility["Case"].push(ff);
                 compatibility["Plate"].push(ff);
             }
@@ -477,14 +466,14 @@ class ItemManager extends React.Component {
     }
 
     handleRemoveItem(itemType) {
-        if (itemType == "Kit") {
+        if (itemType === "Kit") {
             this.setState({ partsInKit: [] })
         }
         
         this.setState(currState => {
             const filters = { ...currState.compatibilityFilters };
             for (const field in filters) {
-                filters[field] = filters[field].filter(f => f.origin != itemType);
+                filters[field] = filters[field].filter(f => f.origin !== itemType);
             }
 
             return {
@@ -497,7 +486,7 @@ class ItemManager extends React.Component {
     getExtraFieldInfo(itemType) {
         const generateNumericFilter = (display) => function(fieldName, fieldData) {
             // function that returns the smallest or largest value if there are multiple options for this field
-            const getMinOrMax = (operation, data) => data.type == "selection" ? operation(...data.options) : data;
+            const getMinOrMax = (operation, data) => data.type === "selection" ? operation(...data.options) : data;
 
             const low = Math.min(...fieldData.map(x => getMinOrMax(Math.min, x)));
             const high = Math.max(...fieldData.map(x => getMinOrMax(Math.max, x)));
@@ -516,7 +505,7 @@ class ItemManager extends React.Component {
                     if (hasManyValues) {
                         data.forEach(val => options.add(this.display(val)));
                     } else {
-                        if (data.type == "selection") {
+                        if (data.type === "selection") {
                             data.options.forEach(x => options.add(this.display(x.type || x)));
                         } else {
                             options.add(this.display(data));
@@ -550,21 +539,30 @@ class ItemManager extends React.Component {
     render() {
         const { selectedItems, selectingItem, partsInKit, compatibilityFilters } = this.state;
 
-        //const compatibilityFilters = this.state.partsInKit.length == 0 ? 
-        return selectingItem != null ?
-            <ItemSelection
-                itemType={selectingItem}
-                compatibilityFilters={compatibilityFilters[selectingItem]}
-                extraFieldInfo={this.getExtraFieldInfo(selectingItem)}
-                onSelect={this.handleSelectItem}
-                onReturn={() => this.setState({ selectingItem: null })}
-            /> :
-            <SelectedItems
-                selectedItems={selectedItems}
-                partsInKit={partsInKit}
-                onSelect={this.handleBrowseItem}
-                onDelete={this.handleRemoveItem}
-            />;
+        return (//selectingItem !== null ?
+            <Switch>
+                <Route exact path="/">
+                    <ItemSelection
+                        itemType={selectingItem}
+                        compatibilityFilters={compatibilityFilters[selectingItem]}
+                        extraFieldInfo={this.getExtraFieldInfo(selectingItem)}
+                        onSelect={this.handleSelectItem}
+                        onReturn={() => this.setState({ selectingItem: null })}
+                    />
+                </Route>
+                <Route path="/select-item">
+                    <SelectedItems
+                        selectedItems={selectedItems}
+                        partsInKit={partsInKit}
+                        onSelect={() => {
+
+                            this.setState({ selectingItem: itemType });
+                        }}
+                        onDelete={this.handleRemoveItem}
+                    />
+                </Route>
+            </Switch>
+        );
     }
 }
 
@@ -605,7 +603,7 @@ class SelectedItems extends React.Component {
     }
 
     componentDidUpdate(_, prevState) {
-        // if (prevState.selectedItemsCollapsed != this.state.selectedItemsCollapsed) {
+        // if (prevState.selectedItemsCollapsed !== this.state.selectedItemsCollapsed) {
         //     resizeCanvas();
         // }
     }
@@ -654,15 +652,17 @@ const SelectedItemTable = (props) => (
                 return (
                     <tr key={itemType} className={partInKit ? "part-in-kit" : undefined}>
                         <td className="item-select-cell">
-                            <button className={"select-item-button" + (itemType == "Kit" ? " kit-item-button" : "")}
-                                    disabled={partInKit} onClick={() => props.onSelect(itemType)}>
-                                {itemType}
-                            </button>
+                            {/* <Link to={`select-item/${itemType}`}> */}
+                                <button className={"select-item-button" + (itemType === "Kit" ? " kit-item-button" : "")}
+                                        disabled={partInKit} onClick={() => props.onSelect(itemType)}>
+                                    {itemType}
+                                </button>
+                            {/* </Link> */}
                         </td>
                         <td className="item-name-cell">
                             {partInKit ? "Included in kit" :
                                 item &&
-                                <a className="item-link" href={item["Link"]} target="_blank">
+                                <a className="item-link" href={item["Link"]} target="_blank" rel="noreferrer">
                                     <div className="item-image-container selected-item-image-container">
                                         <img src={item["Image"]} alt={item["Name"]} />
                                     </div>
@@ -695,7 +695,7 @@ class App extends React.Component {
             <Router>
                 <header>
                     <div id="header-inner">
-                        <img src="resources/keyboard.png" width="60" height="60" />
+                        {/* <img src="./resources/keyboard.png" /* TODO use module load alt="Keyboard Icon" width="60" height="60" /> */}
                         <h1>KBD<span id="header-part">PART</span>PICKER</h1>
                     </div>
                 </header>

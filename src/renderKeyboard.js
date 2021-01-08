@@ -1,4 +1,6 @@
-"use strict";
+import React from "react";
+import { mat4, vec3 } from "gl-matrix";
+import "./style.scss";
 
 let gl = null;
 
@@ -114,7 +116,7 @@ function loadTexture(url) {
                 gl.bindTexture(gl.TEXTURE_2D, texture);
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
     
-                const isPowerOf2 = x => (x & (x - 1)) == 0;
+                const isPowerOf2 = x => (x & (x - 1)) === 0;
                 if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
                     gl.generateMipmap(gl.TEXTURE_2D);
                 } else {
@@ -159,7 +161,7 @@ function getKeycapColorOptions(key, keycapsInfo) {
     }
 
     let exception;
-    if (exception = keycapsInfo.exceptions.find(e => e.keys.includes(key))) {
+    if ((exception = keycapsInfo.exceptions.find(e => e.keys.includes(key)))) {
         colorOptions.push(exception);
     } else if (ALPHAS.has(key)) {
         alphasInSet.add(key);
@@ -184,6 +186,7 @@ let keyNameToKeyObj = {};
 let objectIdToKey = {};
 
 async function loadModels(kbdName, keycapProfile, keycapSet) {
+    // TODO make resources get from local path
     const fetchJson = filename => fetch("resources/" + filename + ".json").then(response => response.json());
 
     let kbdInfo;
@@ -628,7 +631,7 @@ const toColor = (hex) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h 
 // allow selection for different base kits of same set (e.g. Modern dolch)
 // upload favicon and update header
 
-class KeyboardRender extends React.Component {
+export class KeyboardRender extends React.Component {
     constructor(props) {
         super(props);
 
@@ -655,7 +658,7 @@ class KeyboardRender extends React.Component {
     componentDidMount() {
         const canvas = document.getElementById("webgl-canvas");
         gl = canvas.getContext("webgl");
-        if (gl == null) {
+        if (gl === null) {
             alert("Error in fetching GL context. Please ensure that your browser support WebGL.");
             return;
         }
@@ -699,14 +702,14 @@ class KeyboardRender extends React.Component {
     }
 
     handleResizeCanvas() {
-        const $container = $("#render-container");
+        const container = document.getElementById("render-container");
 
-        const left = $container.offset().left;
-        const rightBound = $(window).width() - $container.css("marginRight").replace("px", "");
+        const left = container.offsetLeft;
+        const rightBound = window.innerWidth - container.style.marginRight.replace("px", "");
         const w = Math.max(600, rightBound - left);
         const h = Math.floor(w / 2);
 
-        if (this.state.prevWidth != w) {
+        if (this.state.prevWidth !== w) {
             const canvas = document.getElementById("webgl-canvas");
             canvas.width = w;
             canvas.height = h;
@@ -718,15 +721,15 @@ class KeyboardRender extends React.Component {
     }
 
     handleCanvasMouseMove(event) {
-        if (event.buttons != 0) {
+        if (event.buttons !== 0) {
             console.log("moved");
             // find how much the mouse has moved since the last position
             const dx = event.movementX;
             const dy = event.movementY;
-            if (dx != 0) {
+            if (dx !== 0) {
                 rotateView(-dx / 100, vec3.fromValues(0, 1, 0));
             }
-            if (dy != 0) {
+            if (dy !== 0) {
                 // make it such that movement upwards is positive rotation
                 const rotateAngle = dy / 100;
                 // if this rotation will surpass lowest allowed viewing angle then clamp it
@@ -754,7 +757,7 @@ class KeyboardRender extends React.Component {
     }
 
     handleCanvasClicked(event) {
-        if (event.clientX == this.beginClick.x && event.clientY == this.beginClick.y) {
+        if (event.clientX === this.beginClick.x && event.clientY === this.beginClick.y) {
             const { left, top, height } = event.target.getBoundingClientRect();
 
             const x = event.clientX - left;
@@ -765,9 +768,9 @@ class KeyboardRender extends React.Component {
             let pixelClicked = new Uint8Array(4);
             gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelClicked);
 
-            const objectWasClicked = pixelClicked[3] == 0;
+            const objectWasClicked = pixelClicked[3] === 0;
             const objectId = pixelClicked[0];
-            if (objectWasClicked && objectId != 0) {
+            if (objectWasClicked && objectId !== 0) {
                 const key = objectIdToKey[objectId];
 
                 if (this.state.fullCustom) {
@@ -786,7 +789,7 @@ class KeyboardRender extends React.Component {
     }
 
     handleToggleHighlight() {
-        if (this.tick != null) {
+        if (this.tick !== null) {
             clearInterval(this.tick);
             this.setState({ increasing: false, blinkProportion: 0 });
             this.tick = null;
@@ -797,12 +800,12 @@ class KeyboardRender extends React.Component {
                         let { highlightKeys, increasing, blinkProportion } = currState;
                         if (increasing) {
                             blinkProportion = Math.min(1, blinkProportion + 0.05);
-                            if (blinkProportion == 1) {
+                            if (blinkProportion === 1) {
                                 increasing = false;
                             }
                         } else {
                             blinkProportion = Math.max(0, blinkProportion - 0.05);
-                            if (blinkProportion == 0) {
+                            if (blinkProportion === 0) {
                                 increasing = true;
                             }
                         }
