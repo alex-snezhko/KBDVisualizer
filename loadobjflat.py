@@ -4,7 +4,7 @@ all_verts = []
 all_normals = []
 all_uvs = []
 all_tris = []
-with open('resources/switch.obj') as f:
+with open('resources/stabs.obj') as f:
     for line in f:
         line = line.strip()
         words = line.split(' ')
@@ -46,12 +46,12 @@ x = json.dumps({
     'triangles': tris,
     #'uvs': uvs
 })
-with open('resources/switch.json', 'w') as f:
+with open('resources/models/stabilizer.json', 'w') as f:
     f.write(x)
 
 
 
-with open('resources/test.obj', 'w') as f:
+with open('resources/teststab.obj', 'w') as f:
     for v in verts:
         f.write('v ' + ' '.join(map(str, v)) + '\n')
     for n in norms:

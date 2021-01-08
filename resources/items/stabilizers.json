@@ -4,35 +4,40 @@
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/O1CN01MtwenC1amQ9FHFKxo__134583372_1800x1800.jpg?v=1598932169",
         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/gmk-screw-in-stabilizers",
         "Base Price": 19,
-        "Mount Method": "PCB Screw-in"
+        "Mount Method": "PCB Screw-in",
+        "color": [0.05, 0.05, 0.05, 0]
     },
     {
         "Name": "Cherry Screw-in Stabilizers",
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_7ae1f1af-059f-4d55-8e3f-74a17a974baa_1800x1800.jpg?v=1584437022",
         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/cherry-screw-in-stabilizer",
         "Base Price": 12,
-        "Mount Method": "PCB Screw-in"
+        "Mount Method": "PCB Screw-in",
+        "color": [0.05, 0.05, 0.05, 0]
     },
     {
         "Name": "Durock Stabilizers",
         "Image": "https://cdn.shopify.com/s/files/1/3099/8088/products/Durock_Screw_in_Stabs_1024x1024@2x.png?v=1579884471",
         "Link": "https://novelkeys.xyz/products/durock-stabilizers",
         "Base Price": 3.50,
-        "Mount Method": "PCB Screw-in"
+        "Mount Method": "PCB Screw-in",
+        "color": [0.5, 0.0, 0.5, 0.5]
     },
     {
         "Name": "Zeal Transparent Gold Plated Stabilizers",
         "Image": "https://cdn.shopify.com/s/files/1/0490/7329/products/zealstabilizers7_2048x.jpg?v=1570000453",
         "Link": "https://zealpc.net/products/zealstabilizers",
         "Base Price": 30,
-        "Mount Method": "PCB Screw-in"
+        "Mount Method": "PCB Screw-in",
+        "color": [1.0, 1.0, 1.0, 0.3]
     },
     {
         "Name": "Gold Screw-in Stabilizers",
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_05a1728d-4369-4945-bda2-7284f0613bd7_1800x1800.jpg?v=1584436671",
         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/gold-plated-screw-stabilizer",
         "Base Price": 8,
-        "Mount Method": "PCB Screw-in"
+        "Mount Method": "PCB Screw-in",
+        "color": [0.05, 0.05, 0.05, 0]
     },
 
 
@@ -43,14 +48,16 @@
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_9bd0bc2e-528b-4acd-9888-c34b4d4ec720_1800x1800.jpg?v=1584436561",
         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/cherry-original-pcb-stabilizers",
         "Base Price": 25,
-        "Mount Method": "PCB Clip-in"
+        "Mount Method": "PCB Clip-in",
+        "color": [0.05, 0.05, 0.05, 0]
     },
     {
         "Name": "Transparent PCB Stabilizers",
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/1_77f5f494-8dc0-49e0-a6a9-8dd6c9cb8c4e_1800x1800.jpg?v=1584436523",
         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/transparent-pcb-stabilizers-27",
         "Base Price": 8.90,
-        "Mount Method": "PCB Clip-in"
+        "Mount Method": "PCB Clip-in",
+        "color": [1.0, 1.0, 1.0, 0.3]
     },
 
 
@@ -61,13 +68,15 @@
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/4_9324bfd0-c419-47de-b077-8976f8a834f6_1800x1800.jpg?v=1592208661",
         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/gateron-lubed-plate-mounted-stabilizers?variant=33939807928459",
         "Base Price": 9.41,
-        "Mount Method": "Plate-mount"
+        "Mount Method": "Plate-mount",
+        "color": [0.95, 0.95, 0.95, 1.0]
     },
     {
         "Name": "Black Steel Plate Satellite Shaft Stabilizers",
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/product-image-476994402_1800x1800.jpg?v=1584436620",
         "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/transparent-black-steel-plate-satellite-shaft-customization-mechanical-keyboard-plate-stab",
         "Base Price": 9.41,
-        "Mount Method": "Plate-mount"
+        "Mount Method": "Plate-mount",
+        "color": [0.05, 0.05, 0.05, 1.0]
     }
 ]

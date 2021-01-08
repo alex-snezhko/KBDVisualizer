@@ -5,9 +5,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-red.html",
         "Base Price": 1,
         "Tactility": "Linear",
-        "Spring Weight": "46g",
-        "Actuation Distance": "2.0 mm",
-        "Bottom-out Distance": "4.0 mm"
+        "Spring Weight": 46,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Speed Silver",
@@ -15,9 +16,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-speed-silver.html",
         "Base Price": 1,
         "Tactility": "Linear",
-        "Spring Weight": "46g",
-        "Actuation Distance": "1.2 mm",
-        "Bottom-out Distance": "3.4 mm"
+        "Spring Weight": 46,
+        "Actuation Distance": 1.2,
+        "Bottom-out Distance": 3.4,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Black",
@@ -25,9 +27,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-black.html",
         "Base Price": 1,
         "Tactility": "Linear",
-        "Spring Weight": "61g",
-        "Actuation Distance": "2.0 mm",
-        "Bottom-out Distance": "4.0 mm"
+        "Spring Weight": 61,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Brown",
@@ -35,9 +38,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-brown.html",
         "Base Price": 1,
         "Tactility": "Tactile",
-        "Spring Weight": "56g",
-        "Actuation Distance": "2.0 mm",
-        "Bottom-out Distance": "4.0 mm"
+        "Spring Weight": 56,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Blue",
@@ -45,9 +49,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-blue.html",
         "Base Price": 1,
         "Tactility": "Clicky",
-        "Spring Weight": "61g",
-        "Actuation Distance": "2.2 mm",
-        "Bottom-out Distance": "4.0 mm"
+        "Spring Weight": 61,
+        "Actuation Distance": 2.2,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Silent Red",
@@ -55,9 +60,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-silent-red.html",
         "Base Price": 1,
         "Tactility": "Silent Linear",
-        "Spring Weight": "46g",
-        "Actuation Distance": "1.9 mm",
-        "Bottom-out Distance": "3.7 mm"
+        "Spring Weight": 46,
+        "Actuation Distance": 1.9,
+        "Bottom-out Distance": 3.7,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Silent Black",
@@ -65,9 +71,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-silent-black.html",
         "Base Price": 1,
         "Tactility": "Silent Linear",
-        "Spring Weight": "61g",
-        "Actuation Distance": "1.9 mm",
-        "Bottom-out Distance": "3.7 mm"
+        "Spring Weight": 61,
+        "Actuation Distance": 1.9,
+        "Bottom-out Distance": 3.7,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Green",
@@ -75,9 +82,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-green.html",
         "Base Price": 1,
         "Tactility": "Clicky",
-        "Spring Weight": "82g",
-        "Actuation Distance": "2.2 mm",
-        "Bottom-out Distance": "4.0 mm"
+        "Spring Weight": 82,
+        "Actuation Distance": 2.2,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Clear",
@@ -85,9 +93,10 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-clear.html",
         "Base Price": 1,
         "Tactility": "Tactile",
-        "Spring Weight": "66g",
-        "Actuation Distance": "2.0 mm",
-        "Bottom-out Distance": "4.0 mm"
+        "Spring Weight": 66,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [0.05, 0.05, 0.05]
     },
     {
         "Name": "Cherry MX Grey",
@@ -95,8 +104,33 @@
         "Link": "https://www.cherrymx.de/en/mx-original/mx-grey.html",
         "Base Price": 1,
         "Tactility": "Tactile",
-        "Spring Weight": "82g",
-        "Actuation Distance": "2.0 mm",
-        "Bottom-out Distance": "4.0 mm"
+        "Spring Weight": 82,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [0.05, 0.05, 0.05]
+    },
+
+
+    {
+        "Name": "Zealio V2",
+        "Image": "https://mechanicalkeyboards.com/shop/images/products/detail_ZL67gV2_main.png",
+        "Link": "https://zealpc.net/products/zealio",
+        "Base Price": 1,
+        "Tactility": "Tactile",
+        "Spring Weight": {"type": "selection", "options": [62, 65, 67, 78]},
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [1, 1, 1, 0.3]
+    },
+    {
+        "Name": "Zilent V2",
+        "Image": "https://cdn.shopify.com/s/files/1/0275/3649/0561/products/Zilent62-1_800x.jpg?v=1601191543",
+        "Link": "https://zealpc.net/products/zilent",
+        "Base Price": 1.2,
+        "Tactility": "Silent Tactile",
+        "Spring Weight": {"type": "selection", "options": [62, 65, 67, 78]},
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [1, 1, 1, 0.3]
     }
 ]

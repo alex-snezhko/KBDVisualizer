@@ -95,8 +95,8 @@ header h1 {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    max-width: 150px;
-    max-height: 100px;
+    max-width: 148px;
+    max-height: 98px;
 }
 
 .item-name {
@@ -107,12 +107,12 @@ header h1 {
 
 .selected-item-image-container {
     width: 100px;
-    height: 67px;
+    height: 66px;
 }
 
 .selected-item-image-container img {
     max-width: 100px;
-    max-height: 67px;
+    max-height: 66px;
 }
 
 /* ----------------------------------------------- *\
@@ -187,7 +187,37 @@ header h1 {
 }
 
 #keyboard-render {
-    /*min-width: 600px;*/
+    position: relative;
+}
+
+#keyboard-render > * {
+    position: absolute;
+}
+
+#webgl-canvas {
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+#render-inputs {
+    /* color: white; */
+    padding: 10px;
+    font-size: 14px;
+}
+
+#render-inputs input[type=color] {
+    /* background-color: #666; */
+    width: 30px;
+}
+
+#render-inputs button {
+    background-color: #666;
+    border-radius: 3px;
+    border: 1px solid black;
+    color: white;
+    font-family: "Heebo", sans-serif;
+    font-size: 14px;
 }
 
 #selected-item-table {
@@ -290,11 +320,25 @@ header h1 {
 }
 
 .numeric-range-input {
-    width: 50px;
+    margin: 3px;
+}
+
+.numeric-range-input input {
+    width: 30px;
     margin: 3px;
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
+}
+
+.return-button {
+    margin-top: 10px;
+    font-family: "Heebo", sans-serif;
+    color: white;
+    background-color: #48f;
+    border: none;
+    border-radius: 10px;
+    padding: 5px;
 }
 
 .sort-by {

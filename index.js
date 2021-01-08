@@ -1,21 +1,29 @@
 "use strict";
 
+const Router = window.ReactRouter;
+const { RouteHandler, Route, DefaultRoute } = Router;
+
 const money = (num) => "$" + num.toFixed(2);
 
 function NumericRangeFilterComponent(props) {
-    const { field, low, high } = props.filter;
-
-    const toMoney = (val, backup) =>
-        !isNaN(val) && String(val).length < Number(val).toFixed(2).length ? val : backup;
+    const { field, low, high, display } = props.filter;
 
     return (
         <div>
             <h4>{field}</h4>
-            $<input type="text" className="numeric-range-input" value={low}
-                onChange={e => props.onUpdateFilter([toMoney(e.target.value, low), high])} />
+            {display(<input type="text" value={low}
+                onChange={e => {
+                    if (!isNaN(e.target.value)) {
+                        props.onUpdateFilter([e.target.value, high])
+                    }
+                }} />)}
             -
-            $<input type="text" className="numeric-range-input" value={high}
-                onChange={e => props.onUpdateFilter([low, toMoney(e.target.value, high)])} />
+            {display(<input type="text" value={high}
+                onChange={e => {
+                    if (!isNaN(e.target.value)) {
+                        props.onUpdateFilter([low, e.target.value])
+                    }
+                }} />)}
         </div>
     );
 }
@@ -24,7 +32,6 @@ function SelectionFilterComponent(props) {
     const { field, passAll, all, selected } = props.filter;
 
     // TODO add 'alternate' field to items to describe a more general (say, color)
-    // TODO do 2 options for checkbox: must contain and can contain: maybe shift-click for other
 
     return (
         <div>
@@ -70,54 +77,48 @@ class ItemSelectionRow extends React.Component {
         super(props);
 
         this.state = {
-            selections: props.fields.reduce((obj, f) => {
-                const data = props.item[f];
-                obj[f] = data && data.type == "selection" ?
-                    NO_SELECTION :
-                    data;
+            selections: props.extraFieldInfo.reduce((obj, fieldInfo) => {
+                const fieldName = fieldInfo.name;
+                const fieldData = props.item[fieldName];
+                obj[fieldName] = fieldData && fieldData.type == "selection" ? NO_SELECTION : fieldData;
                 return obj;
             }, {})
         }
     }
 
     // function that properly displays option text
-    display(x) {
+    displayOption(x) {
         return x && x.type && x.extra ? `${x.type} (+${money(x.extra)})` : x;
     }
 
     handleSelectionChange(event, field) {
-        const val = this.props.item[field].options.find(x => this.display(x) == event.target.value);
-        this.setState(currState => {
-            let newSelections = {
-                ...currState.selections,
-                [field]: val
-            };
-            return { selections: newSelections }
-        });
+        const val = this.props.item[field].options.find(x => this.displayOption(x) == event.target.value);
+        this.setState(currState => ({ selections: { ...currState.selections, [field]: val } }));
     }
 
-    renderTableData(field) {
-        // the actual data of this item
-        const data = this.props.item[field];
+    renderTableData(fieldInfo) {
+        const fieldName = fieldInfo.name;
 
-        // the currently selected value of this field
-        const selected = this.display(this.state.selections[field]);
+        // the actual data of this item
+        const data = this.props.item[fieldName];
 
         if (data === undefined) {
             return null;
         } else if (Array.isArray(data)) {
             return data.join(", ");
         } else if (data.type == "selection") {
+            // the currently selected value of this field
+            const selected = this.displayOption(fieldInfo.display(this.state.selections[fieldName]));
             return (
-                <select value={selected} onChange={e => this.handleSelectionChange(e, field)}>
-                    {[NO_SELECTION].concat(data.options).map(x => {
-                        const displayed = this.display(x);
+                <select value={selected} onChange={e => this.handleSelectionChange(e, fieldName)}>
+                    {[NO_SELECTION].concat(data.options.map(opt => fieldInfo.display(opt))).map(opt => {
+                        const displayed = this.displayOption(opt);
                         return <option key={displayed} value={displayed}>{displayed}</option>
                     })}
                 </select>
             );
         } else {
-            return data;
+            return fieldInfo.display(data);
         }
     }
 
@@ -135,9 +136,7 @@ class ItemSelectionRow extends React.Component {
                 </td>
                 <td className="item-price-cell">{money(item["Base Price"])}</td>
 
-                {Object.keys(this.state.selections).map(f => 
-                    <td key={f}>{this.renderTableData(f)}</td>
-                )}
+                {this.props.extraFieldInfo.map(f => <td key={f.name}>{this.renderTableData(f)}</td>)}
 
                 <td className="item-select-cell">
                     <button className="select-item-button" onClick={() => {
@@ -151,6 +150,44 @@ class ItemSelectionRow extends React.Component {
                 </td>
             </tr>
         );
+    }
+}
+
+class CompatibilityFilter {
+    constructor(field, origin, accepts) {
+        this.field = field;
+        this.origin = origin;
+        this.accepts = accepts;
+    }
+
+    passes(item) {
+        const fieldData = item[this.field];
+        return fieldData.type == "selection" ?
+                fieldData.options.some(option => this.accepts.includes(option.type || option)) :
+                this.accepts.includes(fieldData);
+    }
+}
+
+class NumRangeFilter {
+    constructor(field, low, high, display) {
+        this.field = field;
+        this.low = low;
+        this.high = high;
+        this.display = display;
+    }
+
+    updateData([low, high]) {
+        this.low = low;
+        this.high = high;
+    }
+
+    passes(item) {
+        const fieldData = item[this.field];
+        const low = this.low === "" ? 0 : Number(this.low);
+        const high = this.high === "" ? Infinity : Number(this.high)
+        return fieldData.type == "selection" ?
+            fieldData.options.some(option => option >= low && option <= high) :
+            fieldData >= low && fieldData <= high;
     }
 }
 
@@ -177,35 +214,15 @@ class SelectionFilter {
         }
     
         const fieldData = item[this.field];
-        if (this.passAll) { // ensure that the item meets at least one selected filter option
+        if (this.passAll) { // ensure that the item meets every selected filter option
             return Array.from(this.selected).every(selection => fieldData.includes(selection));
-        } else { // ensure that the item meets every selected filter option
+        } else { // ensure that the item meets at least one selected filter option
             // if there are several options make sure that one of them passes filter
             return fieldData.type == "selection" ?
                 fieldData.options.some(option => this.selected.has(option.type || option)) :
                 this.selected.has(fieldData);
         }
         
-    }
-}
-
-class NumRangeFilter {
-    constructor(field, low, high) {
-        this.field = field;
-        this.low = low;
-        this.high = high;
-    }
-
-    updateData([low, high]) {
-        this.low = low;
-        this.high = high;
-    }
-
-    passes(item) {
-        const fieldData = item[this.field];
-        const low = this.low === "" ? 0 : Number(this.low);
-        const high = this.high === "" ? Infinity : Number(this.high)
-        return fieldData >= low && fieldData <= high;
     }
 }
 
@@ -228,50 +245,21 @@ class ItemSelection extends React.Component {
     }
 
     loadItems(items) {
-        const filters = [];
+        // discard all items that do not pass initial compatibility checks
+        const shownItems = items.filter(item => this.props.compatibilityFilters.every(f => f.passes(item)));
+
         // generate filters from each field
-        for (const field of ["Base Price"].concat(this.props.extraFields)) {
+        const prices = shownItems.map(item => item["Base Price"]);
+        const filters = [new NumRangeFilter("Base Price", Math.min(...prices), Math.max(...prices), x => <span className="numeric-range-input">${x /* TODO add Base Price to extraFields */}</span>)];
+        for (const fieldInfo of this.props.extraFieldInfo) {
+            const fieldName = fieldInfo.name;
             // separate all data for this field
-            const fieldData = items.map(item => item[field]);
-
-            if (typeof fieldData[0] == "number") { // if items are numbers then generate high/low bound filter
-                const low = fieldData.reduce((min, x) => Math.min(min, x), Number.MAX_VALUE);
-                const high = fieldData.reduce((max, x) => Math.max(max, x), Number.MIN_VALUE);
-                filters.push(new NumRangeFilter(field, low, high));
-            } else { // otherwise generate filter matching selections
-                const options = new Set();
-
-                // determine if this is a field with many options or just one
-                const hasManyValues = Array.isArray(fieldData[0]);
-
-                // generate set of all options for this field
-                for (const data of fieldData) {
-                    if (data !== undefined) {
-                        if (hasManyValues) {
-                            data.forEach(val => options.add(val));
-                        } else {
-                            if (data.type == "selection") {
-                                data.options.forEach(x => options.add(x.type || x));
-                            } else {
-                                options.add(data);
-                            }
-                        }
-                    }
-                }
-
-                // create filter out of set of options; filter will match all selections if this field
-                //   contained arrays (meaning there are several values for the field for each item)
-                //   or at least one selection otherwise (meaning there is an option for some fields for some items)
-                filters.push(new SelectionFilter(
-                    field,
-                    Array.from(options).sort(),
-                    hasManyValues
-                ));
-            }
+            const fieldData = shownItems.map(item => item[fieldName]);
+            filters.push(fieldInfo.generateFilter(fieldName, fieldData));
         }
         
-        items.sort((x, y) => x["Name"].localeCompare(y["Name"]));
-        this.setState({ items, filters });
+        shownItems.sort((x, y) => x["Name"].localeCompare(y["Name"]));
+        this.setState({ items: shownItems, filters });
     }
 
     handleUpdateFilter(field, data) {
@@ -284,9 +272,7 @@ class ItemSelection extends React.Component {
 
     render() {
         const { items, filters, sortBy } = this.state;
-        const extraFields = this.props.extraFields;
-        // first field blank because it represents image; not really necessary to show
-        const allFields = ["Name", "Base Price"].concat(extraFields);
+        const { extraFieldInfo, compatibilityFilters, itemType } = this.props;
 
         if (items == null) {
             return null;
@@ -309,8 +295,8 @@ class ItemSelection extends React.Component {
                     filters={filters}
                     onUpdateFilter={this.handleUpdateFilter} />
 
-                
                 <div style={{margin: "10px 30px 10px 250px"}}>
+                    <button className="return-button" onClick={this.props.onReturn}>Return</button>
                     <div className="sort-by">
                         Sort By:
                         <select value={sortBy} onChange={e => this.setState({ sortBy: e.target.value })}>
@@ -320,31 +306,34 @@ class ItemSelection extends React.Component {
                         </select>
                     </div>
 
-                    {itemsToDisplay.length == 0 && <h3>No Items Found To Match Filters</h3> ||
+                    {compatibilityFilters.length != 0 &&
+                        <h4 style={{ color: "red" }}>Note: only items compatible with currently selected parts are shown</h4>}
+
+                    {itemsToDisplay.length == 0 ? <h3>No Items Found To Match Filters</h3> : (
                         <table id="select-item-table">
                             <thead>
-                                <tr>{allFields.map(f => <th key={f}>{f}</th>)}</tr>
+                                <tr>{["Name", "Base Price"].concat(extraFieldInfo.map(fieldInfo => fieldInfo.name)).map(f => <th key={f}>{f}</th>)}</tr>
                             </thead>
                             <tbody>
                                 {itemsToDisplay.map(item =>
                                     <ItemSelectionRow
                                         key={item["Name"]}
                                         item={item}
-                                        fields={extraFields}
-                                        itemType={this.props.itemType}
+                                        extraFieldInfo={extraFieldInfo}
+                                        itemType={itemType}
                                         onSelect={this.props.onSelect}
                                     />
                                 )}
                             </tbody>
                         </table>
-                    }
+                    )}
                 </div>
             </div>
         );
     }
 }
 
-const ALL_PARTS = ["Case", "Plate", "PCB", "Switches", "Keycaps", "Stabilizers"];
+const ALL_PARTS = ["Case", "Plate", "PCB", "Stabilizers", "Switches", "Keycaps"];
 
 class ItemManager extends React.Component {
     constructor(props) {
@@ -355,7 +344,11 @@ class ItemManager extends React.Component {
                 return obj;
             }, {}),
             selectingItem: null,
-            partsInKit: []
+            partsInKit: [],
+            compatibilityFilters: ALL_PARTS.reduce((obj, item) => {
+                obj[item] = [];
+                return obj;
+            }, {})
         };
 
         this.handleBrowseItem = this.handleBrowseItem.bind(this);
@@ -405,7 +398,8 @@ class ItemManager extends React.Component {
                 "Spring Weight": "46g",
                 "Actuation Distance": "2.0 mm",
                 "Bottom-out Distance": "4.0 mm",
-                price: 1
+                price: 1,
+                casingColor: [0.05, 0.05, 0.05]
             },
             "Keycaps": {
                 "Name": "GMK Modern Dolch",
@@ -422,7 +416,15 @@ class ItemManager extends React.Component {
                 price: 1,
                 profile: "cherry"
             },
-            "Stabilizers": null
+            "Stabilizers": {
+                "Name": "GMK Screw-in Stabilizers",
+                "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/O1CN01MtwenC1amQ9FHFKxo__134583372_1800x1800.jpg?v=1598932169",
+                "Link": "https://kbdfans.com/collections/keyboard-stabilizer/products/gmk-screw-in-stabilizers",
+                "Base Price": 19,
+                "Mount Method": "PCB Screw-in",
+                "color": [0.05, 0.05, 0.05, 0],
+                price: 1
+            }
         }
     }
 
@@ -445,19 +447,30 @@ class ItemManager extends React.Component {
             // TODO actually look up and get references to items if this is a kit
             
             // if (itemType == "Case" || itemType == "Plate" || itemType == "PCB") {
-            //     // TODO handle compatability
+            //     // TODO handle compatibility
             // }
-            
-            const newSelected = {
-                ...currState.selectedItems,
-                [itemType]: {
-                    ...item,
-                    price: item["Base Price"] + selectedValues.reduce(
-                        (extra, val) => extra + (val.extra || 0),
-                        0)
-                }
+
+            let compatibility = currState.compatibilityFilters;
+            const ff = new CompatibilityFilter("Form Factor", itemType, [selections["Form Factor"]]);
+            if (itemType == "Case") {
+                compatibility["PCB"].push(ff);
+                compatibility["Plate"].push(ff);
+            } else if (itemType == "Plate") {
+                compatibility["Case"].push(ff);
+                compatibility["PCB"].push(ff);
+            } else if (itemType == "PCB") {
+                compatibility["Case"].push(ff);
+                compatibility["Plate"].push(ff);
+            }
+
+            const price = item["Base Price"] + selectedValues.reduce((extra, val) => extra + (val.extra || 0), 0);
+
+            return {
+                selectingItem: null,
+                selectedItems: { ...currState.selectedItems, [itemType]: { ...item, price } },
+                partsInKit,
+                compatibilityFilters: compatibility
             };
-            return { selectingItem: null, selectedItems: newSelected, partsInKit };
         });
 
         return true;
@@ -467,34 +480,84 @@ class ItemManager extends React.Component {
         if (itemType == "Kit") {
             this.setState({ partsInKit: [] })
         }
-        this.setState(currState => ({
-            selectedItems: {
-                ...currState.selectedItems,
-                [itemType]: null
+        
+        this.setState(currState => {
+            const filters = { ...currState.compatibilityFilters };
+            for (const field in filters) {
+                filters[field] = filters[field].filter(f => f.origin != itemType);
             }
-        }));
+
+            return {
+                selectedItems: { ...currState.selectedItems, [itemType]: null },
+                compatibilityFilters: filters
+            };
+        });
     }
 
-    getExtraFields(itemType) {
+    getExtraFieldInfo(itemType) {
+        const generateNumericFilter = (display) => function(fieldName, fieldData) {
+            // function that returns the smallest or largest value if there are multiple options for this field
+            const getMinOrMax = (operation, data) => data.type == "selection" ? operation(...data.options) : data;
+
+            const low = Math.min(...fieldData.map(x => getMinOrMax(Math.min, x)));
+            const high = Math.max(...fieldData.map(x => getMinOrMax(Math.max, x)));
+            return new NumRangeFilter(fieldName, low, high, display);
+        };
+
+        function generateSelectionFilter(fieldName, fieldData) {
+            const options = new Set();
+
+            // determine if this is a field with many options or just one
+            const hasManyValues = Array.isArray(fieldData[0]);
+
+            // generate set of all options for this field
+            for (const data of fieldData) {
+                if (data !== undefined) {
+                    if (hasManyValues) {
+                        data.forEach(val => options.add(this.display(val)));
+                    } else {
+                        if (data.type == "selection") {
+                            data.options.forEach(x => options.add(this.display(x.type || x)));
+                        } else {
+                            options.add(this.display(data));
+                        }
+                    }
+                }
+            }
+
+            // create filter out of set of options; filter will match all selections if this field
+            //   contained arrays (meaning there are several values for the field for each item)
+            //   or at least one selection otherwise (meaning there is an option for some fields for some items)
+            return new SelectionFilter(fieldName, Array.from(options).sort(), hasManyValues);
+        }
+
+        const std = (name) => ({ name, display: x => x, generateFilter: generateSelectionFilter });
+
+        // TODO maybe change display to a field of NumRangeFilter
         return {
-            "Kit": ["Form Factor"].concat(ALL_PARTS),
-            "Case": ["Form Factor", "Material", "Primary Color", "Mount Method"],
-            "Plate": ["Form Factor", "Material"],
-            "Switches": ["Tactility", "Spring Weight", "Actuation Distance", "Bottom-out Distance"],
-            "PCB": ["Form Factor", "Hot-swap", "Backlight"],
-            "Keycaps": ["Colors", "Material", "Legends"],
-            "Stabilizers": ["Mount Method"]
+            "Kit": [std("Form Factor")].concat(ALL_PARTS.map(part => std(part))),
+            "Case": [std("Form Factor"), std("Material"), std("Primary Color"), std("Mount Method")],
+            "Plate": [std("Form Factor"), std("Material")],
+            "PCB": [std("Form Factor"), std("Hot-swap"), std("Backlight")],
+            "Stabilizers": [std("Mount Method")],
+            "Switches": [std("Tactility"), { name: "Spring Weight", display: x => x + "g", generateFilter: generateNumericFilter(x => <span className="numeric-range-input">{x}g</span>) },
+                { name: "Actuation Distance", display: x => x.toFixed(1) + " mm", generateFilter: generateNumericFilter(x => <span className="numeric-range-input">{x}mm</span>) },
+                { name: "Bottom-out Distance", display: x => x.toFixed(1) + " mm", generateFilter: generateNumericFilter(x => <span className="numeric-range-input">{x}mm</span>) }],
+            "Keycaps": [std("Colors"), std("Material"), std("Legends")]
         }[itemType] || [];
     }
 
     render() {
-        const { selectedItems, selectingItem, partsInKit } = this.state;
-        //const compatabilityFilters = this.state.partsInKit.length == 0 ? 
-        return selectingItem ?
+        const { selectedItems, selectingItem, partsInKit, compatibilityFilters } = this.state;
+
+        //const compatibilityFilters = this.state.partsInKit.length == 0 ? 
+        return selectingItem != null ?
             <ItemSelection
                 itemType={selectingItem}
-                extraFields={this.getExtraFields(selectingItem)}
+                compatibilityFilters={compatibilityFilters[selectingItem]}
+                extraFieldInfo={this.getExtraFieldInfo(selectingItem)}
                 onSelect={this.handleSelectItem}
+                onReturn={() => this.setState({ selectingItem: null })}
             /> :
             <SelectedItems
                 selectedItems={selectedItems}
@@ -542,22 +605,30 @@ class SelectedItems extends React.Component {
     }
 
     componentDidUpdate(_, prevState) {
-        if (prevState.selectedItemsCollapsed != this.state.selectedItemsCollapsed) {
-            resizeCanvas();
-        }
+        // if (prevState.selectedItemsCollapsed != this.state.selectedItemsCollapsed) {
+        //     resizeCanvas();
+        // }
     }
 
     render() {
+        const selected = this.props.selectedItems;
         const collapsed = this.state.selectedItemsCollapsed;
-        const canRenderKeyboard = ALL_PARTS.every(part => this.props.selectedItems[part]);
+
+        const allPartsSelected = ALL_PARTS.every(part => selected[part]);
+        const totalPrice = ALL_PARTS.reduce((total, part) => total + selected[part].price || 0, 0);
 
         return (
             <div id="selected-items-container">
-                {!collapsed && <div><SelectedItemTable {...this.props} /></div>}
+                {!collapsed && (
+                    <div>
+                        <SelectedItemTable {...this.props} />
+                        <div>Total Price: {money(totalPrice)}</div>
+                    </div>
+                )}
                 <CollapseSelectedItems collapsed={collapsed} onClick={this.handleCollapseItems} />
                 <div id="rightmost">
                     <div id="render-container">
-                        {canRenderKeyboard ? <KeyboardRender selectedItems={this.props.selectedItems} /> :
+                        {allPartsSelected ? <KeyboardRender selectedItems={this.props.selectedItems} /> :
                             <h3>Select all parts to view keyboard render</h3>}
                     </div>
                 </div>
@@ -612,51 +683,6 @@ const SelectedItemTable = (props) => (
     </table>
 );
 
-class KeyboardRender extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            keycapColor: "#000000",
-            legendColor: "#ffffff"
-        }
-    }
-
-    componentDidMount() {
-        const selected = this.props.selectedItems;
-
-        const kbdName = selected["Case"]["Name"];
-        const kcProfile = selected["Keycaps"].profile;
-        const keycaps = selected["Keycaps"]["Name"];
-        loadModels(kbdName, kcProfile, keycaps);
-    }
-
-    render() {
-        return (
-            <React.Fragment>
-                <input type="checkbox" id="highlight-changeable" onChange={toggleHighlightKeys} />
-                <label htmlFor="highlight-changeable">Highlight Changeable Keys</label>
-                <button onClick={enableFullCustom}>Customize</button>
-                <div>
-                    <div className="color-picker">
-                        <input type="color" id="keycap-color" value={this.state.keycapColor}
-                            onChange={e => this.setState({ keycapColor: e.target.value })} />
-                        <label htmlFor="keycap-color">Keycap Color</label>
-                    </div>
-                    <div className="color-picker">
-                        <input type="color" id="legend-color" value={this.state.legendColor}
-                            onChange={e => this.setState({ legendColor: e.target.value })} />
-                        <label htmlFor="legend-color">Legend Color</label>
-                    </div>
-                </div>
-                <div id="keyboard-render">
-                    <canvas id="webGLCanvas" onClick={canvasClicked} />
-                </div>
-            </React.Fragment>
-        );
-    }
-}
-
 class ImportExport extends React.Component {
     render() {
         return null;
@@ -666,7 +692,7 @@ class ImportExport extends React.Component {
 class App extends React.Component {
     render() {
         return (
-            <React.Fragment>
+            <Router>
                 <header>
                     <div id="header-inner">
                         <img src="resources/keyboard.png" width="60" height="60" />
@@ -675,12 +701,9 @@ class App extends React.Component {
                 </header>
                 <ItemManager />
                 <ImportExport />
-            </React.Fragment>
+            </Router>
         );
     }
 }
 
 ReactDOM.render(<App />, document.getElementById("root"));
-
-// To-do list
-// implement in-stock/vendor tracking
