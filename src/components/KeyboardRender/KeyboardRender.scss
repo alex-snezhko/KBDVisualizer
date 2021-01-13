@@ -1,0 +1,33 @@
+@use "../../styles/styles.scss";
+
+#keyboard-render {
+    position: relative;
+
+    & > * {
+        position: absolute;
+    }
+}
+
+#webgl-canvas {
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+#render-inputs {
+    padding: 10px;
+    font-size: 14px;
+
+    input[type=color] {
+        width: 30px;
+    }
+
+    button {
+        background-color: #666;
+        border-radius: 4px;
+        border: 1px solid black;
+        color: white;
+        font-family: styles.$main-font;
+        font-size: 14px;
+    }
+}

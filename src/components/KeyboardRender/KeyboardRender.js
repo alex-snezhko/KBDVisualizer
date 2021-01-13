@@ -1,6 +1,9 @@
 import React from "react";
 import { mat4, vec3 } from "gl-matrix";
-import "./style.scss";
+
+import allKbdInfo from "@resources/keyboardInfo.json";
+import allKeycapsInfo from "@resources/keycapInfo.json";
+import "./KeyboardRender.scss";
 
 let gl = null;
 
@@ -23,14 +26,14 @@ let progsInfo = {
         uniforms: {},
         buffers: {}
     }
-}
+};
 
 let eye = {
     position: vec3.fromValues(0, 30, 30),
     lookAt: vec3.normalize(vec3.create(), vec3.fromValues(0, -1, -1)),
     lookUp: vec3.normalize(vec3.create(), vec3.fromValues(0, 1, -1)),
     yAngle: Math.PI / 4
-}
+};
 
 let keyRenderInstructions = [];
 
@@ -62,7 +65,7 @@ const SPECIAL_NUM_UNITS = {
     "Space6_25": 6.25,
     "Space7": 7,
     "Num0": 2
-}
+};
 
 const SPECIAL_KEYCAP_IDENTIFIERS = new Set([
     "Space6_25", "Space6", "Space7", "NumEnter", "NumPlus", "ISOEnter"
@@ -126,14 +129,14 @@ function loadTexture(url) {
                 }
     
                 resolve(img);
-            }
+            };
             img.onerror = () => resolve(img);
             img.src = url;
 
             // TODO remove when working
             // resolve(img);
         })
-    }
+    };
 }
 
 const ALPHAS = new Set([
@@ -187,14 +190,14 @@ let objectIdToKey = {};
 
 async function loadModels(kbdName, keycapProfile, keycapSet) {
     // TODO make resources get from local path
-    const fetchJson = filename => fetch("resources/" + filename + ".json").then(response => response.json());
+    const fetchJson = filename => import("@resources/" + filename + ".json").then(({ default: json }) => json);
 
-    let kbdInfo;
-    let keycapsInfo;
-    await Promise.all([
-        fetchJson("keyboardInfo").then(allKbdInfo => kbdInfo = allKbdInfo[kbdName]),
-        fetchJson("keycapInfo").then(allKcInfo => keycapsInfo = allKcInfo[keycapSet])
-    ]);
+    let kbdInfo = allKbdInfo[kbdName];
+    let keycapsInfo = allKeycapsInfo[keycapSet];
+    // await Promise.all([
+    //     fetchJson("keyboardInfo").then(allKbdInfo => kbdInfo = allKbdInfo[kbdName]),
+    //     fetchJson("keycapInfo").then(allKcInfo => keycapsInfo = allKcInfo[keycapSet])
+    // ]);
 
     // ---------------------------------------------------------------------------
     // prepare all necessary information for setting up key rendering instructions
@@ -579,14 +582,14 @@ function setupShaders() {
             progInfo.attribs[attribName] = {
                 loc: gl.getAttribLocation(progInfo.program, attribName),
                 ...attribInfo
-            }
+            };
         }
 
         for (const uniformName in uniforms) {
             progInfo.uniforms[uniformName] = {
                 loc: gl.getUniformLocation(progInfo.program, uniformName),
                 method: uniforms[uniformName].bind(gl)
-            }
+            };
         }
     }
 
@@ -644,7 +647,9 @@ export class KeyboardRender extends React.Component {
             fullCustom: false,
             keycapColor: "#000000",
             legendColor: "#ffffff"
-        }
+        };
+
+        this.tick = null;
 
         this.handleCanvasClicked = this.handleCanvasClicked.bind(this);
         this.handleCanvasMouseMove = this.handleCanvasMouseMove.bind(this);
@@ -680,10 +685,10 @@ export class KeyboardRender extends React.Component {
 
         const selected = this.props.selectedItems;
         loadModels("Tofu 65% Aluminum"/*selected["Case"]["Name"]*/, "cherry"/* TODO selected["Keycaps"].profile */, selected["Keycaps"]["Name"])
-        .then(() => {
-            this.handleResizeCanvas();
-            this.renderScene();
-        });
+            .then(() => {
+                this.handleResizeCanvas();
+                this.renderScene();
+            });
     }
 
     componentWillUnmount() {
@@ -722,7 +727,6 @@ export class KeyboardRender extends React.Component {
 
     handleCanvasMouseMove(event) {
         if (event.buttons !== 0) {
-            console.log("moved");
             // find how much the mouse has moved since the last position
             const dx = event.movementX;
             const dy = event.movementY;
@@ -833,7 +837,7 @@ export class KeyboardRender extends React.Component {
 
     handleCustomizeKeycaps() {
         this.keycapColors = keyRenderInstructions.map(key => ({ keycapColor: key.keycapColor, legendColor: key.legendColor }));
-        this.setState({ highlightKeys: false, fullCustom: true })
+        this.setState({ highlightKeys: false, fullCustom: true });
     }
 
     handleResetKeycaps() {
@@ -883,7 +887,7 @@ export class KeyboardRender extends React.Component {
                         uModelMat: [false, transformation],
                         uColor: this.props.selectedItems["Stabilizers"].color.slice(0, 3) // TODO
                     });
-                }
+                };
 
                 renderStab([stabOffset, 0, 0]);
                 renderStab([-stabOffset, 0, 0]);

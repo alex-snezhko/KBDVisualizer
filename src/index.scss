@@ -1,0 +1,58 @@
+/* -------------- *\
+    Global style
+\* -------------- */
+@use "./styles/styles.scss";
+@import url(https://fonts.googleapis.com/css2?family=Heebo&display=swap);
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: styles.$main-font;
+    background-color: styles.$body-background-color;
+}
+
+#root {
+    @extend body;
+    display: flex;
+    flex-direction: column;
+}
+
+h4 {
+    margin-bottom: 3px;
+}
+
+table {
+    border-spacing: 0;
+
+    thead {
+        font-weight: 600;
+        text-align: left;
+    }
+    
+    td {
+        border-top: 1px solid styles.$light-border-color;
+    }
+    
+    td, th {
+        padding: 20px 10px;
+    }
+}
+
+select {
+    @include styles.standard-rounded-border;
+}
+
+hr {
+    height: 1px;
+    border: none;
+    background-color: styles.$light-border-color;
+}
+
+a {
+    text-decoration: none;
+
+    &:hover {
+        opacity: 0.8;
+    }
+}

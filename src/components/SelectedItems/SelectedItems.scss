@@ -1,0 +1,59 @@
+/* ----------------------------------------------- *\
+    Style for table which contains selected parts
+\* ----------------------------------------------- */
+@use "../../styles/styles.scss";
+
+#selected-items-container {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    width: 100%;
+    min-width: 1500px;
+
+    & > *:last-child {
+        flex-grow: 100;
+    }
+}
+
+#collapse-selected-items {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    width: 50px;
+    text-align: center;
+}
+
+.vertical-line {
+    width: 1px;
+    height: 100%;
+    background-color: black;
+    margin: 0 auto;
+}
+
+#show-hide-arrow-container {
+    margin: 20px auto;
+    white-space: nowrap;
+    font-size: 20px;
+    cursor: pointer;
+
+    &:hover {
+        color: gray;
+    }
+
+    * {
+        display: inline-block;
+    }
+
+    .vertical {
+        writing-mode: vertical-lr;
+        @include styles.centered-inline;
+    }
+}
+
+.flipped {
+    transform: rotate(-180deg);
+}
+
+#render-container {
+    margin: 30px;
+}

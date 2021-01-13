@@ -24,13 +24,5 @@
         "Form Factor": "65%",
         "Case": {"type": "selection", "options": ["Black", "Gray", "White", "Blue", "Green", "Purple"]},
         "Plate": {"type": "selection", "options": ["Aluminum", "Brass"]}
-    },
-    {
-        "Name": "ASDF",
-        "Image": "https://buffer.com/library/content/images/library/wp-content/uploads/2015/11/long-url.png",
-        "Base Price": 325,
-        "Form Factor": "65%",
-        "Case": {"type": "selection", "options": ["Black", "Gray", "White", "Blue", "Green", "Purple"]},
-        "Plate": {"type": "selection", "options": ["Aluminum", "Brass"]}
     }
 ]
