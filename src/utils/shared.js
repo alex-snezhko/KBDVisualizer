@@ -79,3 +79,5 @@ export class SelectionFilterObj {
         }
     }
 }
+
+export const toColor = (hex) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h => Number("0x" + h) / 255);

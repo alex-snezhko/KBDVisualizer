@@ -1,11 +1,18 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import groupBuyItems from "@resources/groupbuys.json";
 import { money } from "../../utils/shared";
 import "./GroupBuys.scss";
 
 export function GroupBuys({ onSelectItem }) {
+    const [groupBuyItems, setGroupBuyItems] = useState([]);
+    
+    useEffect(() => {
+        fetch("http://localhost:3001/activeGroupBuys")
+            .then(res => res.json())
+            .then(setGroupBuyItems);
+    }, []);
+
     return (
         <React.Fragment>
             <h1>Ongoing Group Buys</h1>
@@ -32,6 +39,14 @@ function GroupBuyItem({ item, onSelectItem }) {
 
     const format = (num, str) => `${num} ${str}${num > 1 ? "s" : ""}`;
 
+    async function handleSelectItem() {
+        const partType = item.partType.toLowerCase();
+        const name = item.name;
+
+        const item = await fetch(`http://localhost:3001/item/${partType}/${name}`);
+        onSelectItem(item.partType, item);
+    }
+
     return (
         <div className="group-buy-item">
             <a href={item.link}>
@@ -49,11 +64,7 @@ function GroupBuyItem({ item, onSelectItem }) {
                 <li><b>Time left:</b> {daysLeft > 0 && format(daysLeft, "day")} {format(hoursLeft, "hour")}</li>
             </ul>
             <Link to="/">
-                <button onClick={() => {
-                    import(`@resources/items/${item.partType.toLowerCase()}.json`)
-                        .then(({ default: items }) => items.find(item => item["Name"] === item.name))
-                        .then(item => onSelectItem(item.partType, item));
-                }}>Try Now!</button>
+                <button onClick={handleSelectItem}>Try Now!</button>
             </Link>
         </div>
     );

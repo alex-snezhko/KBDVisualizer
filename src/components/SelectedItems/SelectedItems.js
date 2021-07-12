@@ -32,7 +32,8 @@ export function SelectedItems(props) {
 
             <div>
                 <div id="render-container">
-                    {allPartsSelected ? <KeyboardRender selectedItems={props.selectedItems} /> :
+                    {allPartsSelected ?
+                        <KeyboardRender selectedItems={props.selectedItems} /> :
                         <h3>Select all parts to view keyboard render</h3>}
                 </div>
             </div>

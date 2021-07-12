@@ -20,25 +20,23 @@ export function ItemSelection(props) {
 
     const { itemType } = useParams();
 
-    useEffect(() => {
-        // TODO make better
-        fetch(`../../../resources/items/${itemType.toLowerCase()}.json`)
-            .then(response => response.json())
-            .then(items => {
-                // discard all items that do not pass initial compatibility checks
-                const shownItems = items.filter(item => props.compatibilityFilters.every(f => f.passes(item)));
+    useEffect(async () => {
+        const response = await fetch(`http://localhost:3001/items/${itemType.toLowerCase()}`);
+        const items = await response.json();
         
-                // generate filters from each field
-                const prices = shownItems.map(item => item["Base Price"]);
-                const filts = [
-                    new NumRangeFilterObj("Base Price", Math.min(...prices), Math.max(...prices),
-                        x => <span className="numeric-range-input">${x /* TODO add Base Price to extraFields */}</span>)
-                ].concat(props.extraFieldInfo.map(f => f.generateFilter(f.name, shownItems.map(item => item[f.name]))));
-                
-                shownItems.sort((x, y) => x["Name"].localeCompare(y["Name"]));
-                setItems(shownItems);
-                setFilters(filts);
-            });
+        // discard all items that do not pass initial compatibility checks
+        const shownItems = items.filter(item => props.compatibilityFilters.every(f => f.passes(item)));
+
+        // generate filters from each field
+        const prices = shownItems.map(item => item["Base Price"]);
+        const filts = [
+            new NumRangeFilterObj("Base Price", Math.min(...prices), Math.max(...prices),
+                x => <span className="numeric-range-input">${x /* TODO add Base Price to extraFields */}</span>)
+        ].concat(props.extraFieldInfo.map(f => f.generateFilter(f.name, shownItems.map(item => item[f.name]))));
+        
+        shownItems.sort((x, y) => x["Name"].localeCompare(y["Name"]));
+        setItems(shownItems);
+        setFilters(filts);
     }, []);
 
     if (items === null) {

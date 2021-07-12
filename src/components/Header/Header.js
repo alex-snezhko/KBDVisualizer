@@ -8,7 +8,7 @@ export const Header = () => (
     <header>
         <div id="header-inner">
             <img src={keyboardIcon} alt="Keyboard Icon" id="keyboard-icon" />
-            <h1>KBD<span id="header-part">PART</span>PICKER</h1>
+            <h1>KBD<span id="header-part">VISUALIZER</span></h1>
             <nav>
                 <div>
                     <NavLink to="/" exact activeClassName="active-page-link">

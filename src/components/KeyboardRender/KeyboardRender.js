@@ -1,8 +1,6 @@
 import React from "react";
 import { mat4, vec3 } from "gl-matrix";
 
-import allKbdInfo from "@resources/keyboardInfo.json";
-import allKeycapsInfo from "@resources/keycapInfo.json";
 import "./KeyboardRender.scss";
 
 let gl = null;
@@ -188,16 +186,9 @@ function getKeycapColorOptions(key, keycapsInfo) {
 let keyNameToKeyObj = {};
 let objectIdToKey = {};
 
-async function loadModels(kbdName, keycapProfile, keycapSet) {
+async function loadModels(keyboardInfo, keycapsInfo, keycapProfile) {
     // TODO make resources get from local path
     const fetchJson = filename => import("@resources/" + filename + ".json").then(({ default: json }) => json);
-
-    let kbdInfo = allKbdInfo[kbdName];
-    let keycapsInfo = allKeycapsInfo[keycapSet];
-    // await Promise.all([
-    //     fetchJson("keyboardInfo").then(allKbdInfo => kbdInfo = allKbdInfo[kbdName]),
-    //     fetchJson("keycapInfo").then(allKcInfo => keycapsInfo = allKcInfo[keycapSet])
-    // ]);
 
     // ---------------------------------------------------------------------------
     // prepare all necessary information for setting up key rendering instructions
@@ -210,23 +201,23 @@ async function loadModels(kbdName, keycapProfile, keycapSet) {
     let keycapModelsVisited = new Set();
     // find total number of units horizontally and vertically
     // to get number of units horizontally, find the keygroup that extends farthest right
-    const numUnitsX = kbdInfo.keyGroups.reduce(
+    const numUnitsX = keyboardInfo.keyGroups.reduce(
         (rightmostUnits, keyGroup) => Math.max(rightmostUnits, keyGroup.keys.reduce(
             (numU, key) => numU + (SPECIAL_NUM_UNITS[key] || 1),
             keyGroup.offset[0])),
         0);
     // to get number of units vertically, find the keygroup that extends farthest down
-    const numUnitsY = kbdInfo.keyGroups.reduce((max, kg) => Math.max(max, kg.offset[1]), 0) + 1;
+    const numUnitsY = keyboardInfo.keyGroups.reduce((max, kg) => Math.max(max, kg.offset[1]), 0) + 1;
     const HEIGHT = 1.25;
     // define matrix for rotating an object by the keyboard incline and then moving it up to proper height
     const heightInclineMat = mat4.multiply(mat4.create(),
         mat4.fromTranslation(mat4.create(), vec3.fromValues(0, HEIGHT, 0)),
-        mat4.fromRotation(mat4.create(), kbdInfo.incline * (Math.PI / 180), [1, 0, 0]) // incline
+        mat4.fromRotation(mat4.create(), keyboardInfo.incline * (Math.PI / 180), [1, 0, 0]) // incline
     );
     // -------------------------------------------------
     // define instructions for rendering all needed keys
     // -------------------------------------------------
-    for (const kg of kbdInfo.keyGroups) {
+    for (const kg of keyboardInfo.keyGroups) {
         // initialize position to beginning of row and increment after each key
         let posXZ = [kg.offset[0] - numUnitsX / 2, 0, kg.offset[1] - numUnitsY / 2 + 0.5];
         for (const key of kg.keys) {
@@ -634,11 +625,19 @@ const toColor = (hex) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h 
 // allow selection for different base kits of same set (e.g. Modern dolch)
 // upload favicon and update header
 
+
+
+
+// TODO refactor this clusterfuck of a file
+
 export class KeyboardRender extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
+            keyboardInfo: null,
+            keycapsInfo: null,
+
             blinkProportion: 0,
             increasing: false,
             prevWidth: 0,
@@ -658,52 +657,6 @@ export class KeyboardRender extends React.Component {
         this.handleCustomizeKeycaps = this.handleCustomizeKeycaps.bind(this);
         this.handleResetKeycaps = this.handleResetKeycaps.bind(this);
         this.handleResizeCanvas = this.handleResizeCanvas.bind(this);
-    }
-
-    componentDidMount() {
-        const canvas = document.getElementById("webgl-canvas");
-        gl = canvas.getContext("webgl");
-        if (gl === null) {
-            alert("Error in fetching GL context. Please ensure that your browser support WebGL.");
-            return;
-        }
-
-        gl.viewport(0, 0, canvas.width, canvas.height);
-
-        // enable gl attributes: use z-buffering, make background black
-        gl.clearColor(...toColor("#fcfcf8"), 1.0);
-        gl.clearDepth(1.0);
-        // gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-        // gl.enable(gl.BLEND);
-        // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        gl.enable(gl.DEPTH_TEST);
-
-        window.addEventListener("resize", this.handleResizeCanvas);
-        canvas.addEventListener("wheel", this.handleCanvasWheel);
-
-        setupShaders();
-
-        const selected = this.props.selectedItems;
-        loadModels("Tofu 65% Aluminum"/*selected["Case"]["Name"]*/, "cherry"/* TODO selected["Keycaps"].profile */, selected["Keycaps"]["Name"])
-            .then(() => {
-                this.handleResizeCanvas();
-                this.renderScene();
-            });
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener("resize", this.handleResizeCanvas);
-        document.getElementById("webgl-canvas").removeEventListener("wheel", this.handleCanvasWheel);
-        if (this.tick) {
-            clearInterval(this.tick);
-            this.tick = null;
-        }
-        gl = null;
-    }
-
-    componentDidUpdate() {
-        this.handleResizeCanvas();
-        this.renderScene();
     }
 
     handleResizeCanvas() {
@@ -847,6 +800,90 @@ export class KeyboardRender extends React.Component {
         }
         
         this.setState({ fullCustom: false });
+    }
+
+    async componentDidMount() {
+        const canvas = document.getElementById("webgl-canvas");
+        gl = canvas.getContext("webgl");
+        if (gl === null) {
+            alert("Error in fetching GL context. Please ensure that your browser supports WebGL.");
+            return;
+        }
+
+        gl.viewport(0, 0, canvas.width, canvas.height);
+
+        // enable gl attributes: use z-buffering, make background black
+        gl.clearColor(...toColor("#fcfcf8"), 1.0);
+        gl.clearDepth(1.0);
+        // gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+        // gl.enable(gl.BLEND);
+        // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable(gl.DEPTH_TEST);
+
+        window.addEventListener("resize", this.handleResizeCanvas);
+        canvas.addEventListener("wheel", this.handleCanvasWheel);
+
+        setupShaders();
+
+        const selected = this.props.selectedItems;
+        // const fetchInfo = async (infoType, name) => {// async function fetchInfo(infoType, name) {
+        //     try {
+        //         const res = await fetch(`http://localhost:3001/${infoType}/${encodeURIComponent(name)}`);
+        //         const data = await res.json();
+        //         this.setState({ [infoType]: data });
+        //     } catch (err) {
+        //         console.error(`Error fetching ${infoType}: ${err}`);
+        //     }
+        // };
+
+        // await fetchInfo("keyboardInfo", selected["Case"]["Name"]);
+        // await fetchInfo("keycapsInfo", selected["Keycaps"]["Name"]);
+        let infoType = "keyboardInfo";
+        let name = selected["Case"]["Name"];
+        const set = {};
+        try {
+            const res = await fetch(`http://localhost:3001/${infoType}/${encodeURIComponent(name)}`);
+            const data = await res.json();
+            set[infoType] = data;
+        } catch (err) {
+            console.error(`Error fetching ${infoType}: ${err}`);
+        }
+        infoType = "keycapsInfo";
+        name = selected["Keycaps"]["Name"];
+        try {
+            const res = await fetch(`http://localhost:3001/${infoType}/${encodeURIComponent(name)}`);
+            const data = await res.json();
+            set[infoType] = data;
+        } catch (err) {
+            console.error(`Error fetching ${infoType}: ${err}`);
+        }
+
+        this.setState({ keyboardInfo: set.keyboardInfo, keycapsInfo: set.keycapsInfo });
+
+        console.log("kbd");
+        console.log(this.state.keyboardInfo);
+        console.log("kc");
+        console.log(this.state.keycapsInfo);
+
+        await loadModels(this.state.keyboardInfo, this.state.keycapsInfo, "cherry");
+
+        this.handleResizeCanvas();
+        this.renderScene();
+    }
+
+    componentDidUpdate() {
+        this.handleResizeCanvas();
+        // this.renderScene();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.handleResizeCanvas);
+        document.getElementById("webgl-canvas").removeEventListener("wheel", this.handleCanvasWheel);
+        if (this.tick) {
+            clearInterval(this.tick);
+            this.tick = null;
+        }
+        gl = null;
     }
 
     renderScene() {

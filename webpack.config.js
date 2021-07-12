@@ -1,4 +1,4 @@
-const isDevelopment = true;//process.env.NODE_ENV === 'development';
+const isDevelopment = true;// TODO process.env.NODE_ENV === 'development';
 
 // TODO change to import
 const path = require('path');

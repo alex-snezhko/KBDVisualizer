@@ -186,17 +186,6 @@ export function App() {
 
             <main>
                 <Switch>
-                    <Route path="/login">
-                        <Login />
-                    </Route>
-                    <Route path="/signup">
-                        <SignUp />
-                    </Route>
-                    <Route path="/group-buys">
-                        <GroupBuys onSelectItem={
-                            (partType, item) => setSelectedItems({ ...selectedItems, [partType]: item })
-                        } />
-                    </Route>
                     <Route exact path="/">
                         <SelectedItems
                             selectedItems={selectedItems}
@@ -211,6 +200,17 @@ export function App() {
                             onSelect={handleSelectItem}
                         />
                     )} />
+                    <Route path="/group-buys">
+                        <GroupBuys onSelectItem={
+                            (partType, item) => setSelectedItems({ ...selectedItems, [partType]: item })
+                        } />
+                    </Route>
+                    <Route path="/login">
+                        <Login />
+                    </Route>
+                    <Route path="/signup">
+                        <SignUp />
+                    </Route>
                 </Switch>
             </main>
         </Router>
