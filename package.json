@@ -6,8 +6,7 @@
   "proxy": "http://localhost:3000",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start-client": "webpack serve",
-    "start-server": "nodemon server/api.js",
+    "start": "node server/api.js",
     "dev": "(nodemon server/api.js) & (webpack serve)",
     "build": "webpack"
   },
