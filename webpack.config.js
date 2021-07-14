@@ -1,4 +1,4 @@
-const isDevelopment = true;// TODO process.env.NODE_ENV === 'development';
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 // TODO change to import
 const path = require('path');
@@ -7,9 +7,9 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
     mode: isDevelopment ? 'development' : 'production',
-    entry: path.resolve(__dirname, 'src', 'index.js'),
+    entry: path.resolve(__dirname, 'client', 'src', 'index.js'),
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, 'client', 'dist'),
         filename: 'bundle.js'
     },
     module: {
@@ -19,25 +19,6 @@ module.exports = {
                 exclude: /node_modules/,
                 use: ['babel-loader', 'eslint-loader']
             },
-            // {
-            //   test: /\.module\.s(a|c)ss$/,
-            //   loader: [
-            //     isDevelopment ? 'style-loader' : MiniCssExtractPlugin.loader,
-            //     {
-            //       loader: 'css-loader',
-            //       options: {
-            //         modules: true,
-            //         sourceMap: isDevelopment
-            //       }
-            //     },
-            //     {
-            //       loader: 'sass-loader',
-            //       options: {
-            //         sourceMap: isDevelopment
-            //       }
-            //     }
-            //   ]
-            // },
             {
                 test: /\.css$/,
                 use: [
@@ -78,7 +59,7 @@ module.exports = {
     // },
     // add a custom index.html as the template
     plugins: [
-        new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'src', 'index.html') }),
+        new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'client', 'src', 'index.html') }),
         new MiniCssExtractPlugin({
             filename: '[name].css',
             chunkFilename: '[id].css'

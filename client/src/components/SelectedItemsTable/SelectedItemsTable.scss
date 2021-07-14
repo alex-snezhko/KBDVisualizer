@@ -1,0 +1,29 @@
+@use "../../styles/styles.scss";
+
+#selected-item-table {
+    /* Special class for selected parts that are in a kit */
+    .part-in-kit td {
+        color: darkgray
+    }
+}
+
+.selected-item-image-container {
+    @include styles.bordered-img-container(100px !important, 66px !important);
+}
+
+/* Style button for deleting a chosen part */
+.delete-button {
+    border-radius: 15px;
+    border-width: 0;
+    background-color: #faa;
+    font-size: 13px;
+    padding: 3px 7px 5px 7px;
+
+    &:hover {
+        background-color: #f66;
+    }
+
+    * {
+        margin: 0;
+    }
+}

@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "An app that used to visualize custom mechanical keyboards",
   "main": "index.js",
-  "proxy": "http://localhost:3001",
+  "proxy": "http://localhost:3000",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack serve",
+    "start-client": "webpack serve",
+    "start-server": "nodemon server/api.js",
+    "start": "(nodemon server/api.js) & (webpack serve)",
     "dev": "webpack-dev-server --mode=development",
     "build": "webpack"
   },
@@ -21,7 +23,12 @@
   },
   "homepage": "https://github.com/alexsnezhko3/KBDVisualizer#readme",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
     "gl-matrix": "^3.3.0",
+    "node-cron": "^3.0.0",
+    "puppeteer": "^10.1.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-icons": "^4.1.0",

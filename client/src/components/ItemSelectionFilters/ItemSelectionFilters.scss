@@ -1,0 +1,16 @@
+@use "../../styles/styles.scss";
+
+#filters-box {
+    width: 200px;
+    float: left;
+
+    .numeric-range-input {
+        margin: 3px;
+
+        input {
+            @include styles.standard-rounded-border;
+            width: 30px;
+            margin: 3px;
+        }
+    }
+}

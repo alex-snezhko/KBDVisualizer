@@ -1,0 +1,51 @@
+@use "../../styles/styles.scss";
+
+main {
+    margin: 15px 30px;
+    flex-grow: 1;
+}
+
+.item-name-cell {
+    min-width: 350px;
+
+    a {
+        text-decoration: none;
+        font-weight: bold;
+        color: black;
+
+        &:hover {
+            color: #666;
+        }
+    }
+}
+
+.item-price-cell {
+    width: 80px;
+}
+
+.item-name {
+    width: 180px;
+    @include styles.centered-inline;
+}
+
+.item-image-container {
+    @include styles.centered-inline;
+    @include styles.bordered-img-container(150px, 100px);
+    margin-right: 10px;
+}
+
+/* Make select button cell width exactly fit button */
+.item-select-cell {
+    width: 1px;
+    white-space: nowrap;
+}
+
+/* Style button for selecting a part */
+
+.blue-button {
+    @include styles.rounded-button(#4bc);
+}
+
+.orange-button {
+    @include styles.rounded-button(#ffa500);
+}

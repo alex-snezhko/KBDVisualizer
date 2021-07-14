@@ -1,9 +1,11 @@
+"use strict";
 const express = require("express");
 const cron = require("node-cron");
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const cors = require("cors");
 const fs = require("fs");
+const path = require("path");
 
 cron.schedule("0 0 * * *", async () => {
     const browser = await puppeteer.launch();
@@ -65,33 +67,36 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(express.static(path.resolve(__dirname, "../client/dist")));
+
 const findInfo = itemType => (req, res) => {
     const { name } = req.params;
-    const json = JSON.parse(fs.readFileSync(`./resources/${itemType}.json`));
+    console.log(__dirname);
+    const json = JSON.parse(fs.readFileSync(path.resolve(__dirname, `resources/${itemType}.json`)));
     const object = json[name];
     res.send(object);
 };
 
+for (const itemType of ["keyboardInfo", "keycapsInfo"]) {
+    app.get(`/${itemType}/:name`, findInfo(itemType));
+}
+
 const findItem = itemType => (req, res) => {
     const { name } = req.params;
-    const jsonItems = JSON.parse(fs.readFileSync(`./resources/items/${itemType}.json`));
+    const jsonItems = JSON.parse(fs.readFileSync(path.resolve(__dirname, `resources/items/${itemType}.json`)));
     const item = jsonItems.find(item => item["Name"] === name);
     res.send(item);
 };
 
 const getItems = itemType => (req, res) => {
-    const jsonItems = JSON.parse(fs.readFileSync(`./resources/items/${itemType}.json`));
+    const jsonItems = JSON.parse(fs.readFileSync(path.resolve(__dirname, `resources/items/${itemType}.json`)));
     res.send(jsonItems);
 };
 
 app.get("/activeGroupBuys", (req, res) => {
-    const json = fs.readFileSync("resources/groupbuys.json");
+    const json = fs.readFileSync(path.resolve(__dirname, "resources/groupbuys.json"));
     res.send(json);
 });
-
-for (const itemType of ["keyboardInfo", "keycapsInfo"]) {
-    app.get(`/${itemType}/:name`, findInfo(itemType));
-}
 
 for (const itemType of ["case", "keycaps", "kit", "pcb", "plate", "stabilizers", "switches"]) {
     app.get(`/item/${itemType}/:name`, findItem(itemType));
@@ -100,7 +105,11 @@ for (const itemType of ["case", "keycaps", "kit", "pcb", "plate", "stabilizers",
 
 // TODO idea: image processing to detect colors of keys
 
-const PORT = 3001;
+app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../client/dist", "index.html"));
+});
+
+const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
