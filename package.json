@@ -8,8 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-client": "webpack serve",
     "start-server": "nodemon server/api.js",
-    "start": "(nodemon server/api.js) & (webpack serve)",
-    "dev": "webpack-dev-server --mode=development",
+    "dev": "(nodemon server/api.js) & (webpack serve)",
     "build": "webpack"
   },
   "repository": {
