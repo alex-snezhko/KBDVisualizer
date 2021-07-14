@@ -973,14 +973,14 @@ export class KeyboardRender extends React.Component {
                             <button onClick={this.handleResetKeycaps}>Reset</button>
                             <div>
                                 {/* <div className="color-picker"> */}
-                                    <input type="color" id="keycap-color" value={this.state.keycapColor}
-                                        onChange={e => this.setState({ keycapColor: e.target.value })} />
-                                    <label htmlFor="keycap-color">Keycap Color</label>
+                                <input type="color" id="keycap-color" value={this.state.keycapColor}
+                                    onChange={e => this.setState({ keycapColor: e.target.value })} />
+                                <label htmlFor="keycap-color">Keycap Color</label>
                                 {/* </div> */}
                                 {/* <div className="color-picker"> */}
-                                    <input type="color" id="legend-color" value={this.state.legendColor}
-                                        onChange={e => this.setState({ legendColor: e.target.value })} />
-                                    <label htmlFor="legend-color">Legend Color</label>
+                                <input type="color" id="legend-color" value={this.state.legendColor}
+                                    onChange={e => this.setState({ legendColor: e.target.value })} />
+                                <label htmlFor="legend-color">Legend Color</label>
                                 {/* </div> */}
                             </div>
                             <button onClick={() => this.handleColorMultiple("alphas")}>Color Alphas</button>

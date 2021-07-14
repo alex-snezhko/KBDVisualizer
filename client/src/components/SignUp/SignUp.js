@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { IconContext } from "react-icons";
 import { BsPerson } from "react-icons/bs";
 import { AiOutlineLock } from "react-icons/ai";
-import { IoMailOutline } from "react-icons/io";
+import { MdMailOutline } from "react-icons/md";
 
 export function SignUp() {
     function handleSignUp() {
@@ -23,7 +23,7 @@ export function SignUp() {
                 <br />
                 <form onSubmit={handleSignUp}>
                     <div className="login-input-container">
-                        <IconContext.Provider value={{ className: "text-field-icon" }}><IoMailOutline /></IconContext.Provider>
+                        <IconContext.Provider value={{ className: "text-field-icon" }}><MdMailOutline /></IconContext.Provider>
                         <input
                             type="text"
                             placeholder="Email Address"
