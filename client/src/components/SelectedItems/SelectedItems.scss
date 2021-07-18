@@ -5,13 +5,17 @@
 
 #selected-items-container {
     display: flex;
-    align-items: stretch;
+    // align-items: stretch;
     height: 100%;
-    width: 100%;
-    min-width: 1500px;
+    // width: 100%;
+    // min-width: 1000px;
 
     & > *:last-child {
-        flex-grow: 100;
+        // flex-grow: 100;
+        width: 100%;
+        padding: 30px;
+        min-width: 400px;
+        // height: 100%;
     }
 }
 
@@ -52,8 +56,4 @@
 
 .flipped {
     transform: rotate(-180deg);
-}
-
-#render-container {
-    margin: 30px;
 }

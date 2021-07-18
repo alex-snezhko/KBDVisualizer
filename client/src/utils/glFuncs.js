@@ -1,6 +1,6 @@
 import { mat4, vec3 } from "gl-matrix";
 
-export function rotateView(ang, axis, eye) {
+export function rotateView(eye, ang, axis) {
     const rotationMat = mat4.fromRotation(mat4.create(), ang, axis);
     eye.position = vec3.transformMat4(vec3.create(), eye.position, rotationMat);
     eye.lookAt = vec3.transformMat4(vec3.create(), eye.lookAt, rotationMat);
@@ -29,39 +29,39 @@ export function loadGLBuffers(gl, glObjectBuffers, object, isTextured) {
     glObjectBuffers.numTriangles = object.triangles.length;
 }
 
-export function loadTexture(gl, url) {
+export function loadTexture(gl, imgPath) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
         gl.UNSIGNED_BYTE, new Uint8Array([0, 255, 255, 0]));
 
-    return {
-        texture,
-        loadTexturePromise: new Promise(resolve => {
-            const img = new Image();
-            img.onload = () => {
-                gl.bindTexture(gl.TEXTURE_2D, texture);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    
-                const isPowerOf2 = x => (x & (x - 1)) === 0;
-                if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
-                    gl.generateMipmap(gl.TEXTURE_2D);
-                } else {
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-                }
-    
-                resolve(img);
-            };
-            img.onerror = () => resolve(img);
-            img.src = url;
+    const loadTexturePromise = new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
-            // TODO remove when working
-            // resolve(img);
-        })
-    };
+            const isPowerOf2 = x => (x & (x - 1)) === 0;
+            if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
+                gl.generateMipmap(gl.TEXTURE_2D);
+            } else {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            }
+
+            resolve(img);
+        };
+        img.onerror = () => {
+            console.error(`Unable to fetch image ${imgPath}`);
+            resolve(img);
+        };
+        import(`@resources/${imgPath}`)
+            .then(({ default: src }) => img.src = src);
+    });
+
+    return { loadTexturePromise, texture };
 }
 
 export function renderSelection(gl, eye, progsInfo, keyRenderInstructions) {
@@ -71,7 +71,7 @@ export function renderSelection(gl, eye, progsInfo, keyRenderInstructions) {
     const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
     const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
 
-    renderObject(progsInfo.selection, progsInfo.untextured.buffers["case"], {
+    renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["case"], {
         uMVPMat: [false, viewProjMat],
         uModelMat: [false, mat4.create()],
         uObjectId: [0]
@@ -81,13 +81,13 @@ export function renderSelection(gl, eye, progsInfo, keyRenderInstructions) {
     for (const { transformation, objectId, modelIdentifier } of keyRenderInstructions) {
         const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, transformation);
 
-        renderObject(progsInfo.selection, progsInfo.untextured.buffers["switch"], {
+        renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["switch"], {
             uMVPMat: [false, modelViewProjMat],
             uModelMat: [false, transformation],
             uObjectId: [0]
         });
 
-        renderObject(progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], {
+        renderObject(gl, progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], {
             uMVPMat: [false, modelViewProjMat],
             uModelMat: [false, transformation],
             uObjectId: [objectId]
@@ -95,78 +95,7 @@ export function renderSelection(gl, eye, progsInfo, keyRenderInstructions) {
     }
 }
 
-export function renderScene(gl, eye, progsInfo, keyRenderInstructions) {
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    const projMat = mat4.perspective(mat4.create(), Math.PI / 9, 2, 0.1, 1000);
-    const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
-    const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
-
-    renderObject(progsInfo.untextured, progsInfo.untextured.buffers["case"], {
-        uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
-        uMVPMat: [false, viewProjMat],
-        uModelMat: [false, mat4.create()],
-        uColor: [0.1, 0.1, 0.1]
-    });
-
-    // render keys
-    for (const instr of keyRenderInstructions) {
-        const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
-
-        const STAB_OFFSETS = {
-            2: 0.65,
-            2.25: 0.65,
-            2.75: 0.65,
-            6: 2.5,
-            6.25: 2.5,
-            7: 2.5
-        };
-
-        const stabOffset = STAB_OFFSETS[instr.keysize];
-        if (stabOffset) {
-            const renderStab = (offset) => {
-                const offsetMat = mat4.fromTranslation(mat4.create(), offset);
-                const transformation = mat4.multiply(mat4.create(), offsetMat, instr.transformation);
-                renderObject(progsInfo.untextured, progsInfo.untextured.buffers["stabilizer"], {
-                    uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
-                    uMVPMat: [false, mat4.multiply(mat4.create(), viewProjMat, transformation)],
-                    uModelMat: [false, transformation],
-                    uColor: this.props.selectedItems["Stabilizers"].color.slice(0, 3) // TODO
-                });
-            };
-
-            renderStab([stabOffset, 0, 0]);
-            renderStab([-stabOffset, 0, 0]);
-        }
-
-        // render keyswitch
-        renderObject(progsInfo.untextured, progsInfo.untextured.buffers["switch"], {
-            uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
-            uMVPMat: [false, modelViewProjMat],
-            uModelMat: [false, instr.transformation],
-            uColor: this.props.selectedItems["Switches"].casingColor
-        });
-
-        // render keycap
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, instr.legendTexture);
-
-        renderObject(progsInfo.textured, progsInfo.textured.buffers[instr.modelIdentifier], {
-            uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
-            uMVPMat: [false, modelViewProjMat],
-            uModelMat: [false, instr.transformation],
-            uColor: instr.keycapColor,
-            uTexture: [0],
-            uTextureColor: instr.legendColor,
-            uIsBlinking: [!this.state.fullCustom && this.state.highlightKeys && instr.colorOptions.length > 1],
-            uBlinkProportion: [this.state.blinkProportion]
-        });
-    }
-
-    // TODO maybe refactor this to first drawing all textured items and then untextured
-}
-
-function renderObject(gl, progInfo, buffers, uniformVals) {
+export function renderObject(gl, progInfo, buffers, uniformVals) {
     gl.useProgram(progInfo.program);
 
     for (const attribName in progInfo.attribs) {

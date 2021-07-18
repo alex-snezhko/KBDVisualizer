@@ -22,8 +22,7 @@ export function ItemSelection(props) {
     const { itemType } = useParams();
 
     useEffect(async () => {
-        const response = await fetchItems(itemType);
-        const items = await response.json();
+        const items = await fetchItems(itemType);
         
         // discard all items that do not pass initial compatibility checks
         const shownItems = items.filter(item => props.compatibilityFilters.every(f => f.passes(item)));

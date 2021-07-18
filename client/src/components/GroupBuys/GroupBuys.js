@@ -8,10 +8,8 @@ import "./GroupBuys.scss";
 export function GroupBuys({ onSelectItem }) {
     const [groupBuyItems, setGroupBuyItems] = useState([]);
     
-    useEffect(() => {
-        fetchActiveGroupBuys()
-            .then(res => res.json())
-            .then(setGroupBuyItems);
+    useEffect(async () => {
+        setGroupBuyItems(await fetchActiveGroupBuys());
     }, []);
 
     return (

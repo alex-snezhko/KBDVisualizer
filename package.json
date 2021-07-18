@@ -10,6 +10,9 @@
     "dev": "(nodemon server/api.js) & (webpack serve)",
     "build": "webpack"
   },
+  "engines": {
+    "node": "14.x"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alexsnezhko3/KBDVisualizer.git"
@@ -26,6 +29,7 @@
     "express": "^4.17.1",
     "gl-matrix": "^3.3.0",
     "node-cron": "^3.0.0",
+    "pg": "^8.6.0",
     "puppeteer": "^10.1.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",

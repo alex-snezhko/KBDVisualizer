@@ -3,9 +3,9 @@ import { mat4, vec3 } from "gl-matrix";
 
 import "./KeyboardRender.scss";
 import { fetchInfo, fetchCaseModel, fetchKeycapModel, fetchSwitchModel, fetchStabilizerModel } from "../../apiInteraction";
-import { ALL_PARTS } from "../../utils/shared";
-import { renderObject, loadTexture, loadGLBuffers, setupShaders, rotateView } from "../../utils/glFuncs";
+import { loadTexture, loadGLBuffers, setupShaders, rotateView, renderObject, renderSelection } from "../../utils/glFuncs";
 import { ACCENTS, ALPHAS, SPECIAL_KEYCAP_IDENTIFIERS, SPECIAL_NUM_UNITS } from "../../utils/keyboardComponents";
+// import { GLCanvas } from "./GLCanvas";s
 
 const newProgramInfo = () => ({
     program: null,
@@ -14,6 +14,8 @@ const newProgramInfo = () => ({
     buffers: {}
 });
 
+
+// lookup table for all non-1-unit-wide keys. Logically, SPECIAL_NUM_UNITS[key] || 1 will get key size
 
 let alphasInSet = new Set();
 let modsInSet = new Set();
@@ -50,6 +52,10 @@ function getKeycapColorOptions(key, keycapsInfo) {
     };
 }
 
+
+
+
+
 const toColor = (hex) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h => Number("0x" + h) / 255);
 
 // To-do list:
@@ -84,53 +90,49 @@ export class KeyboardRender extends React.Component {
         super(props);
 
         this.state = {
+            keyboardInfo: null,
+            keycapsInfo: null,
+
             blinkProportion: 0,
             increasing: false,
 
             highlightKeys: false,
             fullCustom: false,
             keycapColor: "#000000",
-            legendColor: "#ffffff"
+            legendColor: "#ffffff",
+            prevWidth: 0
         };
-
-        this.tick = null;
 
         this.gl = null;
-
-        this.progsInfo = {
-            textured: newProgramInfo(),
-            untextured: newProgramInfo(),
-            selection: newProgramInfo()
-        };
-        
         this.eye = {
             position: vec3.fromValues(0, 30, 30),
             lookAt: vec3.normalize(vec3.create(), vec3.fromValues(0, -1, -1)),
             lookUp: vec3.normalize(vec3.create(), vec3.fromValues(0, 1, -1)),
             yAngle: Math.PI / 4
         };
-
-        this.keyboardInfo = null;
-        this.keycapsInfo = null;
-
+        this.progsInfo = {
+            textured: newProgramInfo(),
+            untextured: newProgramInfo(),
+            selection: newProgramInfo()
+        };
+        
+        this.tick = null;
         this.keyRenderInstructions = [];
         this.keyNameToKeyObj = {};
         this.objectIdToKey = {};
 
         this.webGlCanvas = React.createRef();
-        this.keyboardRenderContainer = React.createRef();
 
+        this.handleToggleHighlight = this.handleToggleHighlight.bind(this);
+        this.handleCustomizeKeycaps = this.handleCustomizeKeycaps.bind(this);
+        this.handleResetKeycaps = this.handleResetKeycaps.bind(this);
         this.handleCanvasClicked = this.handleCanvasClicked.bind(this);
         this.handleCanvasMouseMove = this.handleCanvasMouseMove.bind(this);
         this.handleCanvasWheel = this.handleCanvasWheel.bind(this);
         this.handleResizeCanvas = this.handleResizeCanvas.bind(this);
-        this.handleToggleHighlight = this.handleToggleHighlight.bind(this);
-        this.handleCustomizeKeycaps = this.handleCustomizeKeycaps.bind(this);
-        this.handleResetKeycaps = this.handleResetKeycaps.bind(this);
     }
 
-    async loadKeyboard(keycapProfile) {
-        const { gl, progsInfo, objectIdToKey, keyNameToKeyObj, keyboardInfo, keycapsInfo } = this;
+    async loadModels(keyboardInfo, keycapsInfo, keycapProfile) {
         // ---------------------------------------------------------------------------
         // prepare all necessary information for setting up key rendering instructions
         // ---------------------------------------------------------------------------
@@ -140,10 +142,15 @@ export class KeyboardRender extends React.Component {
         // find total number of units horizontally and vertically
         // to get number of units horizontally, find the keygroup that extends farthest right
         const numUnitsX = keyboardInfo.keyGroups.reduce(
-            (rightmostUnits, keyGroup) => Math.max(rightmostUnits, keyGroup.keys.reduce(
-                (numU, key) => numU + (SPECIAL_NUM_UNITS[key] || 1),
-                keyGroup.offset[0])),
-            0);
+            (rightmostUnits, keyGroup) => Math.max(
+                rightmostUnits,
+                keyGroup.keys.reduce(
+                    (numU, key) => numU + (SPECIAL_NUM_UNITS[key] || 1),
+                    keyGroup.offset[0]
+                )
+            ),
+            0
+        );
         // to get number of units vertically, find the keygroup that extends farthest down
         const numUnitsY = keyboardInfo.keyGroups.reduce((max, kg) => Math.max(max, kg.offset[1]), 0) + 1;
         const HEIGHT = 1.25;
@@ -166,11 +173,11 @@ export class KeyboardRender extends React.Component {
     
                 // if a keycap with these dimensions has not been loaded yet, then load it
                 if (!keycapModelsVisited.has(modelIdentifier)) {
-                    let bufs = progsInfo.textured.buffers;
+                    let bufs = this.progsInfo.textured.buffers;
                     bufs[modelIdentifier] = {};
                     resourceLoadPromises.push(
                         fetchKeycapModel(keycapProfile, modelIdentifier)
-                            .then(keycapModel => loadGLBuffers(gl, bufs[modelIdentifier], keycapModel, true)));
+                            .then(keycapModel => loadGLBuffers(this.gl, bufs[modelIdentifier], keycapModel, true)));
                     keycapModelsVisited.add(modelIdentifier);
                 }
     
@@ -179,7 +186,7 @@ export class KeyboardRender extends React.Component {
                 const finalTransformationMat = mat4.multiply(mat4.create(), heightInclineMat, toPosMat);
     
                 // load legend texture
-                const { loadTexturePromise, texture } = loadTexture(gl, "legends/" + key + ".png");
+                const { loadTexturePromise, texture } = loadTexture(this.gl, "resources/legends/" + key + ".png");
                 resourceLoadPromises.push(loadTexturePromise);
     
                 // construct an object to represent all relevant information of a keycap for rendering
@@ -192,76 +199,37 @@ export class KeyboardRender extends React.Component {
                 };
     
                 // find an appropriate object id for this key
-                const objectId = Object.keys(objectIdToKey).length + 1;
-                objectIdToKey[objectId] = keycapObj;
-                keyNameToKeyObj[key] = keycapObj;
+                const objectId = Object.keys(this.objectIdToKey).length + 1;
+                this.objectIdToKey[objectId] = keycapObj;
+                this.keyNameToKeyObj[key] = keycapObj;
                 keycapObj.objectId = objectId;
     
                 this.keyRenderInstructions.push(keycapObj);
                 posXZ[0] += keysize;
             }
         }
-        const untexBufs = progsInfo.untextured.buffers;
+        const untexBufs = this.progsInfo.untextured.buffers;
     
         // load case
         untexBufs["case"] = {};
         resourceLoadPromises.push(
-            fetchCaseModel("tofu65")
-                .then(trianglesInfo => loadGLBuffers(gl, untexBufs["case"], trianglesInfo, false)));
+            fetchCaseModel("tofu65").then(trianglesInfo => loadGLBuffers(this.gl, untexBufs["case"], trianglesInfo, false)));
     
         // load switches
         untexBufs["switch"] = {};
         resourceLoadPromises.push(
-            fetchSwitchModel()
-                .then(switchModel => loadGLBuffers(gl, untexBufs["switch"], switchModel, false)));
+            fetchSwitchModel().then(switchModel => loadGLBuffers(this.gl, untexBufs["switch"], switchModel, false)));
     
         // load switches
         untexBufs["stabilizer"] = {};
         resourceLoadPromises.push(
-            fetchStabilizerModel()
-                .then(stabilizerModel => loadGLBuffers(gl, untexBufs["stabilizer"], stabilizerModel, false)));
+            fetchStabilizerModel().then(stabilizerModel => loadGLBuffers(this.gl, untexBufs["stabilizer"], stabilizerModel, false)));
     
-        try {
-            await Promise.all(resourceLoadPromises);
-        } catch (err) {
-            console.error(`Error fetching some or all resources requested: ${err}`)
-        }
-    }
-
-    renderSelection() {
-        const { gl, eye, progsInfo } = this;
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-        const projMat = mat4.perspective(mat4.create(), Math.PI / 9, 2, 0.1, 1000);
-        const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
-        const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
-    
-        renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["case"], {
-            uMVPMat: [false, viewProjMat],
-            uModelMat: [false, mat4.create()],
-            uObjectId: [0]
-        });
-    
-        // render keys
-        for (const { transformation, objectId, modelIdentifier } of this.keyRenderInstructions) {
-            const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, transformation);
-    
-            renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["switch"], {
-                uMVPMat: [false, modelViewProjMat],
-                uModelMat: [false, transformation],
-                uObjectId: [0]
-            });
-    
-            renderObject(gl, progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], {
-                uMVPMat: [false, modelViewProjMat],
-                uModelMat: [false, transformation],
-                uObjectId: [objectId]
-            });
-        }
+        await Promise.all(resourceLoadPromises);
     }
 
     renderScene() {
-        const { gl, eye, progsInfo } = this;
+        const { gl, eye, progsInfo, keyRenderInstructions } = this;
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
@@ -277,9 +245,9 @@ export class KeyboardRender extends React.Component {
         });
     
         // render keys
-        for (const instr of this.keyRenderInstructions) {
+        for (const instr of keyRenderInstructions) {
             const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
-
+    
             const STAB_OFFSETS = {
                 2: 0.65,
                 2.25: 0.65,
@@ -288,7 +256,7 @@ export class KeyboardRender extends React.Component {
                 6.25: 2.5,
                 7: 2.5
             };
-
+    
             const stabOffset = STAB_OFFSETS[instr.keysize];
             if (stabOffset) {
                 const renderStab = (offset) => {
@@ -301,7 +269,7 @@ export class KeyboardRender extends React.Component {
                         uColor: this.props.selectedItems["Stabilizers"].color.slice(0, 3) // TODO
                     });
                 };
-
+    
                 renderStab([stabOffset, 0, 0]);
                 renderStab([-stabOffset, 0, 0]);
             }
@@ -333,93 +301,6 @@ export class KeyboardRender extends React.Component {
         // TODO maybe refactor this to first drawing all textured items and then untextured
     }
 
-    handleCanvasMouseMove(event) {
-        const { eye } = this;
-
-        if (event.buttons !== 0) {
-            // find how much the mouse has moved since the last position
-            const dx = event.movementX;
-            const dy = event.movementY;
-            if (dx !== 0) {
-                rotateView(eye, -dx / 100, vec3.fromValues(0, 1, 0));
-            }
-            if (dy !== 0) {
-                // make it such that movement upwards is positive rotation
-                const rotateAngle = dy / 100;
-                // if this rotation will surpass lowest allowed viewing angle then clamp it
-                const MIN_Y_ANG = 0.1;
-                const MAX_Y_ANG = Math.PI / 2;
-                const newAngle = Math.max(MIN_Y_ANG, Math.min(MAX_Y_ANG, eye.yAngle + rotateAngle));
-                rotateView(eye, newAngle - eye.yAngle, vec3.cross(vec3.create(), eye.lookUp, eye.lookAt));
-                eye.yAngle = newAngle;
-            }
-            this.renderScene();
-        }
-    }
-
-    handleCanvasWheel(event) {
-        const { eye } = this;
-        event.preventDefault();
-
-        const amtToMove = event.deltaY / 100;
-        const dist = vec3.length(eye.position);
-        // constrain the distance away from keyboard to [2, 10]
-        const MIN_DIST = 14;
-        const MAX_DIST = 50;
-        const newDist = Math.max(MIN_DIST, Math.min(MAX_DIST, dist + amtToMove));
-        eye.position = vec3.scale(vec3.create(), vec3.normalize(vec3.create(), eye.position), newDist);
-        // this.renderScene();
-        this.forceUpdate();
-    }
-
-    handleCanvasClicked(event) {
-        const { gl, objectIdToKey } = this;
-        if (event.clientX === this.beginClick.x && event.clientY === this.beginClick.y) {
-            const { left, top, height } = event.target.getBoundingClientRect();
-
-            const x = event.clientX - left;
-            const y = height - (event.clientY - top);
-
-            this.renderSelection();
-
-            let pixelClicked = new Uint8Array(4);
-            gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelClicked);
-
-            const objectWasClicked = pixelClicked[3] === 0;
-            const objectId = pixelClicked[0];
-            if (objectWasClicked && objectId !== 0) {
-                const key = objectIdToKey[objectId];
-
-                if (this.state.fullCustom) {
-                    key.keycapColor = toColor(this.state.keycapColor);
-                    key.legendColor = toColor(this.state.legendColor);
-                } else {
-                    key.optionSelected = (key.optionSelected + 1) % key.colorOptions.length;
-
-                    key.keycapColor = key.colorOptions[key.optionSelected].keycapColor;
-                    key.legendColor = key.colorOptions[key.optionSelected].legendColor;
-                }
-            }
-
-            this.renderScene();
-        }
-    }
-
-    handleResizeCanvas() {
-        const container = this.keyboardRenderContainer.current;
-        const w = container.offsetWidth;
-
-        const canvas = this.webGlCanvas.current;
-
-        if (canvas.width !== w) {
-            canvas.width = w;
-            const h = Math.floor(w / 2);
-            canvas.height = h;
-
-            this.gl.viewport(0, 0, w, h);
-        }
-    }
-
     handleToggleHighlight() {
         if (this.tick !== null) {
             clearInterval(this.tick);
@@ -428,18 +309,13 @@ export class KeyboardRender extends React.Component {
         } else {
             this.tick = setInterval(() => {
                 if (this.state.highlightKeys) {
-                    this.setState(currState => {
-                        let { highlightKeys, increasing, blinkProportion } = currState;
+                    this.setState(({ highlightKeys, increasing, blinkProportion }) => {
                         if (increasing) {
                             blinkProportion = Math.min(1, blinkProportion + 0.05);
-                            if (blinkProportion === 1) {
-                                increasing = false;
-                            }
+                            increasing = blinkProportion !== 1;
                         } else {
                             blinkProportion = Math.max(0, blinkProportion - 0.05);
-                            if (blinkProportion === 0) {
-                                increasing = true;
-                            }
+                            increasing = blinkProportion === 0;
                         }
 
                         return { highlightKeys, increasing, blinkProportion };
@@ -460,7 +336,7 @@ export class KeyboardRender extends React.Component {
             keyObj.legendColor = toColor(this.state.legendColor);
         }
 
-        this.renderScene();
+        // this.renderScene();
     }
 
     handleCustomizeKeycaps() {
@@ -477,18 +353,116 @@ export class KeyboardRender extends React.Component {
         this.setState({ fullCustom: false });
     }
 
-    async componentDidMount() {
-        const { progsInfo } = this;
+    handleCanvasClicked(event) {
+        // const gl = this.gl;
+        const { gl, eye, progsInfo, keyRenderInstructions } = this;
 
+        if (event.clientX === this.beginClick.x && event.clientY === this.beginClick.y) {
+            const { left, top, height } = event.target.getBoundingClientRect();
+
+            const x = event.clientX - left;
+            const y = height - (event.clientY - top);
+
+            renderSelection(gl, eye, progsInfo, keyRenderInstructions);
+
+            let pixelClicked = new Uint8Array(4);
+            gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelClicked);
+
+            const objectWasClicked = pixelClicked[3] === 0;
+            const objectId = pixelClicked[0];
+            if (objectWasClicked && objectId !== 0) {
+                const { fullCustom, keycapColor, legendColor } = this.state;
+
+                const key = this.objectIdToKey[objectId];
+
+                if (fullCustom) {
+                    key.keycapColor = toColor(keycapColor);
+                    key.legendColor = toColor(legendColor);
+                } else {
+                    key.optionSelected = (key.optionSelected + 1) % key.colorOptions.length;
+
+                    key.keycapColor = key.colorOptions[key.optionSelected].keycapColor;
+                    key.legendColor = key.colorOptions[key.optionSelected].legendColor;
+                }
+            }
+
+            this.renderScene();
+        }
+    }
+
+    handleCanvasMouseMove(event) {
+        // const gl = this.gl;
+        const { eye } = this;
+
+        if (event.buttons !== 0) {
+            // find how much the mouse has moved since the last position
+            const dx = event.movementX;
+            const dy = event.movementY;
+            if (dx !== 0) {
+                rotateView(-dx / 100, vec3.fromValues(0, 1, 0), eye);
+            }
+            if (dy !== 0) {
+                // make it such that movement upwards is positive rotation
+                const rotateAngle = dy / 100;
+                // if this rotation will surpass lowest allowed viewing angle then clamp it
+                const MIN_Y_ANG = 0.1;
+                const MAX_Y_ANG = Math.PI / 2;
+                const newAngle = Math.max(MIN_Y_ANG, Math.min(MAX_Y_ANG, eye.yAngle + rotateAngle));
+                rotateView(newAngle - eye.yAngle, vec3.cross(vec3.create(), eye.lookUp, eye.lookAt), eye);
+                eye.yAngle = newAngle;
+            }
+            this.renderScene();
+        }
+    }
+
+    handleCanvasWheel(event) {
+        event.preventDefault();
+        // const gl = this.gl;
+        const { eye } = this;
+
+        const amtToMove = event.deltaY / 100;
+        const dist = vec3.length(eye.position);
+        // constrain the distance away from keyboard to [2, 10]
+        const MIN_DIST = 14;
+        const MAX_DIST = 50;
+        const newDist = Math.max(MIN_DIST, Math.min(MAX_DIST, dist + amtToMove));
+        eye.position = vec3.scale(vec3.create(), vec3.normalize(vec3.create(), eye.position), newDist);
+        this.renderScene();
+    }
+
+    handleResizeCanvas() {
+        // const gl = this.gl;
+        const container = document.getElementById("render-container");
+
+        const left = container.offsetLeft;
+        const rightBound = window.innerWidth - container.style.marginRight.replace("px", "");
+        const w = Math.max(600, rightBound - left);
+        const h = Math.floor(w / 2);
+
+        if (this.state.prevWidth !== w) {
+            const canvas = this.webGlCanvas.current;
+            canvas.width = w;
+            canvas.height = h;
+
+            this.gl.viewport(0, 0, w, h);
+
+            this.setState({ prevWidth: w });
+        }
+    }
+
+    async componentDidMount() {
         const canvas = this.webGlCanvas.current;
+        canvas.addEventListener("wheel", this.handleCanvasWheel);
+        window.addEventListener("resize", this.handleResizeCanvas);
+        
         const gl = canvas.getContext("webgl");
-        this.gl = gl;
         if (gl === null) {
             alert("Error in fetching GL context. Please ensure that your browser supports WebGL.");
             return;
         }
+        this.gl = gl;
 
-        // gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.viewport(0, 0, canvas.width, canvas.height);
 
         // enable gl attributes: use z-buffering, make background black
         gl.clearColor(...toColor("#fcfcf8"), 1.0);
@@ -498,40 +472,39 @@ export class KeyboardRender extends React.Component {
         // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.enable(gl.DEPTH_TEST);
 
-        window.addEventListener("resize", this.handleResizeCanvas);
-        canvas.addEventListener("wheel", this.handleCanvasWheel);
+        setupShaders(gl, this.progsInfo);
 
-        setupShaders(gl, progsInfo);
+        const keyboardInfo = await fetchInfo("keyboardInfo", this.props.selectedItems["Case"]["Name"]);
+        const keycapsInfo = await fetchInfo("keycapsInfo", this.props.selectedItems["Keycaps"]["Name"]);
 
-        this.keyboardInfo = await fetchInfo("keyboardInfo", this.props.selectedItems["Case"]["Name"]);
-        this.keycapsInfo = await fetchInfo("keycapsInfo", this.props.selectedItems["Keycaps"]["Name"]);
+        this.setState({ keyboardInfo, keycapsInfo });
 
-        await this.loadKeyboard("cherry");
-        
-        this.handleResizeCanvas();
-        this.renderScene();
+        await this.loadModels(keyboardInfo, keycapsInfo, "cherry");
+
+        this.forceUpdate();
+
+        // this.handleResizeCanvas();
+        // this.renderScene();
     }
 
     componentDidUpdate() {
-        this.handleResizeCanvas();
-        this.renderScene();
+        // this.handleResizeCanvas();
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this.handleResizeCanvas);
         this.webGlCanvas.current.removeEventListener("wheel", this.handleCanvasWheel);
+        window.removeEventListener("resize", this.handleResizeCanvas);
         if (this.tick) {
             clearInterval(this.tick);
             this.tick = null;
         }
+        this.gl = null;
+        
     }
 
     render() {
-        const allPartsSelected = ALL_PARTS.every(part => this.props.selectedItems[part]);
-        
-        return !allPartsSelected ?
-            <h3>Select all parts to view keyboard render</h3> :
-            <div id="keyboard-render" ref={this.keyboardRenderContainer}>
+        return (
+            <div id="keyboard-render">
                 <canvas id="webgl-canvas"
                     ref={this.webGlCanvas}
                     onMouseDown={e => this.beginClick = { x: e.clientX, y: e.clientY }}
@@ -567,6 +540,7 @@ export class KeyboardRender extends React.Component {
                         </div>
                     )}
                 </div>
-            </div>;
+            </div>
+        );
     }
 }

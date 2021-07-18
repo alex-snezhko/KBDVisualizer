@@ -1,6 +1,12 @@
 @use "../../styles/styles.scss";
 
+// #render-container {
+//     // margin: 30px;
+//     // height: 100%;
+// }
+
 #keyboard-render {
+    width: 100%;
     position: relative;
 
     & > * {
