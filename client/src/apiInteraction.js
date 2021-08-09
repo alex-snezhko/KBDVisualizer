@@ -8,8 +8,8 @@ const fetchJson = route => fetch(`${apiBaseUrl}${route}`)
     .catch(err => console.error(`Error converting response at url ${apiBaseUrl}${route} to JSON: ${err}`));
 
 export const fetchInfo = (infoType, name) => fetchJson(`/info/${infoType}/${encodeURIComponent(name)}`);
-export const fetchItems = itemType => fetchJson(`/items/${itemType.toLowerCase()}`);
-export const fetchItem = (partType, name) => fetchJson(`/item/${partType}/${name}`);
+export const fetchItems = partType => fetchJson(`/items/${partType.toLowerCase()}/all`);
+export const fetchItem = (partType, name) => fetchJson(`/items/${partType.toLowerCase()}/byname/${name}`);
 export const fetchActiveGroupBuys = () => fetchJson("/activeGroupBuys");
 export const fetchCaseModel = caseName => fetchJson(`/models/cases/${caseName}`);
 export const fetchKeycapModel = (keycapProfile, keycapName) => fetchJson(`/models/keycaps/${keycapProfile}/${keycapName}`);
