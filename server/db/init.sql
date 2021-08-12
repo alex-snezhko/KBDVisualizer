@@ -8,12 +8,12 @@ CREATE TABLE IF NOT EXISTS keyboard_kits (
 );
 
 CREATE TABLE IF NOT EXISTS kit_parts (
-    keyboard_id INT NOT NULL,
+    item_id     INT NOT NULL,
     part_type   VARCHAR (20) NOT NULL CHECK (part_type = 'case' OR part_type = 'plate' OR part_type = 'pcb'),
     part_desc   VARCHAR (20) NOT NULL,
     color_arr   VARCHAR (40),
     extra_price FLOAT NOT NULL,
-    FOREIGN KEY(keyboard_id) REFERENCES keyboard_kits(id)
+    FOREIGN KEY(item_id) REFERENCES keyboard_kits(id)
 );
 
 CREATE TABLE IF NOT EXISTS cases (
@@ -28,11 +28,11 @@ CREATE TABLE IF NOT EXISTS cases (
 );
 
 CREATE TABLE IF NOT EXISTS case_colors (
-    case_id     INT NOT NULL,
+    item_id     INT NOT NULL,
     color       VARCHAR (20) NOT NULL,
     color_arr   VARCHAR (40) NOT NULL,
     extra_price FLOAT NOT NULL,
-    FOREIGN KEY(case_id) REFERENCES cases(id)
+    FOREIGN KEY(item_id) REFERENCES cases(id)
 );
 
 CREATE TABLE IF NOT EXISTS keycap_sets (
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS pcbs (
     link            VARCHAR NOT NULL,
     price           FLOAT NOT NULL,
     form_factor     VARCHAR (20) NOT NULL,
-    hot_swap        BIT NOT NULL,
+    hot_swap        VARCHAR (3) NOT NULL CHECK (hot_swap = 'Yes' OR hot_swap = 'No'),
     backlight       VARCHAR (20) NOT NULL
 );
 

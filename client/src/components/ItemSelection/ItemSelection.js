@@ -6,13 +6,7 @@ import { ItemSelectionTable } from "../ItemSelectionTable";
 
 import { NumRangeFilterObj } from "../../utils/shared";
 import "./ItemSelection.scss";
-import { fetchItems } from "../../apiInteraction";
-
-const sorters = {
-    "low-high": xs => [...xs].sort((x, y) => x["Base Price"] - y["Base Price"]),
-    "high-low": xs => [...xs].sort((x, y) => y["Base Price"] - x["Base Price"]),
-    "alpha": xs => xs
-};
+import { fetchFilterRanges, fetchItems } from "../../apiInteraction";
 
 export function ItemSelection(props) {
     const [items, setItems] = useState(null);
@@ -22,40 +16,35 @@ export function ItemSelection(props) {
     const { itemType } = useParams();
 
     useEffect(async () => {
-        const items = await fetchItems(itemType);
-        
-        // discard all items that do not pass initial compatibility checks
-        const shownItems = items.filter(item => props.compatibilityFilters.every(f => f.passes(item)));
+        if (!filters) {
+            const filterRanges = await fetchFilterRanges();
+            setFilters(filterRanges);
+        }
 
-        // generate filters from each field
-        const prices = shownItems.map(item => item["Base Price"]);
+        const items = await fetchItems(itemType, filters);
+        
         const filts = [
             new NumRangeFilterObj("Base Price", Math.min(...prices), Math.max(...prices),
                 x => <span className="numeric-range-input">${x /* TODO add Base Price to extraFields */}</span>)
         ].concat(props.extraFieldInfo.map(f => f.generateFilter(f.name, shownItems.map(item => item[f.name]))));
         
-        shownItems.sort((x, y) => x["Name"].localeCompare(y["Name"]));
         setItems(shownItems);
         setFilters(filts);
-    }, []);
+    }, [filters, sortBy]);
 
     if (items === null) {
         return null;
     }
 
-    function handleUpdateFilter(field, data) {
+    function handleUpdateFilters(field, data) {
         const newFilters = [...filters];
         newFilters.find(filter => filter.field === field).updateData(data);
         setFilters(newFilters);
     }
-
-    // only render rows that match selected filters
-    const filteredItems = items.filter(item => filters.every(filter => filter.passes(item)));
-    const displayedItems = sorters[sortBy](filteredItems);
     
     return (
         <React.Fragment>
-            <ItemSelectionFilters filters={filters} onUpdateFilter={handleUpdateFilter} />
+            <ItemSelectionFilters itemType={itemType} onUpdateFilters={handleUpdateFilters} />
 
             <div id="item-listing">
                 {props.compatibilityFilters.length !== 0 &&

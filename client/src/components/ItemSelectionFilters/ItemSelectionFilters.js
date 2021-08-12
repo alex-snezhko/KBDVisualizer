@@ -1,62 +1,106 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-import { SelectionFilterObj } from "../../utils/shared";
+import { fetchFilterRanges } from "../../apiInteraction";
+
 import "./ItemSelectionFilters.scss";
 
-export const ItemSelectionFilters = ({ filters, onUpdateFilter }) => (
-    <div id="filters-box">
-        <h2>Filters</h2>
+export function ItemSelectionFilters({ itemType, onUpdateFilters }) {
+    const [filters, setFilters] = useState([]);
 
-        {filters.map(filter => {
-            const propsToPass = {
-                filter,
-                onUpdateFilter: val => onUpdateFilter(filter.field, val)
-            };
+    useEffect(async () => {
+        const filterRanges = await fetchFilterRanges(itemType);
 
-            return filter instanceof SelectionFilterObj ?
-                <SelectionFilter key={filter.field} {...propsToPass} /> :
-                <NumericRangeFilter key={filter.field} {...propsToPass} />;
-        })}
-    </div>
-);
+        // indicate that all selection options are unselected
+        const filters = filterRanges.map(filter => {
+            switch (filter.type) {
+            case "selectionOneOf":
+                return { ...filter, value: filter.value.map(option => ({ option, selected: true })) };
+            case "selectionAllOf":
+                return { ...filter, value: filter.value.map(option => ({ option, selected: false })) };
+            default:
+                return filter;
+            }
+        });
+        setFilters(filters);
+    }, []);
 
-function NumericRangeFilter(props) {
-    const { field, low, high, display } = props.filter;
+    function handleUpdateNumericFilter(fieldName, low, high) {
+        const newFilters = [...filters];
+        const numericFilter = newFilters.find(filter => filter.fieldName === fieldName);
+        numericFilter.low = low;
+        numericFilter.high = high;
+        setFilters(newFilters);
+    }
 
-    function handleOnChange(event, other, isLow) {
+    function handleUpdateSelectionFilter(fieldName, option) {
+        const newFilters = [...filters];
+        const selectionFilter = newFilters.find(filter => filter.fieldName === fieldName);
+
+        const selections = [...selectionFilter.value];
+        const selection = selections.find(opt => opt === option);
+        selection.selected = !selection.selected;
+        newFilters.value = selections;
+        
+        setFilters(newFilters);
+    }
+
+    return (
+        <div id="filters-box">
+            <h2>Filters</h2>
+
+            {filters.map(filter =>
+                filter.type === "numeric" ?
+                    <NumericRangeFilter key={filter.fieldName} filter={filter} onUpdateNumericFilter={handleUpdateNumericFilter} /> :
+                    <SelectionFilter key={filter.fieldName} filter={filter} onUpdateFilter={handleUpdateSelectionFilter} />
+            )}
+
+            <button onClick={() => onUpdateFilters(filters)}>Filter By Selections</button>
+        </div>
+    );
+}
+
+function NumericRangeFilter({ filter, onUpdateFilter }) {
+    const { fieldName, value: { low, high } } = filter;
+
+    function handleChangeLow(event) {
         const val = event.target.value;
         if (!isNaN(val)) {
-            props.onUpdateFilter(isLow ? [val, other] : [other, val]);
+            onUpdateFilter(fieldName, val, high);
+        }
+    }
+
+    function handleChangeHigh(event) {
+        const val = event.target.value;
+        if (!isNaN(val)) {
+            onUpdateFilter(fieldName, low, val);
         }
     }
 
     return (
         <div>
-            <h4>{field}</h4>
-            {display(<input type="text" value={low} onChange={e => handleOnChange(e, high, false)} />)}
+            <h4>{fieldName}</h4>
+            <input type="text" value={low} onChange={handleChangeLow} />
             -
-            {display(<input type="text" value={high} onChange={e => handleOnChange(e, low, true)} />)}
+            <input type="text" value={high} onChange={handleChangeHigh} />
         </div>
     );
 }
 
-function SelectionFilter(props) {
-    const { field, passAll, all, selected } = props.filter;
-
-    // TODO add 'alternate' field to items to describe a more general (say, color)
+function SelectionFilter({ filter, onUpdateFilter }) {
+    const { fieldName, type, value: options } = filter;
 
     return (
         <div>
-            <h4>{field} {passAll && <em>(Match all)</em>}</h4>
-            {Array.from(all).map(opt =>
+            <h4>{fieldName} <em>({type === "selectionAllOf" ? "Match all" : "Match any"})</em></h4>
+            {options.map(opt =>
                 <div key={opt}>
                     <input
                         type="checkbox"
-                        id={`filter-option-${field}-${opt}`}
-                        checked={selected.has(opt)}
-                        onChange={() => props.onUpdateFilter(opt)}
+                        id={`filter-option-${fieldName}-${opt}`}
+                        checked={opt.selected}
+                        onChange={() => onUpdateFilter(opt)}
                     />
-                    <label htmlFor={`filter-option-${field}-${opt}`}>{opt}</label>
+                    <label htmlFor={`filter-option-${fieldName}-${opt}`}>{opt}</label>
                 </div>
             )}
         </div>

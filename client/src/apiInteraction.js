@@ -2,13 +2,18 @@ const apiBaseUrl = process.env.NODE_ENV === "development" ?
     "http://localhost:3000" :
     "https://kbd-visualizer.herokuapp.com/";
 
-const fetchJson = route => fetch(`${apiBaseUrl}${route}`)
-    .catch(err => console.error(`Error fetching resource at url ${apiBaseUrl}${route}: ${err}`))
-    .then(res => res.json())
-    .catch(err => console.error(`Error converting response at url ${apiBaseUrl}${route} to JSON: ${err}`));
+function fetchJson(route, urlParams) {
+    const url = new URL(route, apiBaseUrl);
+    url.search = new URLSearchParams(urlParams);
+    return fetch(url)
+        .catch(err => console.error(`Error fetching resource at url ${apiBaseUrl}${route}: ${err}`))
+        .then(res => res.json())
+        .catch(err => console.error(`Error converting response at url ${apiBaseUrl}${route} to JSON: ${err}`));
+}
 
 export const fetchInfo = (infoType, name) => fetchJson(`/info/${infoType}/${encodeURIComponent(name)}`);
-export const fetchItems = partType => fetchJson(`/items/${partType.toLowerCase()}/all`);
+export const fetchFilterRanges = partType => fetchJson(`/items/${partType}/filterRanges`);
+export const fetchItems = (partType, urlParams) => fetchJson(`/items/${partType.toLowerCase()}/find`, urlParams);
 export const fetchItem = (partType, name) => fetchJson(`/items/${partType.toLowerCase()}/byname/${name}`);
 export const fetchActiveGroupBuys = () => fetchJson("/activeGroupBuys");
 export const fetchCaseModel = caseName => fetchJson(`/models/cases/${caseName}`);

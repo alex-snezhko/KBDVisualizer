@@ -1,7 +1,6 @@
 "use strict";
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
 const path = require("path");
 const db = require("./db");
 const infoRoutes = require("./routes/info");

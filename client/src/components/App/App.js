@@ -52,15 +52,9 @@ function getExtraFieldInfo(itemType) {
 
     // TODO maybe change display to a field of NumRangeFilter
     return {
-        "Kit": [std("Form Factor")].concat(ALL_PARTS.map(part => std(part))),
-        "Case": [std("Form Factor"), std("Material"), std("Primary Color"), std("Mount Method")],
-        "Plate": [std("Form Factor"), std("Material")],
-        "PCB": [std("Form Factor"), std("Hot-swap"), std("Backlight")],
-        "Stabilizers": [std("Mount Method")],
         "Switches": [std("Tactility"), { name: "Spring Weight", display: x => x + "g", generateFilter: generateNumericFilter(x => <span className="numeric-range-input">{x}g</span>) },
             { name: "Actuation Distance", display: x => x.toFixed(1) + " mm", generateFilter: generateNumericFilter(x => <span className="numeric-range-input">{x}mm</span>) },
             { name: "Bottom-out Distance", display: x => x.toFixed(1) + " mm", generateFilter: generateNumericFilter(x => <span className="numeric-range-input">{x}mm</span>) }],
-        "Keycaps": [std("Colors"), std("Material"), std("Legends")]
     }[itemType] || [];
 }
 
