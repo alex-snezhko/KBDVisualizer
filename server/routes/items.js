@@ -95,6 +95,7 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
     router.get(`/${itemType}/find`, async (req, res) => {
         const filterQueryParams = [];
         const filterTexts = [];
+        const extraCollectionsNeeded = [];
         const { sortBy, ...filterArgs } = req.query;
         for (const [fieldName, filterValue] of Object.entries(filterArgs)) {
             const filterValueArr = filterValue.split(",");
@@ -102,21 +103,35 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
 
             const beginQueryParamNum = filterQueryParams.length + 1;
             if (filterType === "numeric") {
-                filterValueArr.sort();
-                const [low, high] = filterValueArr;
-                filterTexts.push(`(${fieldName} BETWEEN $${beginQueryParamNum} AND $${beginQueryParamNum + 1})`);
-                filterQueryParams.push(low, high);
+                const filterValueNums = filterValueArr.map(x => Number(x));
+                filterValueNums.sort((a, b) => a - b);
+                const [low, high] = filterValueNums;
+                let boundsToCheck = [];
+                if (low !== Number.NEGATIVE_INFINITY) {
+                    boundsToCheck.push(`${fieldName} >= $${beginQueryParamNum}`);
+                    filterQueryParams.push(low);
+                }
+                if (high !== Number.POSITIVE_INFINITY) {
+                    boundsToCheck.push(`${fieldName} <= $${filterQueryParams.length + 1}`);
+                    filterQueryParams.push(high);
+                }
+                
+                if (boundsToCheck.length !== 0) {
+                    filterTexts.push(`(${boundsToCheck.join(" AND ")})`);
+                }
             } else if (filterType === "selectionOneOf") {
                 const inNumbers = filterValueArr.map((x, i) => "$" + (beginQueryParamNum + i)).join(", ");
                 filterTexts.push(`(${fieldName} IN (${inNumbers}))`);
                 filterQueryParams.push(...filterValueArr);
-            } else if (filterType === "selectionAllOf") {
+            } else if (filterType === "selectionAllOf" && filterValue.length > 0) {
                 const { tableName: collectionTableName, fieldName: collectionFieldName } = collectionData[fieldName];
                 const inNumbers = filterValueArr.map((x, i) => "$" + (beginQueryParamNum + i)).join(", ");
-                filterTexts.push(`(${tableName}.id = ALL
+                filterTexts.push(`(${tableName}.id IN
                     (SELECT ${collectionTableName}.item_id FROM ${collectionTableName}
-                    WHERE ${collectionTableName}.${collectionFieldName} IN (${inNumbers})))`);
+                     WHERE ${collectionTableName}.item_id = ${tableName}.id AND ${collectionTableName}.${collectionFieldName} IN (${inNumbers})))`);
                 filterQueryParams.push(...filterValueArr);
+                
+                extraCollectionsNeeded.push({ collectionTableName, collectionFieldName });
             }
         }
         
@@ -124,10 +139,22 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
             "low-high": "price",
             "high-low": "price DESC"
         }[sortBy] || "name";
+
         const { rows } = await db.query(
             `SELECT * FROM ${tableName}
-             ${filterTexts.length ? ("WHERE" + filterTexts.join(" AND ")) : ""}
+             ${filterTexts.length ? ("WHERE " + filterTexts.join(" AND ")) : ""}
              ORDER BY ${orderByString}`, filterQueryParams);
+        
+        // TODO make this more efficient
+        for (const { collectionTableName, collectionFieldName } of extraCollectionsNeeded) {
+            for (const row of rows) {
+                const { rows: vals } = await db.query(
+                    `SELECT ${collectionFieldName}
+                     FROM ${collectionTableName}
+                     WHERE ${collectionTableName}.item_id = $1`, [row.id]);
+                row[collectionFieldName] = vals.map(x => x[collectionFieldName]);
+            }
+        }
         res.send(rows);
     });
 

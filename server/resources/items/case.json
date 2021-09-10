@@ -32,13 +32,23 @@
         "Primary Color": "Wood"
     },
     {
-        "Name": "60% Wood Case w/ Wrist Wrest",
+        "Name": "60% Bamboo Case w/ Wrist Wrest",
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8_eb718286-cfe6-4c61-aa24-8abd87a75b19_1800x1800.jpg?v=1584437004",
         "Link": "https://kbdfans.com/collections/case/products/60-walnut-case",
         "Base Price": 58,
         "Form Factor": "60%",
         "Mount Method": "Tray Mount",
-        "Material": {"type": "selection", "options": ["Bamboo", {"type": "Walnut", "extra": 9}]},
+        "Material": "Bamboo",
+        "Primary Color": "Wood"
+    },
+    {
+        "Name": "60% Walnut Wood Case w/ Wrist Wrest",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8_eb718286-cfe6-4c61-aa24-8abd87a75b19_1800x1800.jpg?v=1584437004",
+        "Link": "https://kbdfans.com/collections/case/products/60-walnut-case",
+        "Base Price": 67,
+        "Form Factor": "60%",
+        "Mount Method": "Tray Mount",
+        "Material": "Walnut",
         "Primary Color": "Wood"
     },
     {

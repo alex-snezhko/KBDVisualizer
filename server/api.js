@@ -17,7 +17,6 @@ app.use((req, res, next) => {
     try {
         decodeURIComponent(req.path);
     } catch (e) {
-        console.log(e, req.url);
         res.status(400).send({ message: "URL must be properly encoded" });
     }
     next();
@@ -30,13 +29,11 @@ app.use("/items", itemsRoutes);
 
 app.get("/activeGroupBuys", async (req, res) => {
     const { rows } = await db.query("SELECT * FROM groupbuys");
-    console.log(rows);
     res.send(rows);
 });
 
 app.get("/models/:modelPath(*)", (req, res) => {
     const { modelPath } = req.params;
-    console.log(path.resolve(__dirname, `resources/models/${modelPath}.json`));
     res.sendFile(path.resolve(__dirname, `resources/models/${modelPath}.json`));
 });
 

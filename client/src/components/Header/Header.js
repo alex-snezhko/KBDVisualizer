@@ -17,9 +17,9 @@ export const Header = () => (
                     <NavLink to="/group-buys" activeClassName="active-page-link">
                         Group Buys
                     </NavLink>
-                    <NavLink to="/login" activeClassName="active-page-link">
+                    {/* <NavLink to="/login" activeClassName="active-page-link">
                         Login
-                    </NavLink>
+                    </NavLink> */}
                 </div>
             </nav>
         </div>

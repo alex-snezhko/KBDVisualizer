@@ -32,7 +32,7 @@ export function App() {
         "Kit": null,
         "Case": {
             "name": "Tofu 65% Aluminum",
-            "image": "https://cdn.shopify.com/s/files/1/1473/3902/products/8b9cc7c9808a81fc8db0eaf67a4d79d7_b3abc1fb-7837-45dd-bbca-f1b4202bc9e2_1800x1800.jpg?v=1584436794",
+            "image": "https://cdn.shopify.com/s/files/1/1473/3902/products/7_25859fb9-ce4d-495f-93e1-44dad8e63523_1800x1800.jpg?v=1623822117",
             "link": "https://kbdfans.com/collections/65-layout-case/products/in-stocktofu-65-aluminum-case",
             "price": 125,
             "form_factor": "65%",

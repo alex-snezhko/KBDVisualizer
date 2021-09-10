@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS kit_parts (
 
 CREATE TABLE IF NOT EXISTS cases (
     id              SERIAL PRIMARY KEY,
-    name            VARCHAR (30) UNIQUE NOT NULL,
+    name            VARCHAR (60) UNIQUE NOT NULL,
     image           VARCHAR NOT NULL,
     link            VARCHAR NOT NULL,
     price           FLOAT NOT NULL,
@@ -30,14 +30,14 @@ CREATE TABLE IF NOT EXISTS cases (
 CREATE TABLE IF NOT EXISTS case_colors (
     item_id     INT NOT NULL,
     color       VARCHAR (20) NOT NULL,
-    color_arr   VARCHAR (40) NOT NULL,
+    color_arr   FLOAT[] NOT NULL,
     extra_price FLOAT NOT NULL,
     FOREIGN KEY(item_id) REFERENCES cases(id)
 );
 
 CREATE TABLE IF NOT EXISTS keycap_sets (
     id          SERIAL PRIMARY KEY,
-    name        VARCHAR (30) UNIQUE NOT NULL,
+    name        VARCHAR (60) UNIQUE NOT NULL,
     image       VARCHAR NOT NULL,
     link        VARCHAR NOT NULL,
     price       FLOAT NOT NULL,
@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS keycap_sets (
 CREATE TABLE IF NOT EXISTS keycap_colors (
     item_id     INT NOT NULL,
     color       VARCHAR (20) NOT NULL,
+    PRIMARY KEY(item_id, color),
     FOREIGN KEY(item_id) REFERENCES keycap_sets(id)
 );
 
@@ -61,7 +62,7 @@ CREATE TABLE IF NOT EXISTS switches (
     spring_weight   INT NOT NULL,
     act_dist        FLOAT NOT NULL,
     bot_dist        FLOAT NOT NULL,
-    color_arr       VARCHAR (40) NOT NULL
+    color_arr       FLOAT[] NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS plates (
@@ -87,21 +88,21 @@ CREATE TABLE IF NOT EXISTS pcbs (
 
 CREATE TABLE IF NOT EXISTS stabilizers (
     id              SERIAL PRIMARY KEY,
-    name            VARCHAR (30) UNIQUE NOT NULL,
+    name            VARCHAR (60) UNIQUE NOT NULL,
     image           VARCHAR NOT NULL,
     link            VARCHAR NOT NULL,
     price           FLOAT NOT NULL,
     mount_method    VARCHAR (20) NOT NULL CHECK (mount_method = 'PCB Screw-in' OR mount_method = 'PCB Clip-in' OR mount_method = 'Plate-mount'),
-    color_arr       VARCHAR (40) NOT NULL
+    color_arr       FLOAT[] NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS keyboard_info (
-    name            VARCHAR (30) NOT NULL PRIMARY KEY,
+    name            VARCHAR (60) NOT NULL PRIMARY KEY,
     data            TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS keycaps_info (
-    name            VARCHAR (30) NOT NULL PRIMARY KEY,
+    name            VARCHAR (60) NOT NULL PRIMARY KEY,
     data            TEXT NOT NULL
 );
 

@@ -8,7 +8,7 @@
         "Spring Weight": 46,
         "Actuation Distance": 2.0,
         "Bottom-out Distance": 4.0,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Speed Silver",
@@ -19,7 +19,7 @@
         "Spring Weight": 46,
         "Actuation Distance": 1.2,
         "Bottom-out Distance": 3.4,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Black",
@@ -30,7 +30,7 @@
         "Spring Weight": 61,
         "Actuation Distance": 2.0,
         "Bottom-out Distance": 4.0,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Brown",
@@ -41,7 +41,7 @@
         "Spring Weight": 56,
         "Actuation Distance": 2.0,
         "Bottom-out Distance": 4.0,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Blue",
@@ -52,7 +52,7 @@
         "Spring Weight": 61,
         "Actuation Distance": 2.2,
         "Bottom-out Distance": 4.0,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Silent Red",
@@ -63,7 +63,7 @@
         "Spring Weight": 46,
         "Actuation Distance": 1.9,
         "Bottom-out Distance": 3.7,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Silent Black",
@@ -74,7 +74,7 @@
         "Spring Weight": 61,
         "Actuation Distance": 1.9,
         "Bottom-out Distance": 3.7,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Green",
@@ -85,7 +85,7 @@
         "Spring Weight": 82,
         "Actuation Distance": 2.2,
         "Bottom-out Distance": 4.0,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Clear",
@@ -96,7 +96,7 @@
         "Spring Weight": 66,
         "Actuation Distance": 2.0,
         "Bottom-out Distance": 4.0,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
     {
         "Name": "Cherry MX Grey",
@@ -107,28 +107,95 @@
         "Spring Weight": 82,
         "Actuation Distance": 2.0,
         "Bottom-out Distance": 4.0,
-        "casingColor": [0.05, 0.05, 0.05]
+        "casingColor": [0.05, 0.05, 0.05, 1]
     },
 
 
     {
-        "Name": "Zealio V2",
+        "Name": "Zealio V2 62g",
         "Image": "https://mechanicalkeyboards.com/shop/images/products/detail_ZL67gV2_main.png",
         "Link": "https://zealpc.net/products/zealio",
         "Base Price": 1,
         "Tactility": "Tactile",
-        "Spring Weight": {"type": "selection", "options": [62, 65, 67, 78]},
+        "Spring Weight": 62,
         "Actuation Distance": 2.0,
         "Bottom-out Distance": 4.0,
         "casingColor": [1, 1, 1, 0.3]
     },
     {
-        "Name": "Zilent V2",
+        "Name": "Zealio V2 65g",
+        "Image": "https://mechanicalkeyboards.com/shop/images/products/detail_ZL67gV2_main.png",
+        "Link": "https://zealpc.net/products/zealio",
+        "Base Price": 1,
+        "Tactility": "Tactile",
+        "Spring Weight": 65,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [1, 1, 1, 0.3]
+    },
+    {
+        "Name": "Zealio V2 67g",
+        "Image": "https://mechanicalkeyboards.com/shop/images/products/detail_ZL67gV2_main.png",
+        "Link": "https://zealpc.net/products/zealio",
+        "Base Price": 1,
+        "Tactility": "Tactile",
+        "Spring Weight": 67,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [1, 1, 1, 0.3]
+    },
+    {
+        "Name": "Zealio V2 78g",
+        "Image": "https://mechanicalkeyboards.com/shop/images/products/detail_ZL67gV2_main.png",
+        "Link": "https://zealpc.net/products/zealio",
+        "Base Price": 1,
+        "Tactility": "Tactile",
+        "Spring Weight": 78,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [1, 1, 1, 0.3]
+    },
+
+    {
+        "Name": "Zilent V2 62g",
         "Image": "https://cdn.shopify.com/s/files/1/0275/3649/0561/products/Zilent62-1_800x.jpg?v=1601191543",
         "Link": "https://zealpc.net/products/zilent",
         "Base Price": 1.2,
         "Tactility": "Silent Tactile",
-        "Spring Weight": {"type": "selection", "options": [62, 65, 67, 78]},
+        "Spring Weight": 62,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [1, 1, 1, 0.3]
+    },
+    {
+        "Name": "Zilent V2 65g",
+        "Image": "https://cdn.shopify.com/s/files/1/0275/3649/0561/products/Zilent62-1_800x.jpg?v=1601191543",
+        "Link": "https://zealpc.net/products/zilent",
+        "Base Price": 1.2,
+        "Tactility": "Silent Tactile",
+        "Spring Weight": 65,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [1, 1, 1, 0.3]
+    },
+    {
+        "Name": "Zilent V2 67g",
+        "Image": "https://cdn.shopify.com/s/files/1/0275/3649/0561/products/Zilent62-1_800x.jpg?v=1601191543",
+        "Link": "https://zealpc.net/products/zilent",
+        "Base Price": 1.2,
+        "Tactility": "Silent Tactile",
+        "Spring Weight": 67,
+        "Actuation Distance": 2.0,
+        "Bottom-out Distance": 4.0,
+        "casingColor": [1, 1, 1, 0.3]
+    },
+    {
+        "Name": "Zilent V2 78g",
+        "Image": "https://cdn.shopify.com/s/files/1/0275/3649/0561/products/Zilent62-1_800x.jpg?v=1601191543",
+        "Link": "https://zealpc.net/products/zilent",
+        "Base Price": 1.2,
+        "Tactility": "Silent Tactile",
+        "Spring Weight": 78,
         "Actuation Distance": 2.0,
         "Bottom-out Distance": 4.0,
         "casingColor": [1, 1, 1, 0.3]

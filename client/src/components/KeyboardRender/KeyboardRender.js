@@ -224,7 +224,7 @@ export class KeyboardRender extends React.Component {
         try {
             await Promise.all(resourceLoadPromises);
         } catch (err) {
-            console.error(`Error fetching some or all resources requested: ${err}`)
+            console.error(`Error fetching some or all resources requested: ${err}`);
         }
     }
 
@@ -503,8 +503,8 @@ export class KeyboardRender extends React.Component {
 
         setupShaders(gl, progsInfo);
 
-        this.keyboardInfo = await fetchInfo("keyboardInfo", this.props.selectedItems["Case"].name);
-        this.keycapsInfo = await fetchInfo("keycapsInfo", this.props.selectedItems["Keycaps"].name);
+        this.keyboardInfo = JSON.parse(await fetchInfo("keyboardInfo", this.props.selectedItems["Case"].name));
+        this.keycapsInfo = JSON.parse(await fetchInfo("keycapsInfo", this.props.selectedItems["Keycaps"].name));
 
         await this.loadKeyboard("cherry");
         

@@ -32,8 +32,7 @@
         "Link": "https://kbdfans.com/collections/plate/products/60-pc-material-plate",
         "Base Price": 19,
         "Form Factor": "60%",
-        "Material": "Polycarbonate",
-        "Bruh": "**************************************"
+        "Material": "Polycarbonate"
     },
     {
         "Name": "60% Carbon Fiber Plate",
@@ -44,13 +43,20 @@
         "Material": "Carbon Fiber"
     },
     {
-        "Name": "DZ60 CNC Plate",
+        "Name": "DZ60 CNC Plate Aluminum",
         "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/3_8b909399-7c61-42d2-848e-46607fdf7cc9_1800x1800.jpg?v=1607316709",
         "Link": "https://kbdfans.com/collections/plate/products/dz60-cnc-aluminum-plate",
         "Base Price": 18,
         "Form Factor": "60%",
-        "Material": {"type": "selection", "options": ["Aluminum", {"type": "Brass", "extra": 21.90}]},
-        "Bruh": "**************************************"
+        "Material": "Aluminum"
+    },
+    {
+        "Name": "DZ60 CNC Plate Brass",
+        "Image": "https://cdn.shopify.com/s/files/1/1473/3902/products/3_8b909399-7c61-42d2-848e-46607fdf7cc9_1800x1800.jpg?v=1607316709",
+        "Link": "https://kbdfans.com/collections/plate/products/dz60-cnc-aluminum-plate",
+        "Base Price": 39.90,
+        "Form Factor": "60%",
+        "Material": "Brass"
     },
     {
         "Name": "Carbon Fiber DZ60RGB Plate",

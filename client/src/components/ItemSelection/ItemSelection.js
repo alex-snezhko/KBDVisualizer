@@ -17,8 +17,8 @@ export function ItemSelection(props) {
     function handleUpdateNumericFilter(fieldName, low, high) {
         const newFilters = [...filters];
         const numericFilter = newFilters.find(filter => filter.fieldName === fieldName);
-        numericFilter.low = low;
-        numericFilter.high = high;
+        numericFilter.value.low = low;
+        numericFilter.value.high = high;
         setFilters(newFilters);
     }
 
@@ -61,7 +61,10 @@ export function ItemSelection(props) {
         const filterParams = {};
         for (const filter of filters) {
             if (filter.filterType === "numeric") {
-                filterParams[filter.fieldName] = [filter.value.low, filter.value.high];
+                filterParams[filter.fieldName] = [
+                    filter.value.low === "" ? Number.NEGATIVE_INFINITY : Number(filter.value.low),
+                    filter.value.high === "" ? Number.POSITIVE_INFINITY : Number(filter.value.high)
+                ];
             } else {
                 filterParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(({ option }) => option);
             }
