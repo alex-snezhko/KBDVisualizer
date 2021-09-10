@@ -77,7 +77,7 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
         for (const { fieldName, filterType } of itemFilters) {
             let value;
             if (filterType === "numeric") {
-                const { rows } = await db.query(`SELECT MIN(${fieldName}) AS smallest, MAX(${fieldName}) AS largest FROM ${tableName}`);
+                const { rows } = await db.query(`SELECT MIN(${fieldName}) AS low, MAX(${fieldName}) AS high FROM ${tableName}`);
                 value = rows[0];
             } else if (filterType === "selectionOneOf") {
                 const { rows } = await db.query(`SELECT DISTINCT ${fieldName} FROM ${tableName}`);
@@ -97,31 +97,38 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
         const filterTexts = [];
         const { sortBy, ...filterArgs } = req.query;
         for (const [fieldName, filterValue] of Object.entries(filterArgs)) {
+            const filterValueArr = filterValue.split(",");
             const filterType = itemFilters.find(x => x.fieldName === fieldName).filterType;
 
             const beginQueryParamNum = filterQueryParams.length + 1;
             if (filterType === "numeric") {
-                filterValue.sort();
-                const [low, high] = filterValue;
+                filterValueArr.sort();
+                const [low, high] = filterValueArr;
                 filterTexts.push(`(${fieldName} BETWEEN $${beginQueryParamNum} AND $${beginQueryParamNum + 1})`);
                 filterQueryParams.push(low, high);
             } else if (filterType === "selectionOneOf") {
-                filterTexts.push(`(${fieldName} IN $${beginQueryParamNum})`);
-                filterQueryParams.push(`(${filterValue.join(", ")})`);
+                const inNumbers = filterValueArr.map((x, i) => "$" + (beginQueryParamNum + i)).join(", ");
+                filterTexts.push(`(${fieldName} IN (${inNumbers}))`);
+                filterQueryParams.push(...filterValueArr);
             } else if (filterType === "selectionAllOf") {
                 const { tableName: collectionTableName, fieldName: collectionFieldName } = collectionData[fieldName];
+                const inNumbers = filterValueArr.map((x, i) => "$" + (beginQueryParamNum + i)).join(", ");
                 filterTexts.push(`(${tableName}.id = ALL
                     (SELECT ${collectionTableName}.item_id FROM ${collectionTableName}
-                    WHERE ${collectionTableName}.${collectionFieldName} IN $${beginQueryParamNum}))`);
-                filterQueryParams.push(`(${filterValue.join(", ")})`);
+                    WHERE ${collectionTableName}.${collectionFieldName} IN (${inNumbers})))`);
+                filterQueryParams.push(...filterValueArr);
             }
         }
         
-        const orderByString = "" + {
+        const orderByString = {
             "low-high": "price",
             "high-low": "price DESC"
         }[sortBy] || "name";
-        await db.query(`SELECT * FROM ${tableName} WHERE ${filterTexts.join(" AND ")} ORDER BY ${orderByString}`, filterQueryParams);
+        const { rows } = await db.query(
+            `SELECT * FROM ${tableName}
+             ${filterTexts.length ? ("WHERE" + filterTexts.join(" AND ")) : ""}
+             ORDER BY ${orderByString}`, filterQueryParams);
+        res.send(rows);
     });
 
     router.get(`/${itemType}/byname/:name`, async (req, res) => {

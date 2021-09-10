@@ -1,63 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 
-import { fetchFilterRanges } from "../../apiInteraction";
+import { displayName } from "../../utils/shared";
 
 import "./ItemSelectionFilters.scss";
 
-export function ItemSelectionFilters({ itemType, onUpdateFilters }) {
-    const [filters, setFilters] = useState([]);
+export const ItemSelectionFilters = ({ filters, onUpdateNumericFilter, onUpdateSelectionFilter }) => (
+    <div id="filters-box">
+        <h2>Filters</h2>
 
-    useEffect(async () => {
-        const filterRanges = await fetchFilterRanges(itemType);
-
-        // indicate that all selection options are unselected
-        const filters = filterRanges.map(filter => {
-            switch (filter.type) {
-            case "selectionOneOf":
-                return { ...filter, value: filter.value.map(option => ({ option, selected: true })) };
-            case "selectionAllOf":
-                return { ...filter, value: filter.value.map(option => ({ option, selected: false })) };
-            default:
-                return filter;
-            }
-        });
-        setFilters(filters);
-    }, []);
-
-    function handleUpdateNumericFilter(fieldName, low, high) {
-        const newFilters = [...filters];
-        const numericFilter = newFilters.find(filter => filter.fieldName === fieldName);
-        numericFilter.low = low;
-        numericFilter.high = high;
-        setFilters(newFilters);
-    }
-
-    function handleUpdateSelectionFilter(fieldName, option) {
-        const newFilters = [...filters];
-        const selectionFilter = newFilters.find(filter => filter.fieldName === fieldName);
-
-        const selections = [...selectionFilter.value];
-        const selection = selections.find(opt => opt === option);
-        selection.selected = !selection.selected;
-        newFilters.value = selections;
-        
-        setFilters(newFilters);
-    }
-
-    return (
-        <div id="filters-box">
-            <h2>Filters</h2>
-
-            {filters.map(filter =>
-                filter.type === "numeric" ?
-                    <NumericRangeFilter key={filter.fieldName} filter={filter} onUpdateNumericFilter={handleUpdateNumericFilter} /> :
-                    <SelectionFilter key={filter.fieldName} filter={filter} onUpdateFilter={handleUpdateSelectionFilter} />
-            )}
-
-            <button onClick={() => onUpdateFilters(filters)}>Filter By Selections</button>
-        </div>
-    );
-}
+        {filters.map(filter =>
+            filter.filterType === "numeric"
+                ? <NumericRangeFilter key={filter.fieldName} filter={filter} onUpdateFilter={onUpdateNumericFilter} />
+                : <SelectionFilter key={filter.fieldName} filter={filter} onUpdateFilter={onUpdateSelectionFilter} />
+        )}
+    </div>
+);
 
 function NumericRangeFilter({ filter, onUpdateFilter }) {
     const { fieldName, value: { low, high } } = filter;
@@ -78,29 +35,29 @@ function NumericRangeFilter({ filter, onUpdateFilter }) {
 
     return (
         <div>
-            <h4>{fieldName}</h4>
-            <input type="text" value={low} onChange={handleChangeLow} />
+            <h4>{displayName(fieldName)}</h4>
+            <span className="numeric-range-input"><input type="text" value={low} onChange={handleChangeLow} /></span>
             -
-            <input type="text" value={high} onChange={handleChangeHigh} />
+            <span className="numeric-range-input"><input type="text" value={high} onChange={handleChangeHigh} /></span>
         </div>
     );
 }
 
 function SelectionFilter({ filter, onUpdateFilter }) {
-    const { fieldName, type, value: options } = filter;
+    const { fieldName, filterType, value } = filter;
 
     return (
         <div>
-            <h4>{fieldName} <em>({type === "selectionAllOf" ? "Match all" : "Match any"})</em></h4>
-            {options.map(opt =>
-                <div key={opt}>
+            <h4>{displayName(fieldName)} <em>({filterType === "selectionAllOf" ? "Match all" : "Match any"})</em></h4>
+            {value.map(({ option, selected }) =>
+                <div key={option}>
                     <input
                         type="checkbox"
-                        id={`filter-option-${fieldName}-${opt}`}
-                        checked={opt.selected}
-                        onChange={() => onUpdateFilter(opt)}
+                        id={`filter-option-${fieldName}-${option}`}
+                        checked={selected}
+                        onChange={() => onUpdateFilter(fieldName, option)}
                     />
-                    <label htmlFor={`filter-option-${fieldName}-${opt}`}>{opt}</label>
+                    <label htmlFor={`filter-option-${fieldName}-${option}`}>{option}</label>
                 </div>
             )}
         </div>

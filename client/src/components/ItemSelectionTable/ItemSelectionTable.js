@@ -1,20 +1,20 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-import { NO_SELECTION, money, displayOption } from "../../utils/shared";
+import { NO_SELECTION, money, displayOption, displayName } from "../../utils/shared";
 
 export const ItemSelectionTable = ({ displayedItems, ...otherProps }) => (
     displayedItems.length === 0 ? <h3>No Items Found To Match Filters</h3> : 
         <table>
             <thead>
                 <tr>
-                    {["Name", "Base Price"].concat(otherProps.extraFieldInfo.map(fieldInfo => fieldInfo.name))
+                    {["Name", "Base Price"].concat(otherProps.extraFieldInfo.map(fieldInfo => displayName(fieldInfo.name)))
                         .map(fieldName => <th key={fieldName}>{fieldName}</th>)
                     }
                 </tr>
             </thead>
             <tbody>
-                {displayedItems.map(item => <ItemSelectionRow key={item["Name"]} item={item} {...otherProps} />)}
+                {displayedItems.map(item => <ItemSelectionRow key={item.name} item={item} {...otherProps} />)}
             </tbody>
         </table>
 );
@@ -32,14 +32,14 @@ function ItemSelectionRow(props) {
     return (
         <tr>
             <td className="item-name-cell">
-                <a href={item["Link"]} target="_blank" rel="noreferrer">
+                <a href={item.link} target="_blank" rel="noreferrer">
                     <div className="item-image-container">
-                        <img src={item["Image"]} alt={item["Name"]} />
+                        <img src={item.image} alt={item.name} />
                     </div>
-                    <div className="item-name">{item["Name"]}</div>
+                    <div className="item-name">{item.name}</div>
                 </a>
             </td>
-            <td className="item-price-cell">{money(item["Base Price"])}</td>
+            <td className="item-price-cell">{money(item.price)}</td>
 
             {props.extraFieldInfo.map(f => (
                 <ItemSelectionCell
@@ -78,14 +78,14 @@ function ItemSelectionCell({ item, selections, fieldInfo, onSelectionChange }) {
     // the actual data of this item
     const data = item[fieldName];
 
-    /* eslint-disable indent */
     return (
         <td>
-            {
-                data === undefined ? null :
-                Array.isArray(data) ? data.join(", ") :
-                data.type === "selection" ?
-                    <select
+        {
+            data === undefined ? null
+            : Array.isArray(data)
+                ? data.join(", ")
+                : data.type === "selection"
+                    ? <select
                         value={displayOption(fieldInfo.display(selections[fieldName]))}
                         onChange={e => onSelectionChange(fieldName, e.target.value)}
                     >
@@ -93,9 +93,9 @@ function ItemSelectionCell({ item, selections, fieldInfo, onSelectionChange }) {
                             const displayed = displayOption(opt);
                             return <option key={displayed} value={displayed}>{displayed}</option>;
                         })}
-                    </select> :
-                fieldInfo.display(data)
-            }
+                    </select>
+                    : fieldInfo.display(data)
+        }
         </td>
     );
 }

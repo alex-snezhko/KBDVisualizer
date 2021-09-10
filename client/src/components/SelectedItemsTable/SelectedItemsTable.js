@@ -40,11 +40,11 @@ const SelectedItemTableRow = ({ itemType, isPartInKit, item, onDelete }) => (
         <td className="item-name-cell">
             {isPartInKit ? "Included in kit" :
                 item &&
-                <a href={item["Link"]} target="_blank" rel="noreferrer">
+                <a href={item.link} target="_blank" rel="noreferrer">
                     <div className="selected-item-image-container item-image-container">
-                        <img src={item["Image"]} alt={item["Name"]} />
+                        <img src={item.image} alt={item.name} />
                     </div>
-                    <span className="item-name">{item["Name"]}</span>
+                    <span className="item-name">{item.name}</span>
                 </a>
             }
         </td>

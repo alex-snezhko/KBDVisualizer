@@ -503,8 +503,8 @@ export class KeyboardRender extends React.Component {
 
         setupShaders(gl, progsInfo);
 
-        this.keyboardInfo = await fetchInfo("keyboardInfo", this.props.selectedItems["Case"]["Name"]);
-        this.keycapsInfo = await fetchInfo("keycapsInfo", this.props.selectedItems["Keycaps"]["Name"]);
+        this.keyboardInfo = await fetchInfo("keyboardInfo", this.props.selectedItems["Case"].name);
+        this.keycapsInfo = await fetchInfo("keycapsInfo", this.props.selectedItems["Keycaps"].name);
 
         await this.loadKeyboard("cherry");
         

@@ -1,50 +1,88 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
-import { ItemSelectionFilters } from "../ItemSelectionFilters";
 import { ItemSelectionTable } from "../ItemSelectionTable";
+import { ItemSelectionFilters } from "../ItemSelectionFilters";
 
-import { NumRangeFilterObj } from "../../utils/shared";
 import "./ItemSelection.scss";
-import { fetchFilterRanges, fetchItems } from "../../apiInteraction";
+import { fetchItems, fetchFilterRanges } from "../../apiInteraction";
 
 export function ItemSelection(props) {
     const [items, setItems] = useState(null);
-    const [filters, setFilters] = useState([]);
+    const [filters, setFilters] = useState(null);
     const [sortBy, setSortBy] = useState("alpha");
 
     const { itemType } = useParams();
 
+    function handleUpdateNumericFilter(fieldName, low, high) {
+        const newFilters = [...filters];
+        const numericFilter = newFilters.find(filter => filter.fieldName === fieldName);
+        numericFilter.low = low;
+        numericFilter.high = high;
+        setFilters(newFilters);
+    }
+
+    function handleUpdateSelectionFilter(fieldName, option) {
+        const newFilters = [...filters];
+        const selectionFilter = newFilters.find(filter => filter.fieldName === fieldName);
+
+        const selections = [...selectionFilter.value];
+        const selection = selections.find(opt => opt.option === option);
+        selection.selected = !selection.selected;
+        newFilters.value = selections;
+        
+        setFilters(newFilters);
+    }
+
+    // get filter values
+    useEffect(async () => {
+        const filterRanges = await fetchFilterRanges(itemType);
+
+        // indicate that all selection options are unselected
+        const filters = filterRanges.map(filter => {
+            switch (filter.filterType) {
+            case "selectionOneOf":
+                return { ...filter, value: filter.value.map(option => ({ option, selected: true })) };
+            case "selectionAllOf":
+                return { ...filter, value: filter.value.map(option => ({ option, selected: false })) };
+            default:
+                return filter;
+            }
+        });
+        setFilters(filters);
+    }, []);
+
+    // update items
     useEffect(async () => {
         if (!filters) {
-            const filterRanges = await fetchFilterRanges();
-            setFilters(filterRanges);
+            return;
         }
 
-        const items = await fetchItems(itemType, filters);
-        
-        const filts = [
-            new NumRangeFilterObj("Base Price", Math.min(...prices), Math.max(...prices),
-                x => <span className="numeric-range-input">${x /* TODO add Base Price to extraFields */}</span>)
-        ].concat(props.extraFieldInfo.map(f => f.generateFilter(f.name, shownItems.map(item => item[f.name]))));
-        
-        setItems(shownItems);
-        setFilters(filts);
+        const filterParams = {};
+        for (const filter of filters) {
+            if (filter.filterType === "numeric") {
+                filterParams[filter.fieldName] = [filter.value.low, filter.value.high];
+            } else {
+                filterParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(({ option }) => option);
+            }
+        }
+        const urlParams = { ...filterParams, sortBy };
+
+        const fetchedItems = await fetchItems(itemType, urlParams);
+        setItems(fetchedItems);
     }, [filters, sortBy]);
 
     if (items === null) {
         return null;
     }
-
-    function handleUpdateFilters(field, data) {
-        const newFilters = [...filters];
-        newFilters.find(filter => filter.field === field).updateData(data);
-        setFilters(newFilters);
-    }
     
     return (
         <React.Fragment>
-            <ItemSelectionFilters itemType={itemType} onUpdateFilters={handleUpdateFilters} />
+            <ItemSelectionFilters
+                filters={filters}
+                onUpdateNumericFilter={handleUpdateNumericFilter}
+                onUpdateSelectionFilter={handleUpdateSelectionFilter}
+            />
 
             <div id="item-listing">
                 {props.compatibilityFilters.length !== 0 &&
@@ -59,7 +97,7 @@ export function ItemSelection(props) {
                     </select>
                 </div>
 
-                <ItemSelectionTable itemType={itemType} displayedItems={displayedItems} {...props} />
+                <ItemSelectionTable itemType={itemType} displayedItems={items} {...props} />
             </div>
         </React.Fragment>
     );
