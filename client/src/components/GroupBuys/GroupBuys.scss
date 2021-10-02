@@ -6,9 +6,11 @@
 }
 
 .group-buy-item {
+    width: 300px;
     margin: 10px;
     padding: 20px;
     border: 1px solid styles.$light-border-color;
+    background-color: #f0f8f8;
 
     a {
         color: styles.$theme-color-1;
@@ -21,6 +23,21 @@
     }
 }
 
+.gb-image-container {
+    @include styles.bordered-img-container(300px, 200px);
+    // img {
+    //     object-fit: contain;
+    //     height: 100%;
+    //     width: 100%;
+    // }
+    // width: 100%;
+}
+
+.gb-item-name {
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
 .gb-info {
     list-style-type: none;
     padding: 0;
@@ -30,6 +47,4 @@
     }
 }
 
-.image-container {
-    @include styles.bordered-img-container(300px, 200px);
-}
+

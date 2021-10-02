@@ -61,7 +61,7 @@ function ItemSelectionRow(props) {
                     <button className="blue-button" onClick={() => {
                         const allGood = props.onSelect(item, selections, props.itemType);
                         if (!allGood) {
-                            alert("Please select all relevant values");
+                            alert("Please select a value for all options for this item");
                         }
                     }}>
                         Select

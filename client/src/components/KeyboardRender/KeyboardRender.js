@@ -110,6 +110,7 @@ export class KeyboardRender extends React.Component {
             yAngle: Math.PI / 4
         };
 
+        // this.keyboardInfoFound = true;
         this.keyboardInfo = null;
         this.keycapsInfo = null;
 
@@ -298,7 +299,7 @@ export class KeyboardRender extends React.Component {
                         uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
                         uMVPMat: [false, mat4.multiply(mat4.create(), viewProjMat, transformation)],
                         uModelMat: [false, transformation],
-                        uColor: this.props.selectedItems["Stabilizers"].color.slice(0, 3) // TODO
+                        uColor: this.props.selectedItems["Stabilizers"]["color_arr"].slice(0, 3) // TODO
                     });
                 };
 
@@ -311,7 +312,7 @@ export class KeyboardRender extends React.Component {
                 uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
                 uMVPMat: [false, modelViewProjMat],
                 uModelMat: [false, instr.transformation],
-                uColor: this.props.selectedItems["Switches"].casingColor
+                uColor: this.props.selectedItems["Switches"]["color_arr"].slice(0, 3)
             });
     
             // render keycap
@@ -503,7 +504,14 @@ export class KeyboardRender extends React.Component {
 
         setupShaders(gl, progsInfo);
 
-        this.keyboardInfo = JSON.parse(await fetchInfo("keyboardInfo", this.props.selectedItems["Case"].name));
+        let kbdInfo;
+        try {
+            kbdInfo = await fetchInfo("keyboardInfo", this.props.selectedItems["Case"].name);
+        } catch (e) {
+            kbdInfo = await fetchInfo("keyboardInfo", "Tofu 65% Aluminum");
+            alert("The model for the keyboard case selected has not yet been created. Defaulting to Tofu 65% model");
+        }
+        this.keyboardInfo = JSON.parse(kbdInfo);
         this.keycapsInfo = JSON.parse(await fetchInfo("keycapsInfo", this.props.selectedItems["Keycaps"].name));
 
         await this.loadKeyboard("cherry");

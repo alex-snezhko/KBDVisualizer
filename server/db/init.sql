@@ -107,10 +107,10 @@ CREATE TABLE IF NOT EXISTS keycaps_info (
 );
 
 CREATE TABLE IF NOT EXISTS groupbuys (
-    name        VARCHAR (30) PRIMARY KEY UNIQUE NOT NULL,
+    name        VARCHAR (60) PRIMARY KEY UNIQUE NOT NULL,
     image       VARCHAR NOT NULL,
     link        VARCHAR NOT NULL,
-    part_type   VARCHAR (20) CHECK (part_type = 'keycaps' OR part_type = 'switches' OR part_type = 'keyboard'),
+    part_type   VARCHAR (20) CHECK (part_type = 'Keycaps' OR part_type = 'Switches' OR part_type = 'Keyboard'),
     start_date  DATE NOT NULL,
     end_date    DATE NOT NULL,
     price       FLOAT NOT NULL

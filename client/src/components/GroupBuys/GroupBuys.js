@@ -29,14 +29,12 @@ export function GroupBuys({ onSelectItem }) {
 }
 
 function GroupBuyItem({ item, onSelectItem }) {
-    const hoursDiff = Math.floor((Date.parse(item.endDate) - Date.now()) / (60 * 60 * 1000));
+    const hoursDiff = Math.floor((Date.parse(item["end_date"]) - Date.now()) / (60 * 60 * 1000));
     if (hoursDiff < 0) {
         return null;
     }
     const daysLeft = Math.floor(hoursDiff / 24);
     const hoursLeft = Math.floor(hoursDiff % 24);
-
-    const format = (num, str) => `${num} ${str}${num > 1 ? "s" : ""}`;
 
     async function handleSelectItem() {
         const partType = item.partType.toLowerCase();
@@ -46,20 +44,25 @@ function GroupBuyItem({ item, onSelectItem }) {
         onSelectItem(item.partType, item);
     }
 
+    const startDate = new Date(item["start_date"]).toLocaleDateString("en-US");
+    const endDate = new Date(item["end_date"]).toLocaleDateString("en-US");
+
+    const format = (num, str) => `${num} ${str}${num > 1 ? "s" : ""}`;
+
     return (
         <div className="group-buy-item">
             <a href={item.link}>
-                <div className="image-container">
+                <div className="gb-image-container">
                     <img src={item.image} alt={item.name} />
                 </div>
-                <h3>{item.name}</h3>
+                <h3 className="gb-item-name">{item.name}</h3>
             </a>
             <hr />
             <ul className="gb-info">
-                <li><b>Item type:</b> {item.partType}</li>
+                <li><b>Item type:</b> {item["part_type"]}</li>
                 <li><b>Base price:</b> {money(item.price)}</li>
-                <li><b>Start date:</b> {item.startDate}</li>
-                <li><b>End date:</b> {item.endDate}</li>
+                <li><b>Start date:</b> {startDate}</li>
+                <li><b>End date:</b> {endDate}</li>
                 <li><b>Time left:</b> {daysLeft > 0 && format(daysLeft, "day")} {format(hoursLeft, "hour")}</li>
             </ul>
             <Link to="/">

@@ -170,19 +170,16 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
     });
 }
 
-router.get("/switches/byname/:name", async (req, res) => {
-    const { name } = req.params;
-    const { rows } = await db.query("SELECT TOP 1 * FROM switches WHERE name = $1", [name]);
-    res.send(rows[0]);
-});
+router.get("/randomConfig", async (req, res) => {
+    // TODO make case/plate/pcb random as well
+    const { rows: [kbdCase] } = await db.query("SELECT * FROM cases WHERE name = 'Tofu 65% Aluminum'");
+    const { rows: [plate] } = await db.query("SELECT * FROM plates WHERE name = '65% Brass Plate'");
+    const { rows: [pcb] } = await db.query("SELECT * FROM pcbs WHERE name = 'KBD67 Rev2 PCB'");
+    const { rows: [switches] } = await db.query("SELECT * FROM switches ORDER BY RANDOM() LIMIT 1");
+    const { rows: [stabilizers] } = await db.query("SELECT * FROM stabilizers WHERE mount_method = 'PCB Screw-in' ORDER BY RANDOM() LIMIT 1");
+    const { rows: [keycaps] } = await db.query("SELECT * FROM keycap_sets ORDER BY RANDOM() LIMIT 1");
 
-router.get("/cases/byname/:name", async (req, res) => {
-    const { name } = req.params;
-    const { rows } = await db.query("SELECT TOP 1 * FROM cases WHERE name = $1", [name]);
-    const kbdCase = rows[0];
-    const { rows: colors } = await db.query("SELECT * FROM case_colors WHERE case_id = $1", [kbdCase.id]);
-    kbdCase.colors = colors;
-    res.send(rows[0]);
+    res.send({ "Kit": null, "Case": kbdCase, "Plate": plate, "PCB": pcb, "Switches": switches, "Stabilizers": stabilizers, "Keycaps": keycaps });
 });
 
 module.exports = router;

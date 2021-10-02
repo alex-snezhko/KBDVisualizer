@@ -15,7 +15,9 @@ export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }) => (
             </tr>
         </thead>
         <tbody>
-            {["Kit"].concat(ALL_PARTS).map(itemType => (
+            {/* TODO put Kit back once working properly */}
+            {/* {["Kit"].concat(ALL_PARTS).map(itemType => ( */}
+            {ALL_PARTS.map(itemType => (
                 <SelectedItemTableRow
                     key={itemType}
                     itemType={itemType}

@@ -5,9 +5,6 @@ const path = require("path");
 const db = require("./db");
 const infoRoutes = require("./routes/info");
 const itemsRoutes = require("./routes/items");
-const setupGroupBuyScraper = require("./scrapeGroupBuys");
-
-setupGroupBuyScraper();
 
 const app = express();
 
@@ -28,7 +25,7 @@ app.use("/info", infoRoutes);
 app.use("/items", itemsRoutes);
 
 app.get("/activeGroupBuys", async (req, res) => {
-    const { rows } = await db.query("SELECT * FROM groupbuys");
+    const { rows } = await db.query("SELECT * FROM groupbuys ORDER BY end_date");
     res.send(rows);
 });
 

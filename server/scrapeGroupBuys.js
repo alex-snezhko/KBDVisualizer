@@ -1,8 +1,6 @@
-const cron = require("node-cron");
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
-const path = require("path");
-const fs = require("fs");
+const db = require("./db");
 
 function getActiveGroupBuys(data) {
     const $ = cheerio.load(data);
@@ -24,7 +22,11 @@ function getActiveGroupBuys(data) {
         const name = $item.find(".cqDPIl").text();
         const image = $item.find("img.enYpte").attr("src");
         const link = "https://www.mechgroupbuys.com" + $item.find(".gSVBBi").children("a").attr("href");
-        const partType = $item.find(".gLiaon").text();
+        let partType = $item.find(".gLiaon").text();
+        if (partType === "keyboards") {
+            partType = "keyboard";
+        }
+        partType = partType.charAt(0).toUpperCase() + partType.slice(1);
         const startDate = getInfo("Start date:");
         const endDate = getInfo("End date:");
         // TODO handle other currencies
@@ -37,17 +39,28 @@ function getActiveGroupBuys(data) {
     return groupBuyItems;
 }
 
-module.exports = () => {
-    cron.schedule("0 0 * * *", async () => {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        const MECHGB_URL = "https://www.mechgroupbuys.com";
-        await page.goto(MECHGB_URL);
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        const data = await page.content();
-        
-        const groupBuyItems = getActiveGroupBuys(data);
-        fs.writeFileSync(path.resolve(__dirname, "resources/groupbuys.json"), JSON.stringify(groupBuyItems, null, 4));
-        await browser.close();
-    });
-};
+async function scrapeGroupBuys() {
+    await db.query("DELETE FROM groupbuys WHERE end_date > CURRENT_DATE");
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    const MECHGB_URL = "https://www.mechgroupbuys.com";
+    await page.goto(MECHGB_URL);
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    const data = await page.content();
+    
+    const groupBuyItems = getActiveGroupBuys(data);
+    for (const item of groupBuyItems) {
+        const { rows } = await db.query("SELECT name FROM groupbuys WHERE name = $1", [item.name]);
+        if (rows.length === 0) {
+            await db.query(
+                "INSERT INTO groupbuys (name, image, link, part_type, start_date, end_date, price) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                [item.name, item.image, item.link, item.partType, item.startDate, item.endDate, item.price]
+            );
+        }
+    }
+
+    await browser.close();
+}
+
+scrapeGroupBuys();
