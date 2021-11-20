@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 import { Login } from "../Login";
 import { SignUp } from "../SignUp";
@@ -7,10 +7,10 @@ import { Header } from "../Header";
 import { GroupBuys } from "../GroupBuys";
 import { ItemSelection } from "../ItemSelection";
 import { SelectedItems } from "../SelectedItems";
-
 import { ALL_PARTS, NO_SELECTION, CompatibilityFilterObj } from "../../utils/shared";
-import "./App.scss";
 import { fetchRandomItemConfig } from "../../apiInteraction";
+
+import "./App.scss";
 
 function getExtraFieldInfo(itemType) {
     const std = (name) => ({ name, display: x => x });
@@ -90,7 +90,7 @@ export function App() {
             <Header />
 
             <main>
-                <Switch>
+                <Routes>
                     <Route exact path="/">
                         <SelectedItems
                             selectedItems={selectedItems}
@@ -116,7 +116,7 @@ export function App() {
                     <Route path="/signup">
                         <SignUp />
                     </Route>
-                </Switch>
+                </Routes>
             </main>
         </Router>
     );

@@ -1,0 +1,21 @@
+{
+  "name": "kbd-visualizer-api",
+  "version": "1.0.0",
+  "description": "KBDVisualizer server-side code",
+  "main": "api.js",
+  "scripts": {
+    "start": "nodemon api.js"
+  },
+  "author": "Alex Snezhko",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "pg": "^8.7.1",
+    "puppeteer": "^11.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
