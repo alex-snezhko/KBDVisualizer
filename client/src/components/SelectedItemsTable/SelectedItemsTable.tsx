@@ -2,9 +2,16 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 import { ALL_PARTS, money } from "../../utils/shared";
+
 import "./SelectedItemsTable.scss";
 
-export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }) => (
+interface SelectedItemsTableProps {
+    partsInKit: any, // TODO
+    selectedItems: any,
+    onDelete: any
+}
+
+export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }: SelectedItemsTableProps) => (
     <table id="selected-item-table">
         <thead>
             <tr>
@@ -30,7 +37,14 @@ export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }) => (
     </table>
 );
 
-const SelectedItemTableRow = ({ itemType, isPartInKit, item, onDelete }) => (
+interface SelectedItemTableRowProps {
+    itemType: any, // TODO
+    isPartInKit: boolean,
+    item: any,
+    onDelete: any
+}
+
+const SelectedItemTableRow = ({ itemType, isPartInKit, item, onDelete }: SelectedItemTableRowProps) => (
     <tr className={isPartInKit ? "part-in-kit" : undefined}>
         <td className="item-select-cell">
             <Link to={`select-item/${itemType}`}>

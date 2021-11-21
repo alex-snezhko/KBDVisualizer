@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 
 import { NO_SELECTION, money, displayOption, displayName } from "../../utils/shared";
 
-export const ItemSelectionTable = ({ displayedItems, ...otherProps }) => (
+interface ItemSelectionTableProps {
+    displayedItems: any, // TODO
+    // TODO
+}
+
+export const ItemSelectionTable = ({ displayedItems, ...otherProps }: ItemSelectionTableProps) => (
     displayedItems.length === 0 ? <h3>No Items Found To Match Filters</h3> : 
         <table>
             <thead>
@@ -19,7 +24,11 @@ export const ItemSelectionTable = ({ displayedItems, ...otherProps }) => (
         </table>
 );
 
-function ItemSelectionRow(props) {
+interface ItemSelectionRowProps {
+
+}
+
+function ItemSelectionRow(props: ItemSelectionRowProps) {
     const item = props.item;
 
     // keep state of all selections made for each field
@@ -72,7 +81,14 @@ function ItemSelectionRow(props) {
     );
 }
 
-function ItemSelectionCell({ item, selections, fieldInfo, onSelectionChange }) {
+interface ItemSelectionCellProps {
+    item: any, // TODO
+    selections: any,
+    fieldInfo: any,
+    onSelectionChange: any
+}
+
+function ItemSelectionCell({ item, selections, fieldInfo, onSelectionChange }: ItemSelectionCellProps) {
     const fieldName = fieldInfo.name;
 
     // the actual data of this item

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
-import { ItemSelectionTable } from "../ItemSelectionTable";
-import { ItemSelectionFilters } from "../ItemSelectionFilters";
+import { ItemSelectionTable } from "../ItemSelectionTable/ItemSelectionTable";
+import { ItemSelectionFilters } from "../ItemSelectionFilters/ItemSelectionFilters";
+
+import { fetchItems, fetchFilterRanges } from "../../apiInteraction";
 
 import "./ItemSelection.scss";
-import { fetchItems, fetchFilterRanges } from "../../apiInteraction";
 
 export function ItemSelection(props) {
     const [items, setItems] = useState(null);
@@ -35,44 +36,48 @@ export function ItemSelection(props) {
     }
 
     // get filter values
-    useEffect(async () => {
-        const filterRanges = await fetchFilterRanges(itemType);
+    useEffect(() => {
+        (async () => {
+            const filterRanges = await fetchFilterRanges(itemType);
 
-        // indicate that all selection options are unselected
-        const filters = filterRanges.map(filter => {
-            switch (filter.filterType) {
-            case "selectionOneOf":
-                return { ...filter, value: filter.value.map(option => ({ option, selected: true })) };
-            case "selectionAllOf":
-                return { ...filter, value: filter.value.map(option => ({ option, selected: false })) };
-            default:
-                return filter;
-            }
-        });
-        setFilters(filters);
+            // indicate that all selection options are unselected
+            const filters = filterRanges.map(filter => {
+                switch (filter.filterType) {
+                case "selectionOneOf":
+                    return { ...filter, value: filter.value.map(option => ({ option, selected: true })) };
+                case "selectionAllOf":
+                    return { ...filter, value: filter.value.map(option => ({ option, selected: false })) };
+                default:
+                    return filter;
+                }
+            });
+            setFilters(filters);
+        })();
     }, []);
 
     // update items
-    useEffect(async () => {
-        if (!filters) {
-            return;
-        }
-
-        const filterParams = {};
-        for (const filter of filters) {
-            if (filter.filterType === "numeric") {
-                filterParams[filter.fieldName] = [
-                    filter.value.low === "" ? Number.NEGATIVE_INFINITY : Number(filter.value.low),
-                    filter.value.high === "" ? Number.POSITIVE_INFINITY : Number(filter.value.high)
-                ];
-            } else {
-                filterParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(({ option }) => option);
+    useEffect(() => {
+        (async () => {
+            if (!filters) {
+                return;
             }
-        }
-        const urlParams = { ...filterParams, sortBy };
 
-        const fetchedItems = await fetchItems(itemType, urlParams);
-        setItems(fetchedItems);
+            const filterParams = {};
+            for (const filter of filters) {
+                if (filter.filterType === "numeric") {
+                    filterParams[filter.fieldName] = [
+                        filter.value.low === "" ? Number.NEGATIVE_INFINITY : Number(filter.value.low),
+                        filter.value.high === "" ? Number.POSITIVE_INFINITY : Number(filter.value.high)
+                    ];
+                } else {
+                    filterParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(({ option }) => option);
+                }
+            }
+            const urlParams = { ...filterParams, sortBy };
+
+            const fetchedItems = await fetchItems(itemType, urlParams);
+            setItems(fetchedItems);
+        })();
     }, [filters, sortBy]);
 
     if (items === null) {

@@ -4,7 +4,13 @@ import { displayName } from "../../utils/shared";
 
 import "./ItemSelectionFilters.scss";
 
-export const ItemSelectionFilters = ({ filters, onUpdateNumericFilter, onUpdateSelectionFilter }) => (
+interface ItemSelectionFiltersProps {
+    filters: any, // TODO
+    onUpdateNumericFilter: any,
+    onUpdateSelectionFilter: any
+}
+
+export const ItemSelectionFilters = ({ filters, onUpdateNumericFilter, onUpdateSelectionFilter }: ItemSelectionFiltersProps) => (
     <div id="filters-box">
         <h2>Filters</h2>
 
@@ -16,19 +22,24 @@ export const ItemSelectionFilters = ({ filters, onUpdateNumericFilter, onUpdateS
     </div>
 );
 
-function NumericRangeFilter({ filter, onUpdateFilter }) {
+interface NumericRangeFilterProps {
+    filter: any, // TODO
+    onUpdateFilter: any
+}
+
+function NumericRangeFilter({ filter, onUpdateFilter }: NumericRangeFilterProps) {
     const { fieldName, value: { low, high } } = filter;
 
-    function handleChangeLow(event) {
+    function handleChangeLow(event: React.ChangeEvent<HTMLInputElement>) {
         const val = event.target.value;
-        if (!isNaN(val)) {
+        if (!isNaN(Number(val))) {
             onUpdateFilter(fieldName, val, high);
         }
     }
 
-    function handleChangeHigh(event) {
+    function handleChangeHigh(event: React.ChangeEvent<HTMLInputElement>) {
         const val = event.target.value;
-        if (!isNaN(val)) {
+        if (!isNaN(Number(val))) {
             onUpdateFilter(fieldName, low, val);
         }
     }
@@ -43,7 +54,12 @@ function NumericRangeFilter({ filter, onUpdateFilter }) {
     );
 }
 
-function SelectionFilter({ filter, onUpdateFilter }) {
+interface SelectionFilterProps {
+    filter: any, // TODO
+    onUpdateFilter: any
+}
+
+function SelectionFilter({ filter, onUpdateFilter }: SelectionFilterProps) {
     const { fieldName, filterType, value } = filter;
 
     return (

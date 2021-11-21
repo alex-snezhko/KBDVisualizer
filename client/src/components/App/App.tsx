@@ -1,29 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
-import { Login } from "../Login";
-import { SignUp } from "../SignUp";
-import { Header } from "../Header";
-import { GroupBuys } from "../GroupBuys";
-import { ItemSelection } from "../ItemSelection";
-import { SelectedItems } from "../SelectedItems";
+import { Login } from "../Login/Login";
+import { SignUp } from "../SignUp/SignUp";
+import { Header } from "../Header/Header";
+import { GroupBuys } from "../GroupBuys/GroupBuys";
+import { ItemSelection } from "../ItemSelection/ItemSelection";
+import { SelectedItems } from "../SelectedItems/SelectedItems";
 import { ALL_PARTS, NO_SELECTION, CompatibilityFilterObj } from "../../utils/shared";
 import { fetchRandomItemConfig } from "../../apiInteraction";
 
 import "./App.scss";
 
-function getExtraFieldInfo(itemType) {
-    const std = (name) => ({ name, display: x => x });
+function getExtraFieldInfo(itemType: string) {
+    const std = (name: string) => ({ name, display: (x: number) => x });
 
     return {
-        "Kit": [std("form_factor")].concat(ALL_PARTS.map(part => std(part))),
+        "Kit": [std("form_factor")].concat(ALL_PARTS.map((part: string) => std(part))),
         "Case": [std("form_factor"), std("material"), std("color"), std("mount_method")],
         "Plate": [std("form_factor"), std("material")],
         "PCB": [std("form_factor"), std("hot_swap"), std("backlight")],
         "Stabilizers": [std("mount_method")],
-        "Switches": [std("tactility"), { name: "spring_weight", display: x => x + "g" },
-            { name: "act_dist", display: x => x.toFixed(1) + " mm" },
-            { name: "bot_dist", display: x => x.toFixed(1) + " mm" }],
+        "Switches": [std("tactility"), { name: "spring_weight", display: (x: number) => x + "g" },
+            { name: "act_dist", display: (x: number) => x.toFixed(1) + " mm" },
+            { name: "bot_dist", display: (x: number) => x.toFixed(1) + " mm" }],
         "Keycaps": [std("color"), std("material"), std("legends")]
     }[itemType] || [];
 }
@@ -32,9 +32,9 @@ export function App() {
     const [selectedItems, setSelectedItems] = useState(null);
     const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit"].concat(ALL_PARTS).reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
 
-    useEffect(async () => {
-        const items = await fetchRandomItemConfig();
-        setSelectedItems(items);
+    useEffect(() => {
+        fetchRandomItemConfig()
+        .then(items => setSelectedItems(items));
     }, []);
 
     function handleSelectItem(item, selections, itemType) {
@@ -48,28 +48,28 @@ export function App() {
         //     // TODO handle compatibility
         // }
 
-        let compatibility = { ...compatibilityFilters };
-        const ff = new CompatibilityFilterObj("form_factor", itemType, [selections["form_factor"]]);
-        if (itemType === "Case") {
-            compatibility["PCB"].push(ff);
-            compatibility["Plate"].push(ff);
-        } else if (itemType === "Plate") {
-            compatibility["Case"].push(ff);
-            compatibility["PCB"].push(ff);
-        } else if (itemType === "PCB") {
-            compatibility["Case"].push(ff);
-            compatibility["Plate"].push(ff);
-        }
+        // let compatibility = { ...compatibilityFilters };
+        // const ff = new CompatibilityFilterObj("form_factor", itemType, [selections["form_factor"]]);
+        // if (itemType === "Case") {
+        //     compatibility["PCB"].push(ff);
+        //     compatibility["Plate"].push(ff);
+        // } else if (itemType === "Plate") {
+        //     compatibility["Case"].push(ff);
+        //     compatibility["PCB"].push(ff);
+        // } else if (itemType === "PCB") {
+        //     compatibility["Case"].push(ff);
+        //     compatibility["Plate"].push(ff);
+        // }
 
         const price = item["price"] + selectedValues.reduce((extra, val) => extra + (val.extra || 0), 0);
 
         setSelectedItems({ ...selectedItems, [itemType]: { ...item, price } });
-        setCompatibilityFilters(compatibility);
+        // setCompatibilityFilters(compatibility);
 
         return true;
     }
 
-    function handleRemoveItem(itemType) {
+    function handleRemoveItem(itemType: string) {
         const filters = { ...compatibilityFilters };
         for (const field in filters) {
             filters[field] = filters[field].filter(f => f.origin !== itemType);
@@ -91,7 +91,7 @@ export function App() {
 
             <main>
                 <Routes>
-                    <Route exact path="/">
+                    <Route path="/">
                         <SelectedItems
                             selectedItems={selectedItems}
                             partsInKit={partsInKit}

@@ -3,29 +3,40 @@ import { Link } from "react-router-dom";
 import { IconContext } from "react-icons";
 import { BsPerson } from "react-icons/bs";
 import { AiOutlineLock } from "react-icons/ai";
+import { MdMailOutline } from "react-icons/md";
 
-import "./Login.scss";
-
-export function Login() {
-    function handleLogIn() {
-
+export function SignUp() {
+    function handleSignUp() {
+        return null; // TODO
     }
 
+    const [email, setEmail] = useState("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPW, setConfirmPW] = useState("");
 
     return (
         <div id="centered-login-block">
             <div className="login-form-container">
-                <h2>Log In</h2>
+                <h2>Sign Up</h2>
                 <hr />
                 <br />
-                <form onSubmit={handleLogIn}>
+                <form onSubmit={handleSignUp}>
+                    <div className="login-input-container">
+                        <IconContext.Provider value={{ className: "text-field-icon" }}><MdMailOutline /></IconContext.Provider>
+                        <input
+                            type="text"
+                            placeholder="Email Address"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                        />
+                    </div>
+                    <br />
                     <div className="login-input-container">
                         <IconContext.Provider value={{ className: "text-field-icon" }}><BsPerson /></IconContext.Provider>
                         <input
                             type="text"
-                            placeholder="Username or Email Address"
+                            placeholder="Choose a Username"
                             value={username}
                             onChange={e => setUsername(e.target.value)}
                         />
@@ -35,9 +46,19 @@ export function Login() {
                         <IconContext.Provider value={{ className: "text-field-icon" }}><AiOutlineLock /></IconContext.Provider>
                         <input
                             type="password"
-                            placeholder="Password"
+                            placeholder="Choose a Password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
+                        />
+                    </div>
+                    <br />
+                    <div className="login-input-container">
+                        <IconContext.Provider value={{ className: "text-field-icon" }}><AiOutlineLock /></IconContext.Provider>
+                        <input
+                            type="password"
+                            placeholder="Confirm Password"
+                            value={confirmPW}
+                            onChange={e => setConfirmPW(e.target.value)}
                         />
                     </div>
                     <br />
@@ -47,7 +68,7 @@ export function Login() {
             </div>
 
             <h3 id="below">
-                New User? <Link to="/signup">Sign Up</Link>
+                Already have an account? <Link to="/login">Log In</Link>
             </h3>
         </div>
     );

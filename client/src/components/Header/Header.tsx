@@ -11,10 +11,10 @@ export const Header = () => (
             <h1>KBD<span id="header-part">VISUALIZER</span></h1>
             <nav>
                 <div>
-                    <NavLink to="/" exact activeClassName="active-page-link">
+                    <NavLink to="/" end className={({ isActive }) => isActive ? "active-page-link" : ""}>
                         Build
                     </NavLink>
-                    <NavLink to="/group-buys" activeClassName="active-page-link">
+                    <NavLink to="/group-buys" className={({ isActive }) => isActive ? "active-page-link" : ""}>
                         Group Buys
                     </NavLink>
                     {/* <NavLink to="/login" activeClassName="active-page-link">

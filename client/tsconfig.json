@@ -3,17 +3,19 @@
     "target": "es2016",
     "module": "es6",
     "moduleResolution": "node",
-    "rootDir": "./src/",
+    // "rootDir": "./src/",
     "outDir": "./dist/",
     "jsx": "react",
     "sourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "removeComments": true,
     "strict": true,
     "skipLibCheck": true
   },
   "include": [
-    "./client/src/**/*"
+    "./src/**/*"
   ],
   "exclude": [
     "node_modules",

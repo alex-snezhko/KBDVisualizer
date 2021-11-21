@@ -1,21 +1,31 @@
 import React, { useState } from "react";
 
-import { SelectedItemsTable } from "../SelectedItemsTable";
-import { KeyboardRender } from "../KeyboardRender";
+import { SelectedItemsTable } from "../SelectedItemsTable/SelectedItemsTable";
+import { KeyboardRender } from "../KeyboardRender/KeyboardRender";
 
 import { ALL_PARTS, money } from "../../utils/shared";
 import "./SelectedItems.scss";
 
-export function SelectedItems(props) {
+interface SelectedItemsProps {
+    selectedItems: any, // TODO
+    partsInKit: any,
+    onDelete: any
+}
+
+export function SelectedItems({ selectedItems, partsInKit, onDelete }: SelectedItemsProps) {
     const [collapsed, setCollapsed] = useState(false);
 
-    const totalPrice = ALL_PARTS.reduce((total, part) => total + props.selectedItems[part].price || 0, 0);
+    const totalPrice = ALL_PARTS.reduce((total, part) => total + selectedItems[part].price || 0, 0);
 
     return (
         <div id="selected-items-container">
             {!collapsed && (
                 <div>
-                    <SelectedItemsTable {...props} />
+                    <SelectedItemsTable
+                        partsInKit={partsInKit}
+                        selectedItems={selectedItems}
+                        onDelete={onDelete}
+                    />
                     <div>Total Price: {money(totalPrice)}</div>
                 </div>
             )}
@@ -30,7 +40,7 @@ export function SelectedItems(props) {
             </div>
 
             <div>
-                <KeyboardRender selectedItems={props.selectedItems} />
+                <KeyboardRender selectedItems={selectedItems} />
             </div>
         </div>
     );

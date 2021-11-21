@@ -5,11 +5,26 @@ import { fetchActiveGroupBuys, fetchItem } from "../../apiInteraction";
 import { money } from "../../utils/shared";
 import "./GroupBuys.scss";
 
-export function GroupBuys({ onSelectItem }) {
-    const [groupBuyItems, setGroupBuyItems] = useState([]);
+interface GroupBuyItem {
+    name: string,
+    link: string,
+    image: string,
+    partType: string, // TODO partType
+    price: number,
+    startDate: Date,
+    endDate: Date // TODO change from end_date and start_date
+}
+
+interface GroupBuysProps {
+    onSelectItem: any // TODO
+}
+
+export function GroupBuys({ onSelectItem }: GroupBuysProps) {
+    const [groupBuyItems, setGroupBuyItems] = useState<GroupBuyItem[]>([]);
     
-    useEffect(async () => {
-        setGroupBuyItems(await fetchActiveGroupBuys());
+    useEffect(() => {
+        fetchActiveGroupBuys()
+        .then(gbs => setGroupBuyItems(gbs));
     }, []);
 
     return (
@@ -28,7 +43,12 @@ export function GroupBuys({ onSelectItem }) {
     );
 }
 
-function GroupBuyItem({ item, onSelectItem }) {
+interface GroupBuyItemProps {
+    item: GroupBuyItem, // TODO
+    onSelectItem: any
+}
+
+function GroupBuyItem({ item, onSelectItem }: GroupBuyItemProps) {
     const hoursDiff = Math.floor((Date.parse(item["end_date"]) - Date.now()) / (60 * 60 * 1000));
     if (hoursDiff < 0) {
         return null;
@@ -47,7 +67,7 @@ function GroupBuyItem({ item, onSelectItem }) {
     const startDate = new Date(item["start_date"]).toLocaleDateString("en-US");
     const endDate = new Date(item["end_date"]).toLocaleDateString("en-US");
 
-    const format = (num, str) => `${num} ${str}${num > 1 ? "s" : ""}`;
+    const format = (num: number, str: string) => `${num} ${str}${num > 1 ? "s" : ""}`;
 
     return (
         <div className="group-buy-item">

@@ -1,11 +1,12 @@
 import React from "react";
 import { mat4, vec3 } from "gl-matrix";
 
-import "./KeyboardRender.scss";
 import { fetchInfo, fetchCaseModel, fetchKeycapModel, fetchSwitchModel, fetchStabilizerModel } from "../../apiInteraction";
 import { ALL_PARTS } from "../../utils/shared";
 import { renderObject, loadTexture, loadGLBuffers, setupShaders, rotateView } from "../../utils/glFuncs";
 import { ACCENTS, ALPHAS, SPECIAL_KEYCAP_IDENTIFIERS, SPECIAL_NUM_UNITS } from "../../utils/keyboardComponents";
+
+import "./KeyboardRender.scss";
 
 const newProgramInfo = () => ({
     program: null,
