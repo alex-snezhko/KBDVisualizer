@@ -1,22 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchActiveGroupBuys, fetchItem } from "../../apiInteraction";
+import { Item, ItemType, GroupBuyItem } from "../../types";
 
 import { money } from "../../utils/shared";
 import "./GroupBuys.scss";
 
-interface GroupBuyItem {
-    name: string,
-    link: string,
-    image: string,
-    partType: string, // TODO partType
-    price: number,
-    startDate: Date,
-    endDate: Date // TODO change from end_date and start_date
-}
-
 interface GroupBuysProps {
-    onSelectItem: any // TODO
+    onSelectItem: (a: ItemType, item: Item) => void; // TODO
 }
 
 export function GroupBuys({ onSelectItem }: GroupBuysProps) {
@@ -24,7 +15,7 @@ export function GroupBuys({ onSelectItem }: GroupBuysProps) {
     
     useEffect(() => {
         fetchActiveGroupBuys()
-        .then(gbs => setGroupBuyItems(gbs));
+            .then(gbs => setGroupBuyItems(gbs));
     }, []);
 
     return (
@@ -44,8 +35,8 @@ export function GroupBuys({ onSelectItem }: GroupBuysProps) {
 }
 
 interface GroupBuyItemProps {
-    item: GroupBuyItem, // TODO
-    onSelectItem: any
+    item: GroupBuyItem; // TODO
+    onSelectItem: (a: ItemType, item: Item) => void;
 }
 
 function GroupBuyItem({ item, onSelectItem }: GroupBuyItemProps) {
@@ -57,11 +48,11 @@ function GroupBuyItem({ item, onSelectItem }: GroupBuyItemProps) {
     const hoursLeft = Math.floor(hoursDiff % 24);
 
     async function handleSelectItem() {
-        const partType = item.partType.toLowerCase();
+        const partType = item["part_type"];
         const name = item.name;
 
-        const item = await fetchItem(partType, name);
-        onSelectItem(item.partType, item);
+        const chosenItem = await fetchItem(partType, name);
+        onSelectItem(partType, chosenItem);
     }
 
     const startDate = new Date(item["start_date"]).toLocaleDateString("en-US");

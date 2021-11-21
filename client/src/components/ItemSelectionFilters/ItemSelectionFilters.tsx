@@ -1,13 +1,14 @@
 import React from "react";
 
 import { displayName } from "../../utils/shared";
+import { Filter, NumRangeFilter, SelectFilter } from "../../types";
 
 import "./ItemSelectionFilters.scss";
 
 interface ItemSelectionFiltersProps {
-    filters: any, // TODO
-    onUpdateNumericFilter: any,
-    onUpdateSelectionFilter: any
+    filters: Filter[]; // TODO
+    onUpdateNumericFilter: (fieldName: string, low: number, high: number) => void;
+    onUpdateSelectionFilter: (fieldName: string, option: string) => void;
 }
 
 export const ItemSelectionFilters = ({ filters, onUpdateNumericFilter, onUpdateSelectionFilter }: ItemSelectionFiltersProps) => (
@@ -23,8 +24,8 @@ export const ItemSelectionFilters = ({ filters, onUpdateNumericFilter, onUpdateS
 );
 
 interface NumericRangeFilterProps {
-    filter: any, // TODO
-    onUpdateFilter: any
+    filter: NumRangeFilter;
+    onUpdateFilter: (fieldName: string, low: number, high: number) => void;
 }
 
 function NumericRangeFilter({ filter, onUpdateFilter }: NumericRangeFilterProps) {
@@ -32,15 +33,23 @@ function NumericRangeFilter({ filter, onUpdateFilter }: NumericRangeFilterProps)
 
     function handleChangeLow(event: React.ChangeEvent<HTMLInputElement>) {
         const val = event.target.value;
+        if (val === "") {
+            onUpdateFilter(fieldName, Number.NEGATIVE_INFINITY, high);
+        }
+
         if (!isNaN(Number(val))) {
-            onUpdateFilter(fieldName, val, high);
+            onUpdateFilter(fieldName, Number(val), high);
         }
     }
 
     function handleChangeHigh(event: React.ChangeEvent<HTMLInputElement>) {
         const val = event.target.value;
+        if (val === "") {
+            onUpdateFilter(fieldName, low, Number.POSITIVE_INFINITY);
+        }
+
         if (!isNaN(Number(val))) {
-            onUpdateFilter(fieldName, low, val);
+            onUpdateFilter(fieldName, low, Number(val));
         }
     }
 
@@ -55,8 +64,8 @@ function NumericRangeFilter({ filter, onUpdateFilter }: NumericRangeFilterProps)
 }
 
 interface SelectionFilterProps {
-    filter: any, // TODO
-    onUpdateFilter: any
+    filter: SelectFilter;
+    onUpdateFilter: (fieldName: string, option: string) => void;
 }
 
 function SelectionFilter({ filter, onUpdateFilter }: SelectionFilterProps) {

@@ -7,30 +7,43 @@ import { ItemSelectionFilters } from "../ItemSelectionFilters/ItemSelectionFilte
 import { fetchItems, fetchFilterRanges } from "../../apiInteraction";
 
 import "./ItemSelection.scss";
+import { Filter, Item, ItemType, NumRangeFilter, SelectFilter } from "../../types";
+import { ALL_PARTS } from "../../utils/shared";
 
-export function ItemSelection(props) {
-    const [items, setItems] = useState(null);
-    const [filters, setFilters] = useState(null);
+interface ItemSelectionProps {
+    onSelect: (item: Item, selections: Record<string, string>, itemType: ItemType) => boolean;
+}
+
+const isItemType = (s: string): s is ItemType => (ALL_PARTS as string[]).includes(s);
+
+export function ItemSelection({ onSelect }: ItemSelectionProps) {
+    const { itemType } = useParams();
+    if (itemType === undefined || !isItemType(itemType)) {
+        return null;
+    }
+
+    const [items, setItems] = useState<Item[]>([]);
+    const [filters, setFilters] = useState<Filter[]>([]);
     const [sortBy, setSortBy] = useState("alpha");
 
-    const { itemType } = useParams();
-
-    function handleUpdateNumericFilter(fieldName, low, high) {
+    function handleUpdateNumericFilter(fieldName: string, low: number, high: number) {
         const newFilters = [...filters];
-        const numericFilter = newFilters.find(filter => filter.fieldName === fieldName);
+        const numericFilter = newFilters.find((f): f is NumRangeFilter => f.filterType === "numeric" && f.fieldName === fieldName)!;
+
         numericFilter.value.low = low;
         numericFilter.value.high = high;
         setFilters(newFilters);
     }
 
-    function handleUpdateSelectionFilter(fieldName, option) {
+    function handleUpdateSelectionFilter(fieldName: string, option: string) {
         const newFilters = [...filters];
-        const selectionFilter = newFilters.find(filter => filter.fieldName === fieldName);
-
+        const selectionFilter = newFilters.find((f): f is SelectFilter =>
+            (f.filterType === "selectionAllOf" || f.filterType === "selectionOneOf") && f.fieldName === fieldName
+        )!;
         const selections = [...selectionFilter.value];
-        const selection = selections.find(opt => opt.option === option);
+        const selection = selections.find(opt => opt.option === option)!;
         selection.selected = !selection.selected;
-        newFilters.value = selections;
+        selectionFilter.value = selections;
         
         setFilters(newFilters);
     }
@@ -58,29 +71,26 @@ export function ItemSelection(props) {
     // update items
     useEffect(() => {
         (async () => {
+            // TODO make this cleaner
             if (!filters) {
                 return;
             }
 
-            const filterParams = {};
+            const urlParams: Record<string, string> = { sortBy };
             for (const filter of filters) {
                 if (filter.filterType === "numeric") {
-                    filterParams[filter.fieldName] = [
-                        filter.value.low === "" ? Number.NEGATIVE_INFINITY : Number(filter.value.low),
-                        filter.value.high === "" ? Number.POSITIVE_INFINITY : Number(filter.value.high)
-                    ];
+                    urlParams[filter.fieldName] = `${filter.value.low},${filter.value.high}`;
                 } else {
-                    filterParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(({ option }) => option);
+                    urlParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(selected => selected.option).join(",");
                 }
             }
-            const urlParams = { ...filterParams, sortBy };
 
             const fetchedItems = await fetchItems(itemType, urlParams);
             setItems(fetchedItems);
         })();
     }, [filters, sortBy]);
 
-    if (items === null) {
+    if (items.length === 0) {
         return null;
     }
     
@@ -93,8 +103,8 @@ export function ItemSelection(props) {
             />
 
             <div id="item-listing">
-                {props.compatibilityFilters.length !== 0 &&
-                    <h4 className="compatibility-message">Note: Only items compatible with currently selected parts are shown</h4>}
+                {/* TODO {props.compatibilityFilters.length !== 0 &&
+                    <h4 className="compatibility-message">Note: Only items compatible with currently selected parts are shown</h4>} */}
 
                 <div className="sort-by">
                     Sort By:
@@ -105,7 +115,7 @@ export function ItemSelection(props) {
                     </select>
                 </div>
 
-                <ItemSelectionTable itemType={itemType} displayedItems={items} {...props} />
+                <ItemSelectionTable itemType={itemType} displayedItems={items} onSelect={onSelect} />
             </div>
         </React.Fragment>
     );

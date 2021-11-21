@@ -6,38 +6,38 @@ import { SignUp } from "../SignUp/SignUp";
 import { Header } from "../Header/Header";
 import { GroupBuys } from "../GroupBuys/GroupBuys";
 import { ItemSelection } from "../ItemSelection/ItemSelection";
-import { SelectedItems } from "../SelectedItems/SelectedItems";
-import { ALL_PARTS, NO_SELECTION, CompatibilityFilterObj } from "../../utils/shared";
+import { Visualizer } from "../Visualizer/Visualizer";
+
+import { Item, Items, ItemType } from "../../types";
+
+import { ALL_PARTS, NO_SELECTION } from "../../utils/shared";
 import { fetchRandomItemConfig } from "../../apiInteraction";
 
 import "./App.scss";
 
-function getExtraFieldInfo(itemType: string) {
-    const std = (name: string) => ({ name, display: (x: number) => x });
+const emptyItems: Items = {
+    "Case": null,
+    "Plate": null,
+    "PCB": null,
+    "Stabilizers": null,
+    "Switches": null,
+    "Keycaps": null
+};
 
-    return {
-        "Kit": [std("form_factor")].concat(ALL_PARTS.map((part: string) => std(part))),
-        "Case": [std("form_factor"), std("material"), std("color"), std("mount_method")],
-        "Plate": [std("form_factor"), std("material")],
-        "PCB": [std("form_factor"), std("hot_swap"), std("backlight")],
-        "Stabilizers": [std("mount_method")],
-        "Switches": [std("tactility"), { name: "spring_weight", display: (x: number) => x + "g" },
-            { name: "act_dist", display: (x: number) => x.toFixed(1) + " mm" },
-            { name: "bot_dist", display: (x: number) => x.toFixed(1) + " mm" }],
-        "Keycaps": [std("color"), std("material"), std("legends")]
-    }[itemType] || [];
-}
+// TODO decide on "part" or "item"
 
 export function App() {
-    const [selectedItems, setSelectedItems] = useState(null);
-    const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit"].concat(ALL_PARTS).reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
+    const [selectedItems, setSelectedItems] = useState<Items>(emptyItems);
+    // TODO
+    // const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit"].concat(ALL_PARTS).reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
 
+    // TODO generate random config button
     useEffect(() => {
         fetchRandomItemConfig()
         .then(items => setSelectedItems(items));
     }, []);
 
-    function handleSelectItem(item, selections, itemType) {
+    function handleSelectItem(item: Item, selections: Record<string, string>, itemType: ItemType) {
         const selectedValues = Object.values(selections).filter(x => x !== undefined);
         if (selectedValues.some(val => val === NO_SELECTION)) {
             return false;
@@ -61,29 +61,29 @@ export function App() {
         //     compatibility["Plate"].push(ff);
         // }
 
-        const price = item["price"] + selectedValues.reduce((extra, val) => extra + (val.extra || 0), 0);
+        const price = item.price + selectedValues.reduce((extra, val) => extra + (val.extra || 0), 0);
 
+        const newItems: Items = { ...selectedItems };
+        newItems[itemType] = { ...item, price };
         setSelectedItems({ ...selectedItems, [itemType]: { ...item, price } });
         // setCompatibilityFilters(compatibility);
 
         return true;
     }
 
-    function handleRemoveItem(itemType: string) {
-        const filters = { ...compatibilityFilters };
-        for (const field in filters) {
-            filters[field] = filters[field].filter(f => f.origin !== itemType);
-        }
+    function handleRemoveItem(itemType: ItemType) {
+        // const filters = { ...compatibilityFilters };
+        // for (const field in filters) {
+        //     filters[field] = filters[field].filter(f => f.origin !== itemType);
+        // }
 
         setSelectedItems({ ...selectedItems, [itemType]: null });
-        setCompatibilityFilters(filters);
+        // setCompatibilityFilters(filters);
     }
 
-    if (selectedItems == null) {
-        return null;
-    }
-
-    const partsInKit = selectedItems["Kit"] === null ? [] : ALL_PARTS.filter(part => selectedItems["Kit"][part] !== undefined);
+    // TODO
+    // const partsInKit = selectedItems["Kit"] === null ? [] : ALL_PARTS.filter(part => selectedItems["Kit"][part] !== undefined);
+    const partsInKit: ItemType[] = [];
 
     return (
         <Router>
@@ -91,31 +91,27 @@ export function App() {
 
             <main>
                 <Routes>
-                    <Route path="/">
-                        <SelectedItems
+                    <Route path="/" element={
+                        <Visualizer
                             selectedItems={selectedItems}
                             partsInKit={partsInKit}
                             onDelete={handleRemoveItem}
-                        />
-                    </Route>
-                    <Route path="/select-item/:itemType" render={({ match }) => (
+                        />}
+                    />
+                    <Route path="/select-item/:itemType" element={
                         <ItemSelection
-                            compatibilityFilters={compatibilityFilters[match.params.itemType]}
-                            extraFieldInfo={getExtraFieldInfo(match.params.itemType)}
+                            // compatibilityFilters={compatibilityFilters[match.params.itemType]}
+                            // extraFieldInfo={getExtraFieldInfo(match.params.itemType)}
                             onSelect={handleSelectItem}
-                        />
-                    )} />
-                    <Route path="/group-buys">
+                        />}
+                    />
+                    <Route path="/group-buys" element={
                         <GroupBuys onSelectItem={
-                            (partType, item) => setSelectedItems({ ...selectedItems, [partType]: item })
-                        } />
-                    </Route>
-                    <Route path="/login">
-                        <Login />
-                    </Route>
-                    <Route path="/signup">
-                        <SignUp />
-                    </Route>
+                            (partType: ItemType, item: Item) => setSelectedItems({ ...selectedItems, [partType]: item })
+                        } />}
+                    />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<SignUp />} />
                 </Routes>
             </main>
         </Router>

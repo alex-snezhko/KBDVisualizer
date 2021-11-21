@@ -4,18 +4,23 @@ import { SelectedItemsTable } from "../SelectedItemsTable/SelectedItemsTable";
 import { KeyboardRender } from "../KeyboardRender/KeyboardRender";
 
 import { ALL_PARTS, money } from "../../utils/shared";
-import "./SelectedItems.scss";
+import { Items, ItemType } from "../../types";
 
-interface SelectedItemsProps {
-    selectedItems: any, // TODO
-    partsInKit: any,
-    onDelete: any
+import "./Visualizer.scss";
+
+interface VisualizerProps {
+    selectedItems: Items;
+    partsInKit: ItemType[];
+    onDelete: (itemType: ItemType) => void;
 }
 
-export function SelectedItems({ selectedItems, partsInKit, onDelete }: SelectedItemsProps) {
+export function Visualizer({ selectedItems, partsInKit, onDelete }: VisualizerProps) {
     const [collapsed, setCollapsed] = useState(false);
 
-    const totalPrice = ALL_PARTS.reduce((total, part) => total + selectedItems[part].price || 0, 0);
+    const totalPrice = ALL_PARTS.reduce((total, part) => {
+        const selectedItem = selectedItems[part];
+        return total + (selectedItem !== null ? selectedItem.price : 0);
+    }, 0);
 
     return (
         <div id="selected-items-container">

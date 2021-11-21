@@ -1,6 +1,5 @@
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// TODO change to import
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');

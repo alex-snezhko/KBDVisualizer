@@ -1,14 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Item, Items, ItemType } from "../../types";
 
 import { ALL_PARTS, money } from "../../utils/shared";
 
 import "./SelectedItemsTable.scss";
 
 interface SelectedItemsTableProps {
-    partsInKit: any, // TODO
-    selectedItems: any,
-    onDelete: any
+    partsInKit: ItemType[];
+    selectedItems: Items;
+    onDelete: (itemType: ItemType) => void;
 }
 
 export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }: SelectedItemsTableProps) => (
@@ -24,31 +25,34 @@ export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }: Sele
         <tbody>
             {/* TODO put Kit back once working properly */}
             {/* {["Kit"].concat(ALL_PARTS).map(itemType => ( */}
-            {ALL_PARTS.map(itemType => (
-                <SelectedItemTableRow
-                    key={itemType}
-                    itemType={itemType}
-                    isPartInKit={partsInKit.includes(itemType)}
-                    item={selectedItems[itemType]}
-                    onDelete={onDelete}
-                />
-            ))}
+            {ALL_PARTS.map(itemType => {
+                const selectedItem = selectedItems[itemType];
+                return selectedItem && (
+                    <SelectedItemTableRow
+                        key={itemType}
+                        itemType={itemType}
+                        isPartInKit={partsInKit.includes(itemType)}
+                        item={selectedItem}
+                        onDelete={onDelete}
+                    />
+                );
+            })}
         </tbody>
     </table>
 );
 
 interface SelectedItemTableRowProps {
-    itemType: any, // TODO
-    isPartInKit: boolean,
-    item: any,
-    onDelete: any
+    itemType: ItemType;
+    isPartInKit: boolean;
+    item: Item;
+    onDelete: (itemType: ItemType) => void;
 }
 
 const SelectedItemTableRow = ({ itemType, isPartInKit, item, onDelete }: SelectedItemTableRowProps) => (
     <tr className={isPartInKit ? "part-in-kit" : undefined}>
         <td className="item-select-cell">
             <Link to={`select-item/${itemType}`}>
-                <button disabled={isPartInKit} className={`${itemType === "Kit" ? "orange": "blue"}-button`}>
+                <button disabled={isPartInKit} className={`${/* TODO itemType === "Kit"  ? "orange": */"blue"}-button`}>
                     {itemType}
                 </button>
             </Link>

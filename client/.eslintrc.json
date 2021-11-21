@@ -28,6 +28,8 @@
         "semi": [
             "warn",
             "always"
-        ]
+        ],
+        "react/prop-types": 0, // TODO
+        "@typescript-eslint/no-non-null-assertion": 0
     }
 }
