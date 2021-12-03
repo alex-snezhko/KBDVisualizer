@@ -40,7 +40,8 @@ export function App() {
     function handleSelectItem(item: Item, selections: Record<string, string>, itemType: ItemType) {
         const selectedValues = Object.values(selections).filter(x => x !== undefined);
         if (selectedValues.some(val => val === NO_SELECTION)) {
-            return false;
+            alert("Please select a value for all options for this item");
+            return;
         }
 
         // TODO actually look up and get references to items if this is a kit
@@ -63,12 +64,9 @@ export function App() {
 
         const price = item.price + selectedValues.reduce((extra, val) => extra + (val.extra || 0), 0);
 
-        const newItems: Items = { ...selectedItems };
-        newItems[itemType] = { ...item, price };
         setSelectedItems({ ...selectedItems, [itemType]: { ...item, price } });
         // setCompatibilityFilters(compatibility);
 
-        return true;
     }
 
     function handleRemoveItem(itemType: ItemType) {

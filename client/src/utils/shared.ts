@@ -32,6 +32,10 @@ export const displayName = (name: string) => (
 //     }[itemType] || [];
 // }
 
+export class ItemField {
+
+}
+
 // default value of select field if no option is selected
 export const NO_SELECTION = "-- select an option --";
 

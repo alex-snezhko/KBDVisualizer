@@ -78,12 +78,7 @@ function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelect }: ItemSele
 
             <td className="item-select-cell">
                 <Link to="/">
-                    <button className="blue-button" onClick={() => {
-                        const allGood = onSelect(item, selections, itemType);
-                        if (!allGood) {
-                            alert("Please select a value for all options for this item");
-                        }
-                    }}>
+                    <button className="blue-button" onClick={() => onSelect(item, selections, itemType)}>
                         Select
                     </button>
                 </Link>
