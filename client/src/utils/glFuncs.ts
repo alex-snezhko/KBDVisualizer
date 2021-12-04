@@ -1,36 +1,40 @@
 import { mat4, vec3 } from "gl-matrix";
+import { Eye, WebGLBufferInfo, ObjectModel, WebGLProgramInfo, WebGLProgramsInfo, AttribInfo } from "../types";
 
-export function rotateView(eye, ang, axis) {
+export function rotateView(eye: Eye, ang: number, axis: vec3) {
     const rotationMat = mat4.fromRotation(mat4.create(), ang, axis);
     eye.position = vec3.transformMat4(vec3.create(), eye.position, rotationMat);
     eye.lookAt = vec3.transformMat4(vec3.create(), eye.lookAt, rotationMat);
     eye.lookUp = vec3.transformMat4(vec3.create(), eye.lookUp, rotationMat);
 }
 
-export function loadGLBuffers(gl, glObjectBuffers, object, isTextured) {
-    glObjectBuffers.vertices = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, glObjectBuffers.vertices);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.vertices.flat()), gl.STATIC_DRAW);
+export function loadGLBuffers(gl: WebGLRenderingContext, glBuffers: Record<string, WebGLBufferInfo>, bufferName: string, model: ObjectModel, isTextured: boolean) {
+    const vertices = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertices);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(model.vertices.flat()), gl.STATIC_DRAW);
 
-    glObjectBuffers.normals = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, glObjectBuffers.normals);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.normals.flat()), gl.STATIC_DRAW);
+    const normals = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, normals);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(model.normals.flat()), gl.STATIC_DRAW);
 
+    let uvs;
     if (isTextured) {
-        glObjectBuffers.uvs = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, glObjectBuffers.uvs);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.uvs.flat()), gl.STATIC_DRAW);
+        uvs = gl.createBuffer()!;
+        gl.bindBuffer(gl.ARRAY_BUFFER, uvs);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(model.uvs.flat()), gl.STATIC_DRAW);
     }
 
-    glObjectBuffers.triangles = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glObjectBuffers.triangles);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(object.triangles.flat()), gl.STATIC_DRAW);
+    const triangles = gl.createBuffer()!;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangles);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(model.triangles.flat()), gl.STATIC_DRAW);
 
-    glObjectBuffers.numTriangles = object.triangles.length;
+    const numTriangles = model.triangles.length;
+
+    glBuffers[bufferName] = { vertices, normals, uvs, triangles, numTriangles};
 }
 
-export function loadTexture(gl, imgPath) {
-    const texture = gl.createTexture();
+export function loadTexture(gl: WebGLRenderingContext, imgPath: string) {
+    const texture = gl.createTexture()!;
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
@@ -42,7 +46,7 @@ export function loadTexture(gl, imgPath) {
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
-            const isPowerOf2 = x => (x & (x - 1)) === 0;
+            const isPowerOf2 = (x: number) => (x & (x - 1)) === 0;
             if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
                 gl.generateMipmap(gl.TEXTURE_2D);
             } else {
@@ -64,51 +68,17 @@ export function loadTexture(gl, imgPath) {
     return { loadTexturePromise, texture };
 }
 
-export function renderSelection(gl, eye, progsInfo, keyRenderInstructions) {
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    const projMat = mat4.perspective(mat4.create(), Math.PI / 9, 2, 0.1, 1000);
-    const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
-    const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
-
-    renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["case"], {
-        uMVPMat: [false, viewProjMat],
-        uModelMat: [false, mat4.create()],
-        uObjectId: [0]
-    });
-
-    // render keys
-    for (const { transformation, objectId, modelIdentifier } of keyRenderInstructions) {
-        const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, transformation);
-
-        renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["switch"], {
-            uMVPMat: [false, modelViewProjMat],
-            uModelMat: [false, transformation],
-            uObjectId: [0]
-        });
-
-        renderObject(gl, progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], {
-            uMVPMat: [false, modelViewProjMat],
-            uModelMat: [false, transformation],
-            uObjectId: [objectId]
-        });
-    }
-}
-
-export function renderObject(gl, progInfo, buffers, uniformVals) {
+export function renderObject(gl: WebGLRenderingContext, progInfo: WebGLProgramInfo, buffers: WebGLBufferInfo, uniformSetters: (() => void)[]) {
     gl.useProgram(progInfo.program);
 
     for (const attribName in progInfo.attribs) {
         const attrib = progInfo.attribs[attribName];
         gl.enableVertexAttribArray(attrib.loc);
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers[attrib.bufferName]);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers[attrib.bufferName]!);
         gl.vertexAttribPointer(attrib.loc, ...attrib.vapParams);
     }
 
-    for (const uniformName in uniformVals) {
-        const uniform = progInfo.uniforms[uniformName];
-        uniform.method(uniform.loc, ...uniformVals[uniformName]);
-    }
+    uniformSetters.forEach(setUniform => setUniform());
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.triangles);
     gl.drawElements(gl.TRIANGLES, buffers.numTriangles * 3, gl.UNSIGNED_SHORT, 0);
@@ -118,7 +88,7 @@ export function renderObject(gl, progInfo, buffers, uniformVals) {
     }
 }
 
-export function setupShaders(gl, progsInfo) {
+export function setupShaders(gl: WebGLRenderingContext, progsInfo: WebGLProgramsInfo) {
     // ------------------------------------------------------------------
     // define source to be shared between untextured and textured shaders
     // ------------------------------------------------------------------
@@ -294,19 +264,19 @@ export function setupShaders(gl, progsInfo) {
     `;
     
     // compile vertex shader
-    const vShaderUntextured = gl.createShader(gl.VERTEX_SHADER);
+    const vShaderUntextured = gl.createShader(gl.VERTEX_SHADER)!;
     gl.shaderSource(vShaderUntextured, vShaderUntexturedSrc);
-    const fShaderUntextured = gl.createShader(gl.FRAGMENT_SHADER);
+    const fShaderUntextured = gl.createShader(gl.FRAGMENT_SHADER)!;
     gl.shaderSource(fShaderUntextured, fShaderUntexturedSrc);
 
-    const vShaderTextured = gl.createShader(gl.VERTEX_SHADER);
+    const vShaderTextured = gl.createShader(gl.VERTEX_SHADER)!;
     gl.shaderSource(vShaderTextured, vShaderTexturedSrc);
-    const fShaderTextured = gl.createShader(gl.FRAGMENT_SHADER);
+    const fShaderTextured = gl.createShader(gl.FRAGMENT_SHADER)!;
     gl.shaderSource(fShaderTextured, fShaderTexturedSrc);
 
-    const vShaderSelection = gl.createShader(gl.VERTEX_SHADER);
+    const vShaderSelection = gl.createShader(gl.VERTEX_SHADER)!;
     gl.shaderSource(vShaderSelection, vShaderSelectionSrc);
-    const fShaderSelection = gl.createShader(gl.FRAGMENT_SHADER);
+    const fShaderSelection = gl.createShader(gl.FRAGMENT_SHADER)!;
     gl.shaderSource(fShaderSelection, fShaderSelectionSrc);
 
     for (const shader of [
@@ -325,15 +295,15 @@ export function setupShaders(gl, progsInfo) {
     const { textured, untextured, selection } = progsInfo;
 
     // create shader program and link
-    untextured.program = gl.createProgram();
+    untextured.program = gl.createProgram()!;
     gl.attachShader(untextured.program, vShaderUntextured);
     gl.attachShader(untextured.program, fShaderUntextured);
 
-    textured.program = gl.createProgram();
+    textured.program = gl.createProgram()!;
     gl.attachShader(textured.program, vShaderTextured);
     gl.attachShader(textured.program, fShaderTextured);
 
-    selection.program = gl.createProgram();
+    selection.program = gl.createProgram()!;
     gl.attachShader(selection.program, vShaderSelection);
     gl.attachShader(selection.program, fShaderSelection);
 
@@ -345,7 +315,7 @@ export function setupShaders(gl, progsInfo) {
         }
     }
 
-    function assignLocations(progInfo, attribs, uniforms) {
+    function assignLocations(progInfo: WebGLProgramInfo, attribs: Record<string, Omit<AttribInfo, "loc">>, uniforms: string[]) {
         for (const attribName in attribs) {
             const attribInfo = attribs[attribName];
             progInfo.attribs[attribName] = {
@@ -354,27 +324,31 @@ export function setupShaders(gl, progsInfo) {
             };
         }
 
-        for (const uniformName in uniforms) {
-            progInfo.uniforms[uniformName] = {
-                loc: gl.getUniformLocation(progInfo.program, uniformName),
-                method: uniforms[uniformName].bind(gl)
-            };
+        for (const uniformName of uniforms) {
+            progInfo.uniformLocs[uniformName] = gl.getUniformLocation(progInfo.program, uniformName)!;
         }
     }
 
     // vapParams: the parameters that will be passed into gl.vertexAttribPointer when buffer binding
-    const V_INFO = { bufferName: "vertices", vapParams: [3, gl.FLOAT, false, 0, 0] };
-    const N_INFO = { bufferName: "normals", vapParams: [3, gl.FLOAT, false, 0, 0] };
-    const UV_INFO = { bufferName: "uvs", vapParams: [2, gl.FLOAT, false, 0, 0] };
+    const V_INFO: Omit<AttribInfo, "loc"> = { bufferName: "vertices", vapParams: [3, gl.FLOAT, false, 0, 0] };
+    const N_INFO: Omit<AttribInfo, "loc"> = { bufferName: "normals", vapParams: [3, gl.FLOAT, false, 0, 0] };
+    const UV_INFO: Omit<AttribInfo, "loc"> = { bufferName: "uvs", vapParams: [2, gl.FLOAT, false, 0, 0] };
 
-    assignLocations(untextured, { aVertexPosition: V_INFO, aVertexNormal: N_INFO },
-        { uColor: gl.uniform3f, uEyePosition: gl.uniform3f, uModelMat: gl.uniformMatrix4fv, uMVPMat: gl.uniformMatrix4fv });
+    assignLocations(
+        untextured,
+        { aVertexPosition: V_INFO, aVertexNormal: N_INFO },
+        ["uColor", "uEyePosition", "uModelMat", "uMVPMat"]
+    );
 
-    assignLocations(textured, { aVertexPosition: V_INFO, aVertexNormal: N_INFO, aVertexUV: UV_INFO },
-        { uColor: gl.uniform3f, uEyePosition: gl.uniform3f, uModelMat: gl.uniformMatrix4fv,
-            uMVPMat: gl.uniformMatrix4fv, uTexture: gl.uniform1i, uTextureColor: gl.uniform3f,
-            uIsBlinking: gl.uniform1i, uBlinkProportion: gl.uniform1f });
+    assignLocations(
+        textured,
+        { aVertexPosition: V_INFO, aVertexNormal: N_INFO, aVertexUV: UV_INFO },
+        ["uColor", "uEyePosition", "uModelMat", "uMVPMat", "uTexture", "uTextureColor", "uIsBlinking", "uBlinkProportion"]
+    );
 
-    assignLocations(selection, { aVertexPosition: V_INFO },
-        { uModelMat: gl.uniformMatrix4fv, uMVPMat: gl.uniformMatrix4fv, uObjectId: gl.uniform1i });
+    assignLocations(
+        selection,
+        { aVertexPosition: V_INFO },
+        ["uModelMat", "uMVPMat", "uObjectId"]
+    );
 }

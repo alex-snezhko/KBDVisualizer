@@ -1,4 +1,4 @@
-import { FilterRange, GroupBuyItem, Item, KeyboardInfo, KeycapsInfo, SelectedItems } from "./types";
+import { FilterRange, GroupBuyItem, Item, KeyboardInfo, KeycapsInfo, ObjectModel, SelectedItems } from "./types";
 
 const apiBaseUrl = process.env.NODE_ENV === "development" ?
     "http://localhost:3000" :
@@ -24,7 +24,7 @@ export const fetchRandomItemConfig = () => fetchJson<SelectedItems>("/items/rand
 
 export const fetchActiveGroupBuys = () => fetchJson<GroupBuyItem[]>("/activeGroupBuys");
 
-export const fetchCaseModel = (caseName: string) => fetchJson(`/models/cases/${caseName}`);
-export const fetchKeycapModel = (keycapProfile: string, keycapName: string) => fetchJson(`/models/keycaps/${keycapProfile}/${keycapName}`);
-export const fetchSwitchModel = () => fetchJson("/models/switch");
-export const fetchStabilizerModel = () => fetchJson("/models/stabilizer");
+export const fetchCaseModel = (caseName: string) => fetchJson<ObjectModel>(`/models/cases/${caseName}`);
+export const fetchKeycapModel = (keycapProfile: string, keycapName: string) => fetchJson<ObjectModel>(`/models/keycaps/${keycapProfile}/${keycapName}`);
+export const fetchSwitchModel = () => fetchJson<ObjectModel>("/models/switch");
+export const fetchStabilizerModel = () => fetchJson<ObjectModel>("/models/stabilizer");

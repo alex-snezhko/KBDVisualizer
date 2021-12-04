@@ -1,64 +1,82 @@
-// interface ItemBase {
-//     name: string;
-//     link: string;
-//     image: string;
-//     price: number;
-// }
+import { mat4, vec3 } from "gl-matrix";
 
-// interface Case extends ItemBase {
-//     itemType: "Case";
-//     form_factor: string; // TODO
-//     material: string;
-//     color: string;
-//     mount_method: string;
-// }
+export interface Eye {
+    position: vec3;
+    lookAt: vec3;
+    lookUp: vec3;
+    yAngle: number;
+}
 
-// interface Plate extends ItemBase {
-//     itemType: "Plate";
-//     form_factor: string;
-//     material: string;
-// }
+export interface WebGLBufferInfo {
+    vertices: WebGLBuffer;
+    normals: WebGLBuffer;
+    uvs?: WebGLBuffer;
+    triangles: WebGLBuffer;
+    numTriangles: number;
+}
 
-// interface Pcb extends ItemBase {
-//     itemType: "PCB";
-//     form_factor: string;
-//     hot_swap: string;
-//     backlight: string;
-// }
+export interface AttribInfo {
+    loc: number;
+    bufferName: "vertices" | "normals" | "uvs";
+    // the parameters that will be passed into gl.vertexAttribPointer when buffer binding
+    vapParams: [number, number, boolean, number, number];
+}
 
-// interface Stabilizers extends ItemBase {
-//     itemType: "Stabilizers";
-//     mount_method: string;
-// }
+export interface WebGLProgramInfo {
+    program: WebGLProgram;
+    attribs: Record<string, AttribInfo>;
+    uniformLocs: Record<string, WebGLUniformLocation>;
+    buffers: Record<string, WebGLBufferInfo>;
+}
 
-// interface Switches extends ItemBase {
-//     itemType: "Switches";
-//     tactility: string;
-//     spring_weight: number;
-//     act_dist: number;
-//     bot_dist: number;
-// }
+export interface WebGLProgramsInfo {
+    textured: WebGLProgramInfo;
+    untextured: WebGLProgramInfo;
+    // 'invisible' program used for detecting clicks on objects
+    selection: WebGLProgramInfo;
+}
 
-// interface Keycaps extends ItemBase {
-//     itemType: "Keycaps";
-//     color: string;
-//     material: string;
-//     legends: string;
-// }
+// TODO fix anys
+export interface KeyRenderInstruction extends KeycapColor {
+    modelIdentifier: string;
+    keysize: number;
+    transformation: mat4;
+    legendTexture: WebGLTexture;
+    colorOptions: KeycapColor[];
+    optionSelected: number;
+    objectId: number;
+}
 
-// // export interface Item {
-// //     name: string;
-// //     link: string;
-// //     image: string;
-// //     price: number;
-// // }
+// TODO pre-flatten
+export interface ObjectModel {
+    vertices: number[][];
+    normals: number[][];
+    uvs: number[][];
+    triangles: number[][];
+}
 
 export interface KeyboardInfo {
+    incline: number;
+    color: number[];
+    keyGroups: {
+        row: number;
+        offset: number[];
+        keys: string[];
+    }[];
+}
 
+export interface KeycapColor {
+    keycapColor: number[];
+    legendColor: number[];
 }
 
 export interface KeycapsInfo {
-
+    font: "standard";
+    alphas: KeycapColor;
+    mods: KeycapColor;
+    accents: KeycapColor[];
+    exceptions: ({ keys: string[] } & KeycapColor)[];
+    extras: ({ keys: string[] } & KeycapColor)[];
 }
 
 export interface FieldInfo {
@@ -99,8 +117,6 @@ export interface Item {
     price: number;
     properties: Record<string, ItemProperty>;
 }
-
-// export type Item = Case | Plate | Pcb | Stabilizers | Switches | Keycaps;
 
 export type ItemType = "Case" | "Plate" | "PCB" | "Stabilizers" | "Switches" | "Keycaps";
 

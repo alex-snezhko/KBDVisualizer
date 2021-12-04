@@ -7,21 +7,20 @@ import { renderObject, loadTexture, loadGLBuffers, setupShaders, rotateView } fr
 import { ACCENTS, ALPHAS, SPECIAL_KEYCAP_IDENTIFIERS, SPECIAL_NUM_UNITS } from "../../utils/keyboardComponents";
 
 import "./KeyboardRender.scss";
-import { KeyboardInfo, KeycapsInfo, ValidSelectedItems } from "../../types";
+import { Eye, KeyboardInfo, KeycapColor, KeycapsInfo, KeyRenderInstruction, WebGLProgramsInfo, ValidSelectedItems } from "../../types";
 
 const newProgramInfo = () => ({
     program: null,
     attribs: {},
-    uniforms: {},
+    uniformLocs: {},
     buffers: {}
 });
 
+const alphasInSet = new Set<string>();
+const modsInSet = new Set<string>();
+const accentsInSet = new Set<string>();
 
-const alphasInSet = new Set();
-const modsInSet = new Set();
-const accentsInSet = new Set();
-
-function getKeycapColorOptions(key: string, keycapsInfo) {
+function getKeycapColorOptions(key: string, keycapsInfo: KeycapsInfo) {
     // keep a list of all possible color options available for this keycap
     const colorOptions = [];
 
@@ -81,45 +80,7 @@ const toColor = (hex: string) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)
 
 // TODO refactor this clusterfuck of a file
 
-interface Eye {
-    position: vec3;
-    lookAt: vec3;
-    lookUp: vec3;
-    yAngle: number;
-}
 
-interface Key {
-    keycapColor: number[];
-    legendColor: number[];
-    optionSelected: number;
-    colorOptions: any[];
-}
-
-// TODO fix anys
-interface KeyRenderInstruction {
-    modelIdentifier: any;
-    keysize: number;
-    transformation: mat4;
-    legendTexture: any;
-    colorOptions: any[];
-    optionSelected: number;
-    keycapColor: number[];
-    legendColor: number[];
-    objectId: number;
-}
-
-interface ProgInfo {
-    program: any;
-    attribs: any;
-    uniforms: any;
-    buffers: any;
-}
-
-interface ProgsInfo {
-    textured: ProgInfo;
-    untextured: ProgInfo;
-    selection: ProgInfo;
-}
 
 interface KeyboardRenderState {
     blinkProportion: number;
@@ -138,13 +99,15 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
     gl: WebGLRenderingContext;
     tick: number | null;
     eye: Eye;
-    progsInfo: ProgsInfo;
+    progsInfo: WebGLProgramsInfo;
     keyboardInfo: KeyboardInfo;
     keycapsInfo: KeycapsInfo;
+    keycapColors: KeycapColor[];
     keyRenderInstructions: KeyRenderInstruction[];
     webGlCanvas: React.RefObject<HTMLCanvasElement>;
     keyboardRenderContainer: React.RefObject<HTMLDivElement>;
-    objectIdToKey: Record<number, Key>;
+    objectIdToKey: Record<number, KeyRenderInstruction>;
+    keyNameToKeyObj: Record<string, KeyRenderInstruction>;
 
     constructor(props: KeyboardRenderProps) {
         super(props);
@@ -187,7 +150,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         this.webGlCanvas = React.createRef();
         this.keyboardRenderContainer = React.createRef();
 
-        this.handleCanvasClicked = this.handleCanvasClicked.bind(this);
+        this.handleCanvasClick = this.handleCanvasClick.bind(this);
         this.handleCanvasMouseMove = this.handleCanvasMouseMove.bind(this);
         this.handleCanvasWheel = this.handleCanvasWheel.bind(this);
         this.handleResizeCanvas = this.handleResizeCanvas.bind(this);
@@ -234,10 +197,9 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
                 // if a keycap with these dimensions has not been loaded yet, then load it
                 if (!keycapModelsVisited.has(modelIdentifier)) {
                     const bufs = progsInfo.textured.buffers;
-                    bufs[modelIdentifier] = {};
                     resourceLoadPromises.push(
                         fetchKeycapModel(keycapProfile, modelIdentifier)
-                            .then(keycapModel => loadGLBuffers(gl, bufs[modelIdentifier], keycapModel, true)));
+                            .then(keycapModel => loadGLBuffers(gl, bufs, modelIdentifier, keycapModel, true)));
                     keycapModelsVisited.add(modelIdentifier);
                 }
     
@@ -272,22 +234,19 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         const untexBufs = progsInfo.untextured.buffers;
     
         // load case
-        untexBufs["case"] = {};
         resourceLoadPromises.push(
             fetchCaseModel("tofu65")
-                .then(trianglesInfo => loadGLBuffers(gl, untexBufs["case"], trianglesInfo, false)));
+                .then(trianglesInfo => loadGLBuffers(gl, untexBufs, "case", trianglesInfo, false)));
     
         // load switches
-        untexBufs["switch"] = {};
         resourceLoadPromises.push(
             fetchSwitchModel()
-                .then(switchModel => loadGLBuffers(gl, untexBufs["switch"], switchModel, false)));
+                .then(switchModel => loadGLBuffers(gl, untexBufs, "switch", switchModel, false)));
     
         // load switches
-        untexBufs["stabilizer"] = {};
         resourceLoadPromises.push(
             fetchStabilizerModel()
-                .then(stabilizerModel => loadGLBuffers(gl, untexBufs["stabilizer"], stabilizerModel, false)));
+                .then(stabilizerModel => loadGLBuffers(gl, untexBufs, "stabilizer", stabilizerModel, false)));
     
         try {
             await Promise.all(resourceLoadPromises);
@@ -304,27 +263,28 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
         const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
     
-        renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["case"], {
-            uMVPMat: [false, viewProjMat],
-            uModelMat: [false, mat4.create()],
-            uObjectId: [0]
-        });
+        const uniformLoc = (name: string) => progsInfo.selection.uniformLocs[name];
+        renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["case"], [
+            () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, viewProjMat),
+            () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, mat4.create()),
+            () => gl.uniform1i(uniformLoc("uObjectId"), 0)
+        ]);
     
         // render keys
         for (const { transformation, objectId, modelIdentifier } of this.keyRenderInstructions) {
             const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, transformation);
     
-            renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["switch"], {
-                uMVPMat: [false, modelViewProjMat],
-                uModelMat: [false, transformation],
-                uObjectId: [0]
-            });
+            renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["switch"], [
+                () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, modelViewProjMat),
+                () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, transformation),
+                () => gl.uniform1i(uniformLoc("uObjectId"), 0)
+            ]);
     
-            renderObject(gl, progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], {
-                uMVPMat: [false, modelViewProjMat],
-                uModelMat: [false, transformation],
-                uObjectId: [objectId]
-            });
+            renderObject(gl, progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], [
+                () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, modelViewProjMat),
+                () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, transformation),
+                () => gl.uniform1i(uniformLoc("uObjectId"), objectId)
+            ]);
         }
     }
 
@@ -336,19 +296,20 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         const projMat = mat4.perspective(mat4.create(), Math.PI / 9, 2, 0.1, 1000);
         const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
         const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
-    
-        renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["case"], {
-            uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
-            uMVPMat: [false, viewProjMat],
-            uModelMat: [false, mat4.create()],
-            uColor: [0.1, 0.1, 0.1]
-        });
+
+        const utUniformLoc = (name: string) => progsInfo.untextured.uniformLocs[name];
+        renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["case"], [
+            () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
+            () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, viewProjMat),
+            () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, mat4.create()),
+            () => gl.uniform3f(utUniformLoc("uColor"), 0.1, 0.1, 0.1)
+        ]);
     
         // render keys
         for (const instr of this.keyRenderInstructions) {
             const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
 
-            const STAB_OFFSETS = {
+            const STAB_OFFSETS: Record<number, number> = {
                 2: 0.65,
                 2.25: 0.65,
                 2.75: 0.65,
@@ -359,15 +320,15 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
 
             const stabOffset = STAB_OFFSETS[instr.keysize];
             if (stabOffset) {
-                const renderStab = (offset) => {
+                const renderStab = (offset: vec3) => {
                     const offsetMat = mat4.fromTranslation(mat4.create(), offset);
                     const transformation = mat4.multiply(mat4.create(), offsetMat, instr.transformation);
-                    renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["stabilizer"], {
-                        uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
-                        uMVPMat: [false, mat4.multiply(mat4.create(), viewProjMat, transformation)],
-                        uModelMat: [false, transformation],
-                        uColor: this.props.selectedItems["Stabilizers"]["color_arr"].slice(0, 3) // TODO
-                    });
+                    renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["stabilizer"], [
+                        () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
+                        () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, mat4.multiply(mat4.create(), viewProjMat, transformation)),
+                        () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, transformation),
+                        () => gl.uniform3fv(utUniformLoc("uColor"), this.props.selectedItems["Stabilizers"]["color_arr"].slice(0, 3)) // TODO
+                    ]);
                 };
 
                 renderStab([stabOffset, 0, 0]);
@@ -375,27 +336,28 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
             }
     
             // render keyswitch
-            renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["switch"], {
-                uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
-                uMVPMat: [false, modelViewProjMat],
-                uModelMat: [false, instr.transformation],
-                uColor: this.props.selectedItems["Switches"]["color_arr"].slice(0, 3)
-            });
+            renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["switch"], [
+                () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
+                () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, modelViewProjMat),
+                () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, instr.transformation),
+                () => gl.uniform3fv(utUniformLoc("uColor"), this.props.selectedItems["Switches"]["color_arr"].slice(0, 3))
+            ]);
     
             // render keycap
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, instr.legendTexture);
     
-            renderObject(gl, progsInfo.textured, progsInfo.textured.buffers[instr.modelIdentifier], {
-                uEyePosition: [eye.position[0], eye.position[1], eye.position[2]],
-                uMVPMat: [false, modelViewProjMat],
-                uModelMat: [false, instr.transformation],
-                uColor: instr.keycapColor,
-                uTexture: [0],
-                uTextureColor: instr.legendColor,
-                uIsBlinking: [!this.state.fullCustom && this.state.highlightKeys && instr.colorOptions.length > 1],
-                uBlinkProportion: [this.state.blinkProportion]
-            });
+            const tUniformLoc = (name: string) => progsInfo.textured.uniformLocs[name];
+            renderObject(gl, progsInfo.textured, progsInfo.textured.buffers[instr.modelIdentifier], [
+                () => gl.uniform3f(tUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
+                () => gl.uniformMatrix4fv(tUniformLoc("uMVPMat"), false, modelViewProjMat),
+                () => gl.uniformMatrix4fv(tUniformLoc("uModelMat"), false, instr.transformation),
+                () => gl.uniform3fv(tUniformLoc("uColor"), instr.keycapColor),
+                () => gl.uniform1i(tUniformLoc("uTexture"), 0),
+                () => gl.uniform3fv(tUniformLoc("uTextureColor"), instr.legendColor),
+                () => gl.uniform1i(tUniformLoc("uIsBlinking"), Number(!this.state.fullCustom && this.state.highlightKeys && instr.colorOptions.length > 1)),
+                () => gl.uniform1f(tUniformLoc("uBlinkProportion"), this.state.blinkProportion)
+            ]);
         }
     
         // TODO maybe refactor this to first drawing all textured items and then untextured
@@ -421,11 +383,12 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
                 rotateView(eye, newAngle - eye.yAngle, vec3.cross(vec3.create(), eye.lookUp, eye.lookAt));
                 eye.yAngle = newAngle;
             }
+            // TODO try replacing with forceUpdate
             this.renderScene();
         }
     }
 
-    handleCanvasWheel(event: React.WheelEvent<HTMLCanvasElement>) {
+    handleCanvasWheel(event: WheelEvent) {
         const { eye } = this;
         event.preventDefault();
 
@@ -440,10 +403,12 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         this.forceUpdate();
     }
 
-    handleCanvasClicked(event: React.MouseEvent<HTMLCanvasElement>) {
+    handleCanvasClick(event: React.MouseEvent<HTMLCanvasElement>) {
         const { gl, objectIdToKey } = this;
-        if (event.clientX === this.beginClick.x && event.clientY === this.beginClick.y) {
-            const { left, top, height } = event.target.getBoundingClientRect();
+        // TODO undo if broken
+        if (event.movementX === 0 && event.movementY === 0) {
+        // if (event.clientX === this.beginClick.x && event.clientY === this.beginClick.y) {
+            const { left, top, height } = event.currentTarget.getBoundingClientRect();
 
             const x = event.clientX - left;
             const y = height - (event.clientY - top);
@@ -469,6 +434,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
                 }
             }
 
+            // TODO try this.forceUpdate instead
             this.renderScene();
         }
     }
@@ -497,7 +463,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
             this.tick = window.setInterval(() => {
                 if (this.state.highlightKeys) {
                     this.setState(currState => {
-                        let { highlightKeys, increasing, blinkProportion } = currState;
+                        let { increasing, blinkProportion } = currState;
                         if (increasing) {
                             blinkProportion = Math.min(1, blinkProportion + 0.05);
                             if (blinkProportion === 1) {
@@ -510,7 +476,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
                             }
                         }
 
-                        return { highlightKeys, increasing, blinkProportion };
+                        return { increasing, blinkProportion };
                     });
                 }
             }, 20);
@@ -607,8 +573,8 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
             <div id="keyboard-render" ref={this.keyboardRenderContainer}>
                 <canvas id="webgl-canvas"
                     ref={this.webGlCanvas}
-                    onMouseDown={e => this.beginClick = { x: e.clientX, y: e.clientY }}
-                    onMouseUp={this.handleCanvasClicked}
+                    // onMouseDown={e => this.beginClick = { x: e.clientX, y: e.clientY }}
+                    onClick={this.handleCanvasClick}
                     onMouseMove={this.handleCanvasMouseMove} />
 
                 <div id="render-inputs">

@@ -1,4 +1,4 @@
-export const SPECIAL_NUM_UNITS = {
+export const SPECIAL_NUM_UNITS: Record<string, number> = {
     "Backspace": 2,
     "Tab": 1.5,
     "Backslash": 1.5,
