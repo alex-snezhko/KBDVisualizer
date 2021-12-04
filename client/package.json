@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "KBDVisualizer client-side code",
   "scripts": {
+    "build": "webpack",
     "start": "webpack serve"
   },
   "author": "Alex Snezhko",

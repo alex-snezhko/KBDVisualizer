@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Item, Items, ItemType } from "../../types";
+import { Item, SelectedItems, ItemType } from "../../types";
 
 import { ALL_PARTS, money } from "../../utils/shared";
 
@@ -8,7 +8,7 @@ import "./SelectedItemsTable.scss";
 
 interface SelectedItemsTableProps {
     partsInKit: ItemType[];
-    selectedItems: Items;
+    selectedItems: SelectedItems;
     onDelete: (itemType: ItemType) => void;
 }
 

@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Item, ItemType } from "../../types";
+import { FieldInfo, Item, ItemType, NO_SELECTION, SelectionPropertyOption, SelectionProperty, ValidSelectionPropertyOption } from "../../types";
 
-import { NO_SELECTION, money, displayOption, displayName } from "../../utils/shared";
+import { money, displayName } from "../../utils/shared";
 
 interface ItemSelectionTableProps {
     itemType: ItemType;
     displayedItems: Item[];
-    onSelect: (item: Item, selections: Record<string, string>, itemType: ItemType) => boolean;
+    extraFieldInfo: FieldInfo[];
+    onSelect: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
 }
 
-export const ItemSelectionTable = ({ itemType, displayedItems, onSelect }: ItemSelectionTableProps) => (
+export const ItemSelectionTable = ({ itemType, displayedItems, extraFieldInfo, onSelect }: ItemSelectionTableProps) => (
     displayedItems.length === 0 ? <h3>No Items Found To Match Filters</h3> : 
         <table>
             <thead>
                 <tr>
-                    {["Name", "Base Price"].concat(otherProps.extraFieldInfo.map(fieldInfo => displayName(fieldInfo.name)))
+                    {["Name", "Base Price"].concat(extraFieldInfo.map(fieldInfo => displayName(fieldInfo.name)))
                         .map(fieldName => <th key={fieldName}>{fieldName}</th>)
                     }
                 </tr>
@@ -26,32 +27,61 @@ export const ItemSelectionTable = ({ itemType, displayedItems, onSelect }: ItemS
                         key={item.name}
                         item={item}
                         itemType={itemType}
+                        extraFieldInfo={extraFieldInfo}
                         onSelect={onSelect}
                     />)}
             </tbody>
         </table>
 );
 
+// function that properly displays option text
+function displayOption(x: SelectionPropertyOption): string {
+    if (x === NO_SELECTION) {
+        // default value of select field if no option is selected
+        return NO_SELECTION;
+    } else if (x.extra) {
+        return `${x.optionText} (+${money(x.extra)})`;
+    } else {
+        return x.optionText;
+    }
+}
+
+const allFieldsSelected = (selections: Record<string, SelectionPropertyOption>): selections is Record<string, ValidSelectionPropertyOption> => (
+    Object.values(selections).every(val => val !== NO_SELECTION)
+);
+
 interface ItemSelectionRowProps {
     item: Item;
     itemType: ItemType;
-    extraFieldInfo: any;
-    onSelect: (item: Item, selections: Record<string, string>, itemType: ItemType) => boolean;
+    extraFieldInfo: FieldInfo[];
+    onSelect: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
 }
 
 function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelect }: ItemSelectionRowProps) {
-    // keep state of all selections made for each field
-    const [selections, setSelections] = useState(extraFieldInfo.reduce((obj, fieldInfo) => {
-        const fieldData = item[fieldInfo.name];
-        const selection = fieldData && fieldData.type === "selection" ? NO_SELECTION : fieldData;
-        return Object.assign(obj, { [fieldInfo.name]: selection });
-    }, {}));
+    function initSelections() {
+        const selections: Record<string, SelectionPropertyOption> = {};
+        for (const fieldInfo of extraFieldInfo) {
+            const fieldData = item.properties[fieldInfo.name];
+            if (fieldData.type === "selection") {
+                selections[fieldInfo.name] = NO_SELECTION;
+            }
+        }
+        return selections;
+    }
 
-    function handleSelectionChange(field: string, val) {
-        setSelections({
-            ...selections,
-            [field]: item[field].options.find(x => displayOption(x) === val)
-        });
+    // keep state of all selections made for each field
+    const [selections, setSelections] = useState(initSelections());
+
+    function handleSelectOption(field: string, selectedOption: SelectionPropertyOption) {
+        setSelections({ ...selections, [field]: selectedOption });
+    }
+
+    function handleSelectItem() {
+        if (!allFieldsSelected(selections)) {
+            alert("Please select a value for all options for this item");
+        } else {
+            onSelect(item, selections, itemType);
+        }
     }
     
     return (
@@ -72,13 +102,13 @@ function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelect }: ItemSele
                     item={item}
                     selections={selections}
                     fieldInfo={f}
-                    onSelectionChange={handleSelectionChange}
+                    onSelectOption={handleSelectOption}
                 />
             ))}
 
             <td className="item-select-cell">
                 <Link to="/">
-                    <button className="blue-button" onClick={() => onSelect(item, selections, itemType)}>
+                    <button className="blue-button" onClick={handleSelectItem}>
                         Select
                     </button>
                 </Link>
@@ -88,34 +118,41 @@ function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelect }: ItemSele
 }
 
 interface ItemSelectionCellProps {
-    item: Item; // TODO
-    selections: any;
-    fieldInfo: any;
-    onSelectionChange: any;
+    item: Item;
+    selections: Record<string, SelectionPropertyOption>;
+    fieldInfo: FieldInfo;
+    onSelectOption: (fieldName: string, selectedOption: SelectionPropertyOption) => void;
 }
 
-function ItemSelectionCell({ item, selections, fieldInfo, onSelectionChange }: ItemSelectionCellProps) {
+function ItemSelectionCell({ item, selections, fieldInfo, onSelectOption }: ItemSelectionCellProps) {
+
+    function handleSelectionChange(e: React.ChangeEvent<HTMLSelectElement>) {
+        const options = (item.properties[fieldInfo.name] as SelectionProperty).options;
+        const selectedOption = options.find(opt => displayOption(opt) === e.target.value) || NO_SELECTION;
+        onSelectOption(fieldName, selectedOption);
+    }
+
     const fieldName = fieldInfo.name;
 
     // the actual data of this item
-    const data = item[fieldName];
+    const data = item.properties[fieldName];
 
     if (data === undefined) {
         return null;
     }
 
     let content;
-    if (Array.isArray(data)) {
-        content = data.join(", ");
-    } else if (data.type !== "selection") {
-        content = fieldInfo.display(data);
-    } else {
+    if (data.type === "normal") {
+        content = fieldInfo.display(data.value);
+    } else if (data.type === "multiple") {
+        content = data.values.join(", ");
+    } else if (data.type === "selection") {
         content = (
             <select
-                value={displayOption(fieldInfo.display(selections[fieldName]))}
-                onChange={e => onSelectionChange(fieldName, e.target.value)}
+                value={displayOption(selections[fieldName])}
+                onChange={handleSelectionChange}
             >
-                {[NO_SELECTION].concat(data.options.map(opt => fieldInfo.display(opt))).map(opt => {
+                {[NO_SELECTION as SelectionPropertyOption].concat(data.options).map(opt => {
                     const displayed = displayOption(opt);
                     return <option key={displayed} value={displayed}>{displayed}</option>;
                 })}

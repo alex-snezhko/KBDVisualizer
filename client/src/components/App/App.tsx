@@ -8,14 +8,13 @@ import { GroupBuys } from "../GroupBuys/GroupBuys";
 import { ItemSelection } from "../ItemSelection/ItemSelection";
 import { Visualizer } from "../Visualizer/Visualizer";
 
-import { Item, Items, ItemType } from "../../types";
+import { Item, SelectedItems, ItemType, ValidSelectionPropertyOption } from "../../types";
 
-import { ALL_PARTS, NO_SELECTION } from "../../utils/shared";
 import { fetchRandomItemConfig } from "../../apiInteraction";
 
 import "./App.scss";
 
-const emptyItems: Items = {
+const emptyItems: SelectedItems = {
     "Case": null,
     "Plate": null,
     "PCB": null,
@@ -27,7 +26,7 @@ const emptyItems: Items = {
 // TODO decide on "part" or "item"
 
 export function App() {
-    const [selectedItems, setSelectedItems] = useState<Items>(emptyItems);
+    const [selectedItems, setSelectedItems] = useState<SelectedItems>(emptyItems);
     // TODO
     // const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit"].concat(ALL_PARTS).reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
 
@@ -37,13 +36,7 @@ export function App() {
         .then(items => setSelectedItems(items));
     }, []);
 
-    function handleSelectItem(item: Item, selections: Record<string, string>, itemType: ItemType) {
-        const selectedValues = Object.values(selections).filter(x => x !== undefined);
-        if (selectedValues.some(val => val === NO_SELECTION)) {
-            alert("Please select a value for all options for this item");
-            return;
-        }
-
+    function handleSelectItem(item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) {
         // TODO actually look up and get references to items if this is a kit
         // if (itemType === "Case" || itemType === "Plate" || itemType == "PCB") {
         //     // TODO handle compatibility
@@ -62,7 +55,7 @@ export function App() {
         //     compatibility["Plate"].push(ff);
         // }
 
-        const price = item.price + selectedValues.reduce((extra, val) => extra + (val.extra || 0), 0);
+        const price = item.price + Object.values(selections).reduce((extra, val) => extra + val.extra, 0);
 
         setSelectedItems({ ...selectedItems, [itemType]: { ...item, price } });
         // setCompatibilityFilters(compatibility);
@@ -99,7 +92,6 @@ export function App() {
                     <Route path="/select-item/:itemType" element={
                         <ItemSelection
                             // compatibilityFilters={compatibilityFilters[match.params.itemType]}
-                            // extraFieldInfo={getExtraFieldInfo(match.params.itemType)}
                             onSelect={handleSelectItem}
                         />}
                     />

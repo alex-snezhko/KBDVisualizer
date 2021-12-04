@@ -32,13 +32,6 @@ export const displayName = (name: string) => (
 //     }[itemType] || [];
 // }
 
-export class ItemField {
-
-}
-
-// default value of select field if no option is selected
-export const NO_SELECTION = "-- select an option --";
-
 // export class CompatibilityFilterObj {
 //     constructor(field, origin, accepts) {
 //         this.field = field;
@@ -53,8 +46,3 @@ export const NO_SELECTION = "-- select an option --";
 //             this.accepts.includes(fieldData);
 //     }
 // }
-
-// function that properly displays option text
-export const displayOption = (x: any) => x && x.type && x.extra ? `${x.type} (+${money(x.extra)})` : x;
-
-export const toColor = (hex: string) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h => Number("0x" + h) / 255);

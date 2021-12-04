@@ -7,20 +7,38 @@ import { ItemSelectionFilters } from "../ItemSelectionFilters/ItemSelectionFilte
 import { fetchItems, fetchFilterRanges } from "../../apiInteraction";
 
 import "./ItemSelection.scss";
-import { Filter, Item, ItemType, NumRangeFilter, SelectFilter } from "../../types";
+import { FieldInfo, Filter, Item, ItemType, NumRangeFilter, SelectFilter, ValidSelectionPropertyOption } from "../../types";
 import { ALL_PARTS } from "../../utils/shared";
 
-interface ItemSelectionProps {
-    onSelect: (item: Item, selections: Record<string, string>, itemType: ItemType) => boolean;
+function getExtraFieldInfo(itemType: ItemType): FieldInfo[] {
+    const std = (name: string) => ({ name, display: (x: string) => x });
+    const mm = (name: string) => ({ name, display: (x: string) => parseInt(x).toFixed(1) + " mm" });
+    const g = (name: string) => ({ name, display: (x: string) => x + "g" });
+
+    return {
+        "Kit": ["form_factor"].concat(ALL_PARTS).map(part => std(part)),
+        "Case": [std("form_factor"), std("material"), std("color"), std("mount_method")],
+        "Plate": [std("form_factor"), std("material")],
+        "PCB": [std("form_factor"), std("hot_swap"), std("backlight")],
+        "Stabilizers": [std("mount_method")],
+        "Switches": [std("tactility"), g("spring_weight"), mm("act_dist"), mm("bot_dist")],
+        "Keycaps": [std("color"), std("material"), std("legends")]
+    }[itemType] || [];
 }
 
 const isItemType = (s: string): s is ItemType => (ALL_PARTS as string[]).includes(s);
+
+interface ItemSelectionProps {
+    onSelect: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
+}
 
 export function ItemSelection({ onSelect }: ItemSelectionProps) {
     const { itemType } = useParams();
     if (itemType === undefined || !isItemType(itemType)) {
         return null;
     }
+
+    const extraFieldInfo = getExtraFieldInfo(itemType);
 
     const [items, setItems] = useState<Item[]>([]);
     const [filters, setFilters] = useState<Filter[]>([]);
@@ -115,7 +133,7 @@ export function ItemSelection({ onSelect }: ItemSelectionProps) {
                     </select>
                 </div>
 
-                <ItemSelectionTable itemType={itemType} displayedItems={items} onSelect={onSelect} />
+                <ItemSelectionTable itemType={itemType} displayedItems={items} extraFieldInfo={extraFieldInfo} onSelect={onSelect} />
             </div>
         </React.Fragment>
     );

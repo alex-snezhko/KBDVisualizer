@@ -4,12 +4,12 @@ import { SelectedItemsTable } from "../SelectedItemsTable/SelectedItemsTable";
 import { KeyboardRender } from "../KeyboardRender/KeyboardRender";
 
 import { ALL_PARTS, money } from "../../utils/shared";
-import { Items, ItemType } from "../../types";
+import { SelectedItems, ItemType, ValidSelectedItems } from "../../types";
 
 import "./Visualizer.scss";
 
 interface VisualizerProps {
-    selectedItems: Items;
+    selectedItems: SelectedItems;
     partsInKit: ItemType[];
     onDelete: (itemType: ItemType) => void;
 }
@@ -21,6 +21,8 @@ export function Visualizer({ selectedItems, partsInKit, onDelete }: VisualizerPr
         const selectedItem = selectedItems[part];
         return total + (selectedItem !== null ? selectedItem.price : 0);
     }, 0);
+
+    const allPartsSelected = ALL_PARTS.every(part => selectedItems[part]);
 
     return (
         <div id="selected-items-container">
@@ -45,7 +47,9 @@ export function Visualizer({ selectedItems, partsInKit, onDelete }: VisualizerPr
             </div>
 
             <div>
-                <KeyboardRender selectedItems={selectedItems} />
+                {!allPartsSelected
+                    ? <h3>Select all parts to view keyboard render</h3>
+                    : <KeyboardRender selectedItems={selectedItems as ValidSelectedItems} />}
             </div>
         </div>
     );

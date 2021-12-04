@@ -1,12 +1,13 @@
 import React from "react";
 import { mat4, vec3 } from "gl-matrix";
 
-import { fetchInfo, fetchCaseModel, fetchKeycapModel, fetchSwitchModel, fetchStabilizerModel } from "../../apiInteraction";
+import { fetchCaseModel, fetchKeycapModel, fetchSwitchModel, fetchStabilizerModel, fetchKeyboardInfo, fetchKeycapsInfo } from "../../apiInteraction";
 import { ALL_PARTS } from "../../utils/shared";
 import { renderObject, loadTexture, loadGLBuffers, setupShaders, rotateView } from "../../utils/glFuncs";
 import { ACCENTS, ALPHAS, SPECIAL_KEYCAP_IDENTIFIERS, SPECIAL_NUM_UNITS } from "../../utils/keyboardComponents";
 
 import "./KeyboardRender.scss";
+import { KeyboardInfo, KeycapsInfo, ValidSelectedItems } from "../../types";
 
 const newProgramInfo = () => ({
     program: null,
@@ -16,13 +17,13 @@ const newProgramInfo = () => ({
 });
 
 
-let alphasInSet = new Set();
-let modsInSet = new Set();
-let accentsInSet = new Set();
+const alphasInSet = new Set();
+const modsInSet = new Set();
+const accentsInSet = new Set();
 
-function getKeycapColorOptions(key, keycapsInfo) {
+function getKeycapColorOptions(key: string, keycapsInfo) {
     // keep a list of all possible color options available for this keycap
-    let colorOptions = [];
+    const colorOptions = [];
 
     if (ACCENTS.has(key)) {
         accentsInSet.add(key);
@@ -51,7 +52,7 @@ function getKeycapColorOptions(key, keycapsInfo) {
     };
 }
 
-const toColor = (hex) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h => Number("0x" + h) / 255);
+const toColor = (hex: string) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h => Number("0x" + h) / 255);
 
 // To-do list:
 // different cases
@@ -80,8 +81,72 @@ const toColor = (hex) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h 
 
 // TODO refactor this clusterfuck of a file
 
-export class KeyboardRender extends React.Component {
-    constructor(props) {
+interface Eye {
+    position: vec3;
+    lookAt: vec3;
+    lookUp: vec3;
+    yAngle: number;
+}
+
+interface Key {
+    keycapColor: number[];
+    legendColor: number[];
+    optionSelected: number;
+    colorOptions: any[];
+}
+
+// TODO fix anys
+interface KeyRenderInstruction {
+    modelIdentifier: any;
+    keysize: number;
+    transformation: mat4;
+    legendTexture: any;
+    colorOptions: any[];
+    optionSelected: number;
+    keycapColor: number[];
+    legendColor: number[];
+    objectId: number;
+}
+
+interface ProgInfo {
+    program: any;
+    attribs: any;
+    uniforms: any;
+    buffers: any;
+}
+
+interface ProgsInfo {
+    textured: ProgInfo;
+    untextured: ProgInfo;
+    selection: ProgInfo;
+}
+
+interface KeyboardRenderState {
+    blinkProportion: number;
+    increasing: boolean;
+    highlightKeys: boolean;
+    fullCustom: boolean;
+    keycapColor: string;
+    legendColor: string;
+}
+
+interface KeyboardRenderProps {
+    selectedItems: ValidSelectedItems
+}
+
+export class KeyboardRender extends React.Component<KeyboardRenderProps, KeyboardRenderState> {
+    gl: WebGLRenderingContext;
+    tick: number | null;
+    eye: Eye;
+    progsInfo: ProgsInfo;
+    keyboardInfo: KeyboardInfo;
+    keycapsInfo: KeycapsInfo;
+    keyRenderInstructions: KeyRenderInstruction[];
+    webGlCanvas: React.RefObject<HTMLCanvasElement>;
+    keyboardRenderContainer: React.RefObject<HTMLDivElement>;
+    objectIdToKey: Record<number, Key>;
+
+    constructor(props: KeyboardRenderProps) {
         super(props);
 
         this.state = {
@@ -131,14 +196,14 @@ export class KeyboardRender extends React.Component {
         this.handleResetKeycaps = this.handleResetKeycaps.bind(this);
     }
 
-    async loadKeyboard(keycapProfile) {
+    async loadKeyboard(keycapProfile: string) {
         const { gl, progsInfo, objectIdToKey, keyNameToKeyObj, keyboardInfo, keycapsInfo } = this;
         // ---------------------------------------------------------------------------
         // prepare all necessary information for setting up key rendering instructions
         // ---------------------------------------------------------------------------
         // list of promises to load each model (keycaps and keyboard case)
-        let resourceLoadPromises = [];
-        let keycapModelsVisited = new Set();
+        const resourceLoadPromises = [];
+        const keycapModelsVisited = new Set();
         // find total number of units horizontally and vertically
         // to get number of units horizontally, find the keygroup that extends farthest right
         const numUnitsX = keyboardInfo.keyGroups.reduce(
@@ -159,7 +224,7 @@ export class KeyboardRender extends React.Component {
         // -------------------------------------------------
         for (const kg of keyboardInfo.keyGroups) {
             // initialize position to beginning of row and increment after each key
-            let posXZ = [kg.offset[0] - numUnitsX / 2, 0, kg.offset[1] - numUnitsY / 2 + 0.5];
+            const posXZ = [kg.offset[0] - numUnitsX / 2, 0, kg.offset[1] - numUnitsY / 2 + 0.5];
             for (const key of kg.keys) {
                 // if this key is not special (non-1u), then it must be 1 unit wide
                 const keysize = SPECIAL_NUM_UNITS[key] || 1;
@@ -168,7 +233,7 @@ export class KeyboardRender extends React.Component {
     
                 // if a keycap with these dimensions has not been loaded yet, then load it
                 if (!keycapModelsVisited.has(modelIdentifier)) {
-                    let bufs = progsInfo.textured.buffers;
+                    const bufs = progsInfo.textured.buffers;
                     bufs[modelIdentifier] = {};
                     resourceLoadPromises.push(
                         fetchKeycapModel(keycapProfile, modelIdentifier)
@@ -183,21 +248,22 @@ export class KeyboardRender extends React.Component {
                 // load legend texture
                 const { loadTexturePromise, texture } = loadTexture(gl, "legends/" + key + ".png");
                 resourceLoadPromises.push(loadTexturePromise);
+
+                // find an appropriate object id for this key
+                const objectId = Object.keys(objectIdToKey).length + 1;
     
                 // construct an object to represent all relevant information of a keycap for rendering
-                const keycapObj = {
+                const keycapObj: KeyRenderInstruction = {
                     modelIdentifier,
                     keysize,
                     transformation: finalTransformationMat,
                     legendTexture: texture,
+                    objectId,
                     ...getKeycapColorOptions(key, keycapsInfo),
                 };
     
-                // find an appropriate object id for this key
-                const objectId = Object.keys(objectIdToKey).length + 1;
                 objectIdToKey[objectId] = keycapObj;
                 keyNameToKeyObj[key] = keycapObj;
-                keycapObj.objectId = objectId;
     
                 this.keyRenderInstructions.push(keycapObj);
                 posXZ[0] += keysize;
@@ -335,7 +401,7 @@ export class KeyboardRender extends React.Component {
         // TODO maybe refactor this to first drawing all textured items and then untextured
     }
 
-    handleCanvasMouseMove(event) {
+    handleCanvasMouseMove(event: React.MouseEvent<HTMLCanvasElement>) {
         const { eye } = this;
 
         if (event.buttons !== 0) {
@@ -359,7 +425,7 @@ export class KeyboardRender extends React.Component {
         }
     }
 
-    handleCanvasWheel(event) {
+    handleCanvasWheel(event: React.WheelEvent<HTMLCanvasElement>) {
         const { eye } = this;
         event.preventDefault();
 
@@ -374,7 +440,7 @@ export class KeyboardRender extends React.Component {
         this.forceUpdate();
     }
 
-    handleCanvasClicked(event) {
+    handleCanvasClicked(event: React.MouseEvent<HTMLCanvasElement>) {
         const { gl, objectIdToKey } = this;
         if (event.clientX === this.beginClick.x && event.clientY === this.beginClick.y) {
             const { left, top, height } = event.target.getBoundingClientRect();
@@ -384,7 +450,7 @@ export class KeyboardRender extends React.Component {
 
             this.renderSelection();
 
-            let pixelClicked = new Uint8Array(4);
+            const pixelClicked = new Uint8Array(4);
             gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelClicked);
 
             const objectWasClicked = pixelClicked[3] === 0;
@@ -408,10 +474,10 @@ export class KeyboardRender extends React.Component {
     }
 
     handleResizeCanvas() {
-        const container = this.keyboardRenderContainer.current;
+        const container = this.keyboardRenderContainer.current!;
         const w = container.offsetWidth;
 
-        const canvas = this.webGlCanvas.current;
+        const canvas = this.webGlCanvas.current!;
 
         if (canvas.width !== w) {
             canvas.width = w;
@@ -428,7 +494,7 @@ export class KeyboardRender extends React.Component {
             this.setState({ increasing: false, blinkProportion: 0 });
             this.tick = null;
         } else {
-            this.tick = setInterval(() => {
+            this.tick = window.setInterval(() => {
                 if (this.state.highlightKeys) {
                     this.setState(currState => {
                         let { highlightKeys, increasing, blinkProportion } = currState;
@@ -454,7 +520,7 @@ export class KeyboardRender extends React.Component {
         // this.renderScene();
     }
 
-    handleColorMultiple(which) {
+    handleColorMultiple(which: "alphas" | "mods" | "accents") {
         const keys = { "alphas": alphasInSet, "mods": modsInSet, "accents": accentsInSet }[which];
         for (const keyName of keys) {
             const keyObj = this.keyNameToKeyObj[keyName];
@@ -482,8 +548,8 @@ export class KeyboardRender extends React.Component {
     async componentDidMount() {
         const { progsInfo } = this;
 
-        const canvas = this.webGlCanvas.current;
-        const gl = canvas.getContext("webgl");
+        const canvas = this.webGlCanvas.current!;
+        const gl = canvas.getContext("webgl")!;
         this.gl = gl;
         if (gl === null) {
             alert("Error in fetching GL context. Please ensure that your browser supports WebGL.");
@@ -493,7 +559,8 @@ export class KeyboardRender extends React.Component {
         // gl.viewport(0, 0, canvas.width, canvas.height);
 
         // enable gl attributes: use z-buffering, make background black
-        gl.clearColor(...toColor("#fcfcf8"), 1.0);
+        const [r, g, b] = toColor("#fcfcf8");
+        gl.clearColor(r, g, b, 1.0);
         gl.clearDepth(1.0);
         // gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
         // gl.enable(gl.BLEND);
@@ -505,15 +572,15 @@ export class KeyboardRender extends React.Component {
 
         setupShaders(gl, progsInfo);
 
-        let kbdInfo;
+        let kbdInfo: KeyboardInfo;
         try {
-            kbdInfo = await fetchInfo("keyboardInfo", this.props.selectedItems["Case"].name);
+            kbdInfo = await fetchKeyboardInfo(this.props.selectedItems["Case"].name);
         } catch (e) {
-            kbdInfo = await fetchInfo("keyboardInfo", "Tofu 65% Aluminum");
+            kbdInfo = await fetchKeyboardInfo("Tofu 65% Aluminum");
             alert("The model for the keyboard case selected has not yet been created. Defaulting to Tofu 65% model");
         }
-        this.keyboardInfo = JSON.parse(kbdInfo);
-        this.keycapsInfo = JSON.parse(await fetchInfo("keycapsInfo", this.props.selectedItems["Keycaps"].name));
+        this.keyboardInfo = kbdInfo;
+        this.keycapsInfo = await fetchKeycapsInfo(this.props.selectedItems["Keycaps"].name);
 
         await this.loadKeyboard("cherry");
         
@@ -528,7 +595,7 @@ export class KeyboardRender extends React.Component {
 
     componentWillUnmount() {
         window.removeEventListener("resize", this.handleResizeCanvas);
-        this.webGlCanvas.current.removeEventListener("wheel", this.handleCanvasWheel);
+        this.webGlCanvas.current!.removeEventListener("wheel", this.handleCanvasWheel);
         if (this.tick) {
             clearInterval(this.tick);
             this.tick = null;
@@ -536,10 +603,7 @@ export class KeyboardRender extends React.Component {
     }
 
     render() {
-        const allPartsSelected = ALL_PARTS.every(part => this.props.selectedItems[part]);
-        
-        return !allPartsSelected ?
-            <h3>Select all parts to view keyboard render</h3> :
+        return (
             <div id="keyboard-render" ref={this.keyboardRenderContainer}>
                 <canvas id="webgl-canvas"
                     ref={this.webGlCanvas}
@@ -576,6 +640,7 @@ export class KeyboardRender extends React.Component {
                         </div>
                     )}
                 </div>
-            </div>;
+            </div>
+        );
     }
 }

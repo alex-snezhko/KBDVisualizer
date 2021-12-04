@@ -4,7 +4,8 @@
   "description": "KBDVisualizer server-side code",
   "main": "api.js",
   "scripts": {
-    "start": "nodemon api.js"
+    "start": "node api.js",
+    "dev": "nodemon api.js"
   },
   "author": "Alex Snezhko",
   "license": "ISC",
