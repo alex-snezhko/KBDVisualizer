@@ -1,9 +1,11 @@
-const express = require("express");
-const db = require("../db");
+import express from "express";
+import db from "../db";
 
 const router = express.Router();
 
-const tableNameMap = {
+type ItemType = "kit" | "case" | "keycaps" | "pcb" | "plate" | "stabilizers" | "switches";
+
+const tableNameMap: Record<ItemType, string> = {
     "kit": "keyboad_kits",
     "case": "cases",
     "keycaps": "keycap_sets",
@@ -13,7 +15,12 @@ const tableNameMap = {
     "switches": "switches"
 };
 
-const itemFiltersMap = {
+interface ItemFilters {
+    fieldName: string;
+    filterType: "numeric" | "selectionOneOf" | "selectionAllOf";
+}
+
+const itemFiltersMap: Record<ItemType, ItemFilters[]> = {
     "kit": [
         { fieldName: "price", filterType: "numeric" },
         { fieldName: "form_factor", filterType: "selectionOneOf" },
@@ -56,9 +63,14 @@ const itemFiltersMap = {
     ]
 };
 
+interface CollectionData {
+    tableName: string;
+    fieldName: string;
+}
+
 // used for "all of" filters for determining where in the database a certain piece of data will reside
 // example: will indicate case_colors.color is where to look if a case's color options are requested
-const collectionDataMap = {
+const collectionDataMap: Record<string, Record<string, CollectionData>> = {
     "case": {
         "color": { tableName: "case_colors", fieldName: "color" }
     },
@@ -67,7 +79,7 @@ const collectionDataMap = {
     }
 };
 
-for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switches"]) {
+for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switches"] as ItemType[]) {
     const tableName = tableNameMap[itemType];
     const itemFilters = itemFiltersMap[itemType];
     const collectionData = collectionDataMap[itemType];
@@ -96,10 +108,10 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
         const filterQueryParams = [];
         const filterTexts = [];
         const extraCollectionsNeeded = [];
-        const { sortBy, ...filterArgs } = req.query;
+        const { sortBy, ...filterArgs } = req.query as Record<string, string>;
         for (const [fieldName, filterValue] of Object.entries(filterArgs)) {
             const filterValueArr = filterValue.split(",");
-            const filterType = itemFilters.find(x => x.fieldName === fieldName).filterType;
+            const filterType = itemFilters.find(x => x.fieldName === fieldName)!.filterType;
 
             const beginQueryParamNum = filterQueryParams.length + 1;
             if (filterType === "numeric") {
@@ -182,4 +194,4 @@ router.get("/randomConfig", async (req, res) => {
     res.send({ "Kit": null, "Case": kbdCase, "Plate": plate, "PCB": pcb, "Switches": switches, "Stabilizers": stabilizers, "Keycaps": keycaps });
 });
 
-module.exports = router;
+export default router;

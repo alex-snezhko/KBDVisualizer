@@ -1,10 +1,10 @@
 "use strict";
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const db = require("./db");
-const infoRoutes = require("./routes/info");
-const itemsRoutes = require("./routes/items");
+import express from "express";
+import cors from "cors";
+import path from "path";
+import db from "./db";
+import infoRoutes from "./routes/info";
+import itemsRoutes from "./routes/items";
 
 const app = express();
 

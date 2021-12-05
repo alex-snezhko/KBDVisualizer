@@ -1,5 +1,5 @@
-const express = require("express");
-const db = require("../db");
+import express from "express";
+import db from "../db";
 
 const router = express.Router();
 
@@ -23,4 +23,4 @@ router.get("/keycapsInfo/:name", async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

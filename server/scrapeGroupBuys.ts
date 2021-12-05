@@ -1,26 +1,36 @@
-const puppeteer = require("puppeteer");
-const cheerio = require("cheerio");
-const db = require("./db");
+import puppeteer from "puppeteer";
+import cheerio from "cheerio";
+import db from "./db";
 
-function getActiveGroupBuys(data) {
+interface GroupBuyItem {
+    name: string;
+    image: string;
+    link: string;
+    partType: string;
+    startDate: string;
+    endDate: string;
+    price: number;
+}
+
+function getActiveGroupBuys(data: string) {
     const $ = cheerio.load(data);
 
-    const groupBuyItems = [];
+    const groupBuyItems: GroupBuyItem[] = [];
 
     const $items = $("div.gMJRj").children();
     $items.each(function() {
         const $item = $(this);
         const $info = $item.find("ul.kNKLJw").children("li");
-        function getInfo(searchFor) {
+        function getInfo(searchFor: string) {
             const $infoItem = $info.filter(function() {
                 const infoType = $(this).children(".hctKJM").text().trim();
-                return infoType == searchFor;
+                return infoType === searchFor;
             });
             return $infoItem.children(".jxQFAb").text().trim();
         }
 
         const name = $item.find(".cqDPIl").text();
-        const image = $item.find("img.enYpte").attr("src");
+        const image = $item.find("img.enYpte").attr("src")!;
         const link = "https://www.mechgroupbuys.com" + $item.find(".gSVBBi").children("a").attr("href");
         let partType = $item.find(".gLiaon").text();
         if (partType === "keyboards") {
