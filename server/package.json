@@ -4,8 +4,8 @@
   "description": "KBDVisualizer server-side code",
   "main": "api.js",
   "scripts": {
-    "start": "node api.js",
-    "dev": "nodemon api.js"
+    "start": "node api.ts",
+    "dev": "nodemon api.ts"
   },
   "author": "Alex Snezhko",
   "license": "ISC",
@@ -25,6 +25,7 @@
     "@typescript-eslint/parser": "^5.5.0",
     "eslint": "^8.4.0",
     "nodemon": "^2.0.15",
+    "ts-node": "^10.4.0",
     "typescript": "^4.5.2"
   }
 }

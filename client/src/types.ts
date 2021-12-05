@@ -114,7 +114,8 @@ export interface Item {
     link: string;
     image: string;
     price: number;
-    properties: Record<string, ItemProperty>;
+    [property: string]: string | number | ItemProperty;
+    // properties: Record<string, ItemProperty>;
 }
 
 export type ItemType = "Case" | "Plate" | "PCB" | "Stabilizers" | "Switches" | "Keycaps";

@@ -6,8 +6,8 @@ const apiBaseUrl = process.env.NODE_ENV === "development" ?
 
 async function fetchJson<T>(route: string, urlParams?: Record<string, string>): Promise<T> {
     const res = await fetch(apiBaseUrl + route + new URLSearchParams(urlParams).toString());
-    if (res.ok) {
-        throw new Error(res.statusText);
+    if (!res.ok) {
+        throw new Error(`Failed to execute fetch to API route ${route}. ${res.status}: ${res.statusText}`);
     }
     return await (res.json() as Promise<T>);
 }

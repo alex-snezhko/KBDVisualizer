@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FieldInfo, Item, ItemType, NO_SELECTION, SelectionPropertyOption, SelectionProperty, ValidSelectionPropertyOption } from "../../types";
+import { FieldInfo, Item, ItemType, NO_SELECTION, SelectionPropertyOption, SelectionProperty, ValidSelectionPropertyOption, ItemProperty } from "../../types";
 
 import { money, displayName } from "../../utils/shared";
 
@@ -61,7 +61,7 @@ function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelect }: ItemSele
     function initSelections() {
         const selections: Record<string, SelectionPropertyOption> = {};
         for (const fieldInfo of extraFieldInfo) {
-            const fieldData = item.properties[fieldInfo.name];
+            const fieldData = item[fieldInfo.name] as ItemProperty;
             if (fieldData.type === "selection") {
                 selections[fieldInfo.name] = NO_SELECTION;
             }
@@ -127,7 +127,7 @@ interface ItemSelectionCellProps {
 function ItemSelectionCell({ item, selections, fieldInfo, onSelectOption }: ItemSelectionCellProps) {
 
     function handleSelectionChange(e: React.ChangeEvent<HTMLSelectElement>) {
-        const options = (item.properties[fieldInfo.name] as SelectionProperty).options;
+        const options = (item[fieldInfo.name] as SelectionProperty).options;
         const selectedOption = options.find(opt => displayOption(opt) === e.target.value) || NO_SELECTION;
         onSelectOption(fieldName, selectedOption);
     }
@@ -135,7 +135,7 @@ function ItemSelectionCell({ item, selections, fieldInfo, onSelectOption }: Item
     const fieldName = fieldInfo.name;
 
     // the actual data of this item
-    const data = item.properties[fieldName];
+    const data = item[fieldName] as ItemProperty;
 
     if (data === undefined) {
         return null;

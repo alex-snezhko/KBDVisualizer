@@ -18,6 +18,24 @@
                 "${workspaceRoot}/node_modules/**/*.js",
                 "<node_internals>/**/*.js"
             ]
+        },
+        {
+            "type": "firefox",
+            "request": "launch",
+            "name": "Launch Firefox against localhost",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "skipFiles": [
+                "${workspaceRoot}/node_modules/**/*.js",
+                "<node_internals>/**/*.js"
+            ],
+            "pathMappings": [
+                {
+                    "url": "webpack://kbd-visualizer-client/src",
+                    "path": "${workspaceFolder}/client/src"
+                }
+            ]
         }
     ]
 }

@@ -193,7 +193,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
 
             const stabOffset = STAB_OFFSETS[instr.keysize];
             if (stabOffset) {
-                const colorArr = this.props.selectedItems["Stabilizers"].properties["color_arr"] as SingleProperty;
+                const colorArr = this.props.selectedItems["Stabilizers"]["color_arr"] as SingleProperty;
                 const color = (colorArr.value as number[]).slice(0, 3);
                 const renderStab = (offset: vec3) => {
                     const offsetMat = mat4.fromTranslation(mat4.create(), offset);
@@ -211,7 +211,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
             }
     
             // render keyswitch
-            const colorArr = this.props.selectedItems["Switches"].properties["color_arr"] as SingleProperty;
+            const colorArr = this.props.selectedItems["Switches"]["color_arr"] as SingleProperty;
             const color = (colorArr.value as number[]).slice(0, 3);
             renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["switch"], [
                 () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),

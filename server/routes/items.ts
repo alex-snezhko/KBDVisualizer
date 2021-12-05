@@ -79,6 +79,10 @@ const collectionDataMap: Record<string, Record<string, CollectionData>> = {
     }
 };
 
+// function toItem() {
+
+// }
+
 for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switches"] as ItemType[]) {
     const tableName = tableNameMap[itemType];
     const itemFilters = itemFiltersMap[itemType];
@@ -118,7 +122,7 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
                 const filterValueNums = filterValueArr.map(x => Number(x));
                 filterValueNums.sort((a, b) => a - b);
                 const [low, high] = filterValueNums;
-                let boundsToCheck = [];
+                const boundsToCheck = [];
                 if (low !== Number.NEGATIVE_INFINITY) {
                     boundsToCheck.push(`${fieldName} >= $${beginQueryParamNum}`);
                     filterQueryParams.push(low);

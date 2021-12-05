@@ -17,14 +17,12 @@ module.exports = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        use: ['babel-loader'/*, 'eslint-loader'*/]
+        use: ['source-map-loader']
       },
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        // use: 'babel-loader',
-        // use: ['babel-loader', 'ts-loader'],
         exclude: /node_modules/,
+        use: ['babel-loader', 'ts-loader'],
       },
       {
         test: /\.css$/,
