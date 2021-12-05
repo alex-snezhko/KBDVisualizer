@@ -7,7 +7,7 @@ import { money } from "../../utils/shared";
 import "./GroupBuys.scss";
 
 interface GroupBuysProps {
-    onSelectItem: (a: ItemType, item: Item) => void; // TODO
+    onSelectItem: (a: ItemType, item: Item) => void;
 }
 
 export function GroupBuys({ onSelectItem }: GroupBuysProps) {
@@ -23,7 +23,7 @@ export function GroupBuys({ onSelectItem }: GroupBuysProps) {
             <h1>Ongoing Group Buys</h1>
             <div id="group-buys-listing">
                 {groupBuyItems.map(item => (
-                    <GroupBuyItem
+                    <GBItem
                         key={item.name}
                         item={item}
                         onSelectItem={onSelectItem}
@@ -35,11 +35,11 @@ export function GroupBuys({ onSelectItem }: GroupBuysProps) {
 }
 
 interface GroupBuyItemProps {
-    item: GroupBuyItem; // TODO
+    item: GroupBuyItem;
     onSelectItem: (a: ItemType, item: Item) => void;
 }
 
-function GroupBuyItem({ item, onSelectItem }: GroupBuyItemProps) {
+function GBItem({ item, onSelectItem }: GroupBuyItemProps) {
     const hoursDiff = Math.floor((Date.parse(item["end_date"]) - Date.now()) / (60 * 60 * 1000));
     if (hoursDiff < 0) {
         return null;

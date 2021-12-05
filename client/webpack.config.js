@@ -1,8 +1,8 @@
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 module.exports = {
   mode: isDevelopment ? 'development' : 'production',
@@ -11,16 +11,19 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js'
   },
+  devtool: 'inline-source-map',
   module: {
     rules: [
       {
-          test: /\.jsx?$/,
-          exclude: /node_modules/,
-          use: ['babel-loader'/*, 'eslint-loader'*/]
+        test: /\.jsx?$/,
+        exclude: /node_modules/,
+        use: ['babel-loader'/*, 'eslint-loader'*/]
       },
       {
         test: /\.tsx?$/,
-        use: ['babel-loader', 'ts-loader'],
+        use: 'ts-loader',
+        // use: 'babel-loader',
+        // use: ['babel-loader', 'ts-loader'],
         exclude: /node_modules/,
       },
       {
@@ -31,8 +34,8 @@ module.exports = {
         ]
       },
       {
-        test: /\.s(a|c)ss$/,
-        exclude: /\.module.(s(a|c)ss)$/,
+        test: /\.scss$/,
+        exclude: /\.module.(scss)$/,
         use: [
           isDevelopment ? 'style-loader' : MiniCssExtractPlugin.loader,
           'css-loader',
@@ -51,7 +54,7 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.ts', '.tsx', /* TODO remove mentions of JS after transition */'.js', '.jsx', '.scss'],
+    extensions: ['.ts', '.tsx', '.js', '.scss'],
     alias: {
       '@resources': path.resolve(__dirname, 'resources')
     }
@@ -62,6 +65,5 @@ module.exports = {
       filename: '[name].css',
       chunkFilename: '[id].css'
     })
-  ],
-  devtool: 'inline-source-map'
+  ]
 };

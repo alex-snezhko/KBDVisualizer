@@ -13,7 +13,6 @@ async function fetchJson<T>(route: string, urlParams?: Record<string, string>): 
 }
 
 
-// TODO type these
 export const fetchKeyboardInfo = (name: string) => fetchJson<KeyboardInfo>(`/info/keyboardInfo/${encodeURIComponent(name)}`);
 export const fetchKeycapsInfo = (name: string) => fetchJson<KeycapsInfo>(`/info/keycapsInfo/${encodeURIComponent(name)}`);
 

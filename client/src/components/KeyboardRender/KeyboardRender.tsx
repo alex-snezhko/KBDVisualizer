@@ -2,54 +2,11 @@ import React from "react";
 import { mat4, vec3 } from "gl-matrix";
 
 import { fetchCaseModel, fetchKeycapModel, fetchSwitchModel, fetchStabilizerModel, fetchKeyboardInfo, fetchKeycapsInfo } from "../../apiInteraction";
-import { ALL_PARTS } from "../../utils/shared";
 import { renderObject, loadTexture, loadGLBuffers, setupShaders, rotateView } from "../../utils/glFuncs";
 import { ACCENTS, ALPHAS, SPECIAL_KEYCAP_IDENTIFIERS, SPECIAL_NUM_UNITS } from "../../utils/keyboardComponents";
 
 import "./KeyboardRender.scss";
-import { Eye, KeyboardInfo, KeycapColor, KeycapsInfo, KeyRenderInstruction, WebGLProgramsInfo, ValidSelectedItems } from "../../types";
-
-const newProgramInfo = () => ({
-    program: null,
-    attribs: {},
-    uniformLocs: {},
-    buffers: {}
-});
-
-const alphasInSet = new Set<string>();
-const modsInSet = new Set<string>();
-const accentsInSet = new Set<string>();
-
-function getKeycapColorOptions(key: string, keycapsInfo: KeycapsInfo) {
-    // keep a list of all possible color options available for this keycap
-    const colorOptions = [];
-
-    if (ACCENTS.has(key)) {
-        accentsInSet.add(key);
-        colorOptions.push(...keycapsInfo.accents);
-    }
-
-    let exception;
-    if ((exception = keycapsInfo.exceptions.find(e => e.keys.includes(key)))) {
-        colorOptions.push(exception);
-    } else if (ALPHAS.has(key)) {
-        alphasInSet.add(key);
-        colorOptions.push(keycapsInfo.alphas);
-    } else {
-        modsInSet.add(key);
-        colorOptions.push(keycapsInfo.mods);
-    }
-
-    const extraOptions = keycapsInfo.extras.filter(e => e.keys.includes(key));
-    colorOptions.push(...extraOptions);
-
-    return {
-        colorOptions,
-        optionSelected: 0,
-        keycapColor: colorOptions[0].keycapColor,
-        legendColor: colorOptions[0].legendColor
-    };
-}
+import { Eye, KeyboardInfo, KeycapColor, KeycapsInfo, KeyRenderInstruction, WebGLProgramsInfo, ValidSelectedItems, SingleProperty } from "../../types";
 
 const toColor = (hex: string) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h => Number("0x" + h) / 255);
 
@@ -80,7 +37,23 @@ const toColor = (hex: string) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)
 
 // TODO refactor this clusterfuck of a file
 
+interface KbdRenderData {
+    eye: Eye;
+    keyboardInfo: KeyboardInfo;
+    keycapsInfo: KeycapsInfo;
+    progsInfo: WebGLProgramsInfo;
 
+    alphasInSet: Set<string>;
+    modsInSet: Set<string>;
+    accentsInSet: Set<string>;
+
+    keyRenderInstructions: KeyRenderInstruction[];
+    // colors of keycaps from set, to be reverted to upon cancel of customization
+    originalKeycapColors: KeycapColor[];
+    keyNameToKeyObj: Record<string, KeyRenderInstruction>;
+    objectIdToKey: Record<number, KeyRenderInstruction>;
+    tick: number | null;
+}
 
 interface KeyboardRenderState {
     blinkProportion: number;
@@ -96,18 +69,10 @@ interface KeyboardRenderProps {
 }
 
 export class KeyboardRender extends React.Component<KeyboardRenderProps, KeyboardRenderState> {
-    gl: WebGLRenderingContext;
-    tick: number | null;
-    eye: Eye;
-    progsInfo: WebGLProgramsInfo;
-    keyboardInfo: KeyboardInfo;
-    keycapsInfo: KeycapsInfo;
-    keycapColors: KeycapColor[];
-    keyRenderInstructions: KeyRenderInstruction[];
-    webGlCanvas: React.RefObject<HTMLCanvasElement>;
-    keyboardRenderContainer: React.RefObject<HTMLDivElement>;
-    objectIdToKey: Record<number, KeyRenderInstruction>;
-    keyNameToKeyObj: Record<string, KeyRenderInstruction>;
+    gl!: WebGLRenderingContext;
+    kbdRenderData!: KbdRenderData;
+    webGlCanvas: React.RefObject<HTMLCanvasElement> = React.createRef();
+    keyboardRenderContainer: React.RefObject<HTMLDivElement> = React.createRef();
 
     constructor(props: KeyboardRenderProps) {
         super(props);
@@ -122,34 +87,6 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
             legendColor: "#ffffff"
         };
 
-        this.tick = null;
-
-        this.gl = null;
-
-        this.progsInfo = {
-            textured: newProgramInfo(),
-            untextured: newProgramInfo(),
-            selection: newProgramInfo()
-        };
-        
-        this.eye = {
-            position: vec3.fromValues(0, 30, 30),
-            lookAt: vec3.normalize(vec3.create(), vec3.fromValues(0, -1, -1)),
-            lookUp: vec3.normalize(vec3.create(), vec3.fromValues(0, 1, -1)),
-            yAngle: Math.PI / 4
-        };
-
-        // this.keyboardInfoFound = true;
-        this.keyboardInfo = null;
-        this.keycapsInfo = null;
-
-        this.keyRenderInstructions = [];
-        this.keyNameToKeyObj = {};
-        this.objectIdToKey = {};
-
-        this.webGlCanvas = React.createRef();
-        this.keyboardRenderContainer = React.createRef();
-
         this.handleCanvasClick = this.handleCanvasClick.bind(this);
         this.handleCanvasMouseMove = this.handleCanvasMouseMove.bind(this);
         this.handleCanvasWheel = this.handleCanvasWheel.bind(this);
@@ -159,8 +96,305 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         this.handleResetKeycaps = this.handleResetKeycaps.bind(this);
     }
 
-    async loadKeyboard(keycapProfile: string) {
-        const { gl, progsInfo, objectIdToKey, keyNameToKeyObj, keyboardInfo, keycapsInfo } = this;
+    getKeycapColorOptions(key: string, keycapsInfo: KeycapsInfo) {
+        const { alphasInSet, modsInSet, accentsInSet } = this.kbdRenderData;
+        // keep a list of all possible color options available for this keycap
+        const colorOptions = [];
+    
+        if (ACCENTS.has(key)) {
+            accentsInSet.add(key);
+            colorOptions.push(...keycapsInfo.accents);
+        }
+    
+        let exception;
+        if ((exception = keycapsInfo.exceptions.find(e => e.keys.includes(key)))) {
+            colorOptions.push(exception);
+        } else if (ALPHAS.has(key)) {
+            alphasInSet.add(key);
+            colorOptions.push(keycapsInfo.alphas);
+        } else {
+            modsInSet.add(key);
+            colorOptions.push(keycapsInfo.mods);
+        }
+    
+        const extraOptions = keycapsInfo.extras.filter(e => e.keys.includes(key));
+        colorOptions.push(...extraOptions);
+    
+        return {
+            colorOptions,
+            optionSelected: 0,
+            keycapColor: colorOptions[0].keycapColor,
+            legendColor: colorOptions[0].legendColor
+        };
+    }
+
+    renderSelection() {
+        const { gl, kbdRenderData: { eye, progsInfo } } = this;
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+        const projMat = mat4.perspective(mat4.create(), Math.PI / 9, 2, 0.1, 1000);
+        const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
+        const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
+    
+        const uniformLoc = (name: string) => progsInfo.selection.uniformLocs[name];
+        renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["case"], [
+            () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, viewProjMat),
+            () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, mat4.create()),
+            () => gl.uniform1i(uniformLoc("uObjectId"), 0)
+        ]);
+    
+        // render keys
+        for (const { transformation, objectId, modelIdentifier } of this.kbdRenderData.keyRenderInstructions) {
+            const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, transformation);
+    
+            renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["switch"], [
+                () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, modelViewProjMat),
+                () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, transformation),
+                () => gl.uniform1i(uniformLoc("uObjectId"), 0)
+            ]);
+    
+            renderObject(gl, progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], [
+                () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, modelViewProjMat),
+                () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, transformation),
+                () => gl.uniform1i(uniformLoc("uObjectId"), objectId)
+            ]);
+        }
+    }
+
+    renderScene() {
+        const { gl, kbdRenderData: { eye, progsInfo } } = this;
+
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+        const projMat = mat4.perspective(mat4.create(), Math.PI / 9, 2, 0.1, 1000);
+        const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
+        const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
+
+        const utUniformLoc = (name: string) => progsInfo.untextured.uniformLocs[name];
+        renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["case"], [
+            () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
+            () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, viewProjMat),
+            () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, mat4.create()),
+            () => gl.uniform3f(utUniformLoc("uColor"), 0.1, 0.1, 0.1)
+        ]);
+    
+        // render keys
+        for (const instr of this.kbdRenderData.keyRenderInstructions) {
+            const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
+
+            const STAB_OFFSETS: Record<number, number> = {
+                2: 0.65,
+                2.25: 0.65,
+                2.75: 0.65,
+                6: 2.5,
+                6.25: 2.5,
+                7: 2.5
+            };
+
+            const stabOffset = STAB_OFFSETS[instr.keysize];
+            if (stabOffset) {
+                const colorArr = this.props.selectedItems["Stabilizers"].properties["color_arr"] as SingleProperty;
+                const color = (colorArr.value as number[]).slice(0, 3);
+                const renderStab = (offset: vec3) => {
+                    const offsetMat = mat4.fromTranslation(mat4.create(), offset);
+                    const transformation = mat4.multiply(mat4.create(), offsetMat, instr.transformation);
+                    renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["stabilizer"], [
+                        () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
+                        () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, mat4.multiply(mat4.create(), viewProjMat, transformation)),
+                        () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, transformation),
+                        () => gl.uniform3fv(utUniformLoc("uColor"), color)
+                    ]);
+                };
+
+                renderStab([stabOffset, 0, 0]);
+                renderStab([-stabOffset, 0, 0]);
+            }
+    
+            // render keyswitch
+            const colorArr = this.props.selectedItems["Switches"].properties["color_arr"] as SingleProperty;
+            const color = (colorArr.value as number[]).slice(0, 3);
+            renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["switch"], [
+                () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
+                () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, modelViewProjMat),
+                () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, instr.transformation),
+                () => gl.uniform3fv(utUniformLoc("uColor"), color)
+            ]);
+    
+            // render keycap
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, instr.legendTexture);
+    
+            const tUniformLoc = (name: string) => progsInfo.textured.uniformLocs[name];
+            renderObject(gl, progsInfo.textured, progsInfo.textured.buffers[instr.modelIdentifier], [
+                () => gl.uniform3f(tUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
+                () => gl.uniformMatrix4fv(tUniformLoc("uMVPMat"), false, modelViewProjMat),
+                () => gl.uniformMatrix4fv(tUniformLoc("uModelMat"), false, instr.transformation),
+                () => gl.uniform3fv(tUniformLoc("uColor"), instr.keycapColor),
+                () => gl.uniform1i(tUniformLoc("uTexture"), 0),
+                () => gl.uniform3fv(tUniformLoc("uTextureColor"), instr.legendColor),
+                () => gl.uniform1i(tUniformLoc("uIsBlinking"), Number(!this.state.fullCustom && this.state.highlightKeys && instr.colorOptions.length > 1)),
+                () => gl.uniform1f(tUniformLoc("uBlinkProportion"), this.state.blinkProportion)
+            ]);
+        }
+    
+        // TODO maybe refactor this to first drawing all textured items and then untextured
+    }
+
+    handleCanvasMouseMove(event: React.MouseEvent<HTMLCanvasElement>) {
+        const { eye } = this.kbdRenderData;
+
+        if (event.buttons !== 0) {
+            // find how much the mouse has moved since the last position
+            const dx = event.movementX;
+            const dy = event.movementY;
+            if (dx !== 0) {
+                rotateView(eye, -dx / 100, vec3.fromValues(0, 1, 0));
+            }
+            if (dy !== 0) {
+                // make it such that movement upwards is positive rotation
+                const rotateAngle = dy / 100;
+                // if this rotation will surpass lowest allowed viewing angle then clamp it
+                const MIN_Y_ANG = 0.1;
+                const MAX_Y_ANG = Math.PI / 2;
+                const newAngle = Math.max(MIN_Y_ANG, Math.min(MAX_Y_ANG, eye.yAngle + rotateAngle));
+                rotateView(eye, newAngle - eye.yAngle, vec3.cross(vec3.create(), eye.lookUp, eye.lookAt));
+                eye.yAngle = newAngle;
+            }
+            // TODO try replacing with forceUpdate
+            this.renderScene();
+        }
+    }
+
+    handleCanvasWheel(event: WheelEvent) {
+        const { eye } = this.kbdRenderData;
+        event.preventDefault();
+
+        const amtToMove = event.deltaY / 100;
+        const dist = vec3.length(eye.position);
+        // constrain the distance away from keyboard to [2, 10]
+        const MIN_DIST = 14;
+        const MAX_DIST = 50;
+        const newDist = Math.max(MIN_DIST, Math.min(MAX_DIST, dist + amtToMove));
+        eye.position = vec3.scale(vec3.create(), vec3.normalize(vec3.create(), eye.position), newDist);
+        // this.renderScene();
+        this.forceUpdate();
+    }
+
+    handleCanvasClick(event: React.MouseEvent<HTMLCanvasElement>) {
+        const { gl } = this;
+        // TODO undo if broken
+        if (event.movementX === 0 && event.movementY === 0) {
+        // if (event.clientX === this.beginClick.x && event.clientY === this.beginClick.y) {
+            const { left, top, height } = event.currentTarget.getBoundingClientRect();
+
+            const x = event.clientX - left;
+            const y = height - (event.clientY - top);
+
+            this.renderSelection();
+
+            const pixelClicked = new Uint8Array(4);
+            gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelClicked);
+
+            const objectWasClicked = pixelClicked[3] === 0;
+            const objectId = pixelClicked[0];
+            if (objectWasClicked && objectId !== 0) {
+                const key = this.kbdRenderData.objectIdToKey[objectId];
+
+                if (this.state.fullCustom) {
+                    key.keycapColor = toColor(this.state.keycapColor);
+                    key.legendColor = toColor(this.state.legendColor);
+                } else {
+                    key.optionSelected = (key.optionSelected + 1) % key.colorOptions.length;
+
+                    key.keycapColor = key.colorOptions[key.optionSelected].keycapColor;
+                    key.legendColor = key.colorOptions[key.optionSelected].legendColor;
+                }
+            }
+
+            // TODO try this.forceUpdate instead
+            this.renderScene();
+        }
+    }
+
+    handleResizeCanvas() {
+        const container = this.keyboardRenderContainer.current!;
+        const w = container.offsetWidth;
+
+        const canvas = this.webGlCanvas.current!;
+
+        if (canvas.width !== w) {
+            canvas.width = w;
+            const h = Math.floor(w / 2);
+            canvas.height = h;
+
+            this.gl.viewport(0, 0, w, h);
+        }
+    }
+
+    handleToggleHighlight() {
+        if (this.kbdRenderData.tick !== null) {
+            clearInterval(this.kbdRenderData.tick);
+            this.setState({ increasing: false, blinkProportion: 0 });
+            this.kbdRenderData.tick = null;
+        } else {
+            this.kbdRenderData.tick = window.setInterval(() => {
+                if (this.state.highlightKeys) {
+                    this.setState(currState => {
+                        let { increasing, blinkProportion } = currState;
+                        if (increasing) {
+                            blinkProportion = Math.min(1, blinkProportion + 0.05);
+                            if (blinkProportion === 1) {
+                                increasing = false;
+                            }
+                        } else {
+                            blinkProportion = Math.max(0, blinkProportion - 0.05);
+                            if (blinkProportion === 0) {
+                                increasing = true;
+                            }
+                        }
+
+                        return { increasing, blinkProportion };
+                    });
+                }
+            }, 20);
+        }
+
+        this.setState(currState => ({ highlightKeys: !currState.highlightKeys }));
+        // this.renderScene();
+    }
+
+    handleColorMultiple(which: "alphas" | "mods" | "accents") {
+        const { alphasInSet, modsInSet, accentsInSet } = this.kbdRenderData;
+        const keys = { "alphas": alphasInSet, "mods": modsInSet, "accents": accentsInSet }[which];
+        for (const keyName of keys) {
+            const keyObj = this.kbdRenderData.keyNameToKeyObj[keyName];
+            keyObj.keycapColor = toColor(this.state.keycapColor);
+            keyObj.legendColor = toColor(this.state.legendColor);
+        }
+
+        this.renderScene();
+    }
+
+    handleCustomizeKeycaps() {
+        this.setState({ highlightKeys: false, fullCustom: true });
+    }
+
+    handleResetKeycaps() {
+        const { keyRenderInstructions, originalKeycapColors } = this.kbdRenderData;
+        for (const i in keyRenderInstructions) {
+            keyRenderInstructions[i].keycapColor = originalKeycapColors[i].keycapColor;
+            keyRenderInstructions[i].legendColor = originalKeycapColors[i].legendColor;
+        }
+        
+        this.setState({ fullCustom: false });
+    }
+
+    async loadKeyboard(keycapProfile: string, progsInfo: WebGLProgramsInfo, keyboardInfo: KeyboardInfo, keycapsInfo: KeycapsInfo) {
+        const { gl } = this;
+
+        const keyRenderInstructions: KeyRenderInstruction[] = [];
+        const keyNameToKeyObj: Record<string, KeyRenderInstruction> = {};
+        const objectIdToKey: Record<number, KeyRenderInstruction> = {};
         // ---------------------------------------------------------------------------
         // prepare all necessary information for setting up key rendering instructions
         // ---------------------------------------------------------------------------
@@ -221,13 +455,13 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
                     transformation: finalTransformationMat,
                     legendTexture: texture,
                     objectId,
-                    ...getKeycapColorOptions(key, keycapsInfo),
+                    ...this.getKeycapColorOptions(key, keycapsInfo),
                 };
     
                 objectIdToKey[objectId] = keycapObj;
                 keyNameToKeyObj[key] = keycapObj;
     
-                this.keyRenderInstructions.push(keycapObj);
+                keyRenderInstructions.push(keycapObj);
                 posXZ[0] += keysize;
             }
         }
@@ -253,267 +487,11 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         } catch (err) {
             console.error(`Error fetching some or all resources requested: ${err}`);
         }
-    }
 
-    renderSelection() {
-        const { gl, eye, progsInfo } = this;
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-        const projMat = mat4.perspective(mat4.create(), Math.PI / 9, 2, 0.1, 1000);
-        const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
-        const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
-    
-        const uniformLoc = (name: string) => progsInfo.selection.uniformLocs[name];
-        renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["case"], [
-            () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, viewProjMat),
-            () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, mat4.create()),
-            () => gl.uniform1i(uniformLoc("uObjectId"), 0)
-        ]);
-    
-        // render keys
-        for (const { transformation, objectId, modelIdentifier } of this.keyRenderInstructions) {
-            const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, transformation);
-    
-            renderObject(gl, progsInfo.selection, progsInfo.untextured.buffers["switch"], [
-                () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, modelViewProjMat),
-                () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, transformation),
-                () => gl.uniform1i(uniformLoc("uObjectId"), 0)
-            ]);
-    
-            renderObject(gl, progsInfo.selection, progsInfo.textured.buffers[modelIdentifier], [
-                () => gl.uniformMatrix4fv(uniformLoc("uMVPMat"), false, modelViewProjMat),
-                () => gl.uniformMatrix4fv(uniformLoc("uModelMat"), false, transformation),
-                () => gl.uniform1i(uniformLoc("uObjectId"), objectId)
-            ]);
-        }
-    }
-
-    renderScene() {
-        const { gl, eye, progsInfo } = this;
-
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-        const projMat = mat4.perspective(mat4.create(), Math.PI / 9, 2, 0.1, 1000);
-        const viewMat = mat4.lookAt(mat4.create(), eye.position, vec3.add(vec3.create(), eye.position, eye.lookAt), eye.lookUp);
-        const viewProjMat = mat4.multiply(mat4.create(), projMat, viewMat);
-
-        const utUniformLoc = (name: string) => progsInfo.untextured.uniformLocs[name];
-        renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["case"], [
-            () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
-            () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, viewProjMat),
-            () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, mat4.create()),
-            () => gl.uniform3f(utUniformLoc("uColor"), 0.1, 0.1, 0.1)
-        ]);
-    
-        // render keys
-        for (const instr of this.keyRenderInstructions) {
-            const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
-
-            const STAB_OFFSETS: Record<number, number> = {
-                2: 0.65,
-                2.25: 0.65,
-                2.75: 0.65,
-                6: 2.5,
-                6.25: 2.5,
-                7: 2.5
-            };
-
-            const stabOffset = STAB_OFFSETS[instr.keysize];
-            if (stabOffset) {
-                const renderStab = (offset: vec3) => {
-                    const offsetMat = mat4.fromTranslation(mat4.create(), offset);
-                    const transformation = mat4.multiply(mat4.create(), offsetMat, instr.transformation);
-                    renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["stabilizer"], [
-                        () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
-                        () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, mat4.multiply(mat4.create(), viewProjMat, transformation)),
-                        () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, transformation),
-                        () => gl.uniform3fv(utUniformLoc("uColor"), this.props.selectedItems["Stabilizers"]["color_arr"].slice(0, 3)) // TODO
-                    ]);
-                };
-
-                renderStab([stabOffset, 0, 0]);
-                renderStab([-stabOffset, 0, 0]);
-            }
-    
-            // render keyswitch
-            renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["switch"], [
-                () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
-                () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, modelViewProjMat),
-                () => gl.uniformMatrix4fv(utUniformLoc("uModelMat"), false, instr.transformation),
-                () => gl.uniform3fv(utUniformLoc("uColor"), this.props.selectedItems["Switches"]["color_arr"].slice(0, 3))
-            ]);
-    
-            // render keycap
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, instr.legendTexture);
-    
-            const tUniformLoc = (name: string) => progsInfo.textured.uniformLocs[name];
-            renderObject(gl, progsInfo.textured, progsInfo.textured.buffers[instr.modelIdentifier], [
-                () => gl.uniform3f(tUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
-                () => gl.uniformMatrix4fv(tUniformLoc("uMVPMat"), false, modelViewProjMat),
-                () => gl.uniformMatrix4fv(tUniformLoc("uModelMat"), false, instr.transformation),
-                () => gl.uniform3fv(tUniformLoc("uColor"), instr.keycapColor),
-                () => gl.uniform1i(tUniformLoc("uTexture"), 0),
-                () => gl.uniform3fv(tUniformLoc("uTextureColor"), instr.legendColor),
-                () => gl.uniform1i(tUniformLoc("uIsBlinking"), Number(!this.state.fullCustom && this.state.highlightKeys && instr.colorOptions.length > 1)),
-                () => gl.uniform1f(tUniformLoc("uBlinkProportion"), this.state.blinkProportion)
-            ]);
-        }
-    
-        // TODO maybe refactor this to first drawing all textured items and then untextured
-    }
-
-    handleCanvasMouseMove(event: React.MouseEvent<HTMLCanvasElement>) {
-        const { eye } = this;
-
-        if (event.buttons !== 0) {
-            // find how much the mouse has moved since the last position
-            const dx = event.movementX;
-            const dy = event.movementY;
-            if (dx !== 0) {
-                rotateView(eye, -dx / 100, vec3.fromValues(0, 1, 0));
-            }
-            if (dy !== 0) {
-                // make it such that movement upwards is positive rotation
-                const rotateAngle = dy / 100;
-                // if this rotation will surpass lowest allowed viewing angle then clamp it
-                const MIN_Y_ANG = 0.1;
-                const MAX_Y_ANG = Math.PI / 2;
-                const newAngle = Math.max(MIN_Y_ANG, Math.min(MAX_Y_ANG, eye.yAngle + rotateAngle));
-                rotateView(eye, newAngle - eye.yAngle, vec3.cross(vec3.create(), eye.lookUp, eye.lookAt));
-                eye.yAngle = newAngle;
-            }
-            // TODO try replacing with forceUpdate
-            this.renderScene();
-        }
-    }
-
-    handleCanvasWheel(event: WheelEvent) {
-        const { eye } = this;
-        event.preventDefault();
-
-        const amtToMove = event.deltaY / 100;
-        const dist = vec3.length(eye.position);
-        // constrain the distance away from keyboard to [2, 10]
-        const MIN_DIST = 14;
-        const MAX_DIST = 50;
-        const newDist = Math.max(MIN_DIST, Math.min(MAX_DIST, dist + amtToMove));
-        eye.position = vec3.scale(vec3.create(), vec3.normalize(vec3.create(), eye.position), newDist);
-        // this.renderScene();
-        this.forceUpdate();
-    }
-
-    handleCanvasClick(event: React.MouseEvent<HTMLCanvasElement>) {
-        const { gl, objectIdToKey } = this;
-        // TODO undo if broken
-        if (event.movementX === 0 && event.movementY === 0) {
-        // if (event.clientX === this.beginClick.x && event.clientY === this.beginClick.y) {
-            const { left, top, height } = event.currentTarget.getBoundingClientRect();
-
-            const x = event.clientX - left;
-            const y = height - (event.clientY - top);
-
-            this.renderSelection();
-
-            const pixelClicked = new Uint8Array(4);
-            gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelClicked);
-
-            const objectWasClicked = pixelClicked[3] === 0;
-            const objectId = pixelClicked[0];
-            if (objectWasClicked && objectId !== 0) {
-                const key = objectIdToKey[objectId];
-
-                if (this.state.fullCustom) {
-                    key.keycapColor = toColor(this.state.keycapColor);
-                    key.legendColor = toColor(this.state.legendColor);
-                } else {
-                    key.optionSelected = (key.optionSelected + 1) % key.colorOptions.length;
-
-                    key.keycapColor = key.colorOptions[key.optionSelected].keycapColor;
-                    key.legendColor = key.colorOptions[key.optionSelected].legendColor;
-                }
-            }
-
-            // TODO try this.forceUpdate instead
-            this.renderScene();
-        }
-    }
-
-    handleResizeCanvas() {
-        const container = this.keyboardRenderContainer.current!;
-        const w = container.offsetWidth;
-
-        const canvas = this.webGlCanvas.current!;
-
-        if (canvas.width !== w) {
-            canvas.width = w;
-            const h = Math.floor(w / 2);
-            canvas.height = h;
-
-            this.gl.viewport(0, 0, w, h);
-        }
-    }
-
-    handleToggleHighlight() {
-        if (this.tick !== null) {
-            clearInterval(this.tick);
-            this.setState({ increasing: false, blinkProportion: 0 });
-            this.tick = null;
-        } else {
-            this.tick = window.setInterval(() => {
-                if (this.state.highlightKeys) {
-                    this.setState(currState => {
-                        let { increasing, blinkProportion } = currState;
-                        if (increasing) {
-                            blinkProportion = Math.min(1, blinkProportion + 0.05);
-                            if (blinkProportion === 1) {
-                                increasing = false;
-                            }
-                        } else {
-                            blinkProportion = Math.max(0, blinkProportion - 0.05);
-                            if (blinkProportion === 0) {
-                                increasing = true;
-                            }
-                        }
-
-                        return { increasing, blinkProportion };
-                    });
-                }
-            }, 20);
-        }
-
-        this.setState(currState => ({ highlightKeys: !currState.highlightKeys }));
-        // this.renderScene();
-    }
-
-    handleColorMultiple(which: "alphas" | "mods" | "accents") {
-        const keys = { "alphas": alphasInSet, "mods": modsInSet, "accents": accentsInSet }[which];
-        for (const keyName of keys) {
-            const keyObj = this.keyNameToKeyObj[keyName];
-            keyObj.keycapColor = toColor(this.state.keycapColor);
-            keyObj.legendColor = toColor(this.state.legendColor);
-        }
-
-        this.renderScene();
-    }
-
-    handleCustomizeKeycaps() {
-        this.keycapColors = this.keyRenderInstructions.map(key => ({ keycapColor: key.keycapColor, legendColor: key.legendColor }));
-        this.setState({ highlightKeys: false, fullCustom: true });
-    }
-
-    handleResetKeycaps() {
-        for (const i in this.keyRenderInstructions) {
-            this.keyRenderInstructions[i].keycapColor = this.keycapColors[i].keycapColor;
-            this.keyRenderInstructions[i].legendColor = this.keycapColors[i].legendColor;
-        }
-        
-        this.setState({ fullCustom: false });
+        return { keyRenderInstructions, keyNameToKeyObj, objectIdToKey };
     }
 
     async componentDidMount() {
-        const { progsInfo } = this;
-
         const canvas = this.webGlCanvas.current!;
         const gl = canvas.getContext("webgl")!;
         this.gl = gl;
@@ -533,22 +511,35 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.enable(gl.DEPTH_TEST);
 
-        window.addEventListener("resize", this.handleResizeCanvas);
-        canvas.addEventListener("wheel", this.handleCanvasWheel);
+        const progsInfo = setupShaders(gl)!;
 
-        setupShaders(gl, progsInfo);
-
-        let kbdInfo: KeyboardInfo;
+        let keyboardInfo: KeyboardInfo;
         try {
-            kbdInfo = await fetchKeyboardInfo(this.props.selectedItems["Case"].name);
+            keyboardInfo = await fetchKeyboardInfo(this.props.selectedItems["Case"].name);
         } catch (e) {
-            kbdInfo = await fetchKeyboardInfo("Tofu 65% Aluminum");
+            keyboardInfo = await fetchKeyboardInfo("Tofu 65% Aluminum");
             alert("The model for the keyboard case selected has not yet been created. Defaulting to Tofu 65% model");
         }
-        this.keyboardInfo = kbdInfo;
-        this.keycapsInfo = await fetchKeycapsInfo(this.props.selectedItems["Keycaps"].name);
+        const keycapsInfo = await fetchKeycapsInfo(this.props.selectedItems["Keycaps"].name);
 
-        await this.loadKeyboard("cherry");
+        const { keyRenderInstructions, ...rest } = await this.loadKeyboard("cherry", progsInfo, keyboardInfo, keycapsInfo);
+
+        const eye = {
+            position: vec3.fromValues(0, 30, 30),
+            lookAt: vec3.normalize(vec3.create(), vec3.fromValues(0, -1, -1)),
+            lookUp: vec3.normalize(vec3.create(), vec3.fromValues(0, 1, -1)),
+            yAngle: Math.PI / 4
+        };
+        const originalKeycapColors = keyRenderInstructions.map(({ keycapColor, legendColor }) => ({ keycapColor, legendColor }));
+        
+        this.kbdRenderData = {
+            eye, progsInfo, keyboardInfo, keycapsInfo, keyRenderInstructions, originalKeycapColors, 
+            alphasInSet: new Set(), modsInSet: new Set(), accentsInSet: new Set(), tick: null,
+            ...rest
+        };
+
+        window.addEventListener("resize", this.handleResizeCanvas);
+        canvas.addEventListener("wheel", this.handleCanvasWheel);
         
         this.handleResizeCanvas();
         this.renderScene();
@@ -562,9 +553,9 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
     componentWillUnmount() {
         window.removeEventListener("resize", this.handleResizeCanvas);
         this.webGlCanvas.current!.removeEventListener("wheel", this.handleCanvasWheel);
-        if (this.tick) {
-            clearInterval(this.tick);
-            this.tick = null;
+        if (this.kbdRenderData.tick) {
+            clearInterval(this.kbdRenderData.tick);
+            this.kbdRenderData.tick = null;
         }
     }
 

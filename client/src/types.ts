@@ -24,7 +24,7 @@ export interface AttribInfo {
 
 export interface WebGLProgramInfo {
     program: WebGLProgram;
-    attribs: Record<string, AttribInfo>;
+    attribsInfo: Record<string, AttribInfo>;
     uniformLocs: Record<string, WebGLUniformLocation>;
     buffers: Record<string, WebGLBufferInfo>;
 }
@@ -36,7 +36,6 @@ export interface WebGLProgramsInfo {
     selection: WebGLProgramInfo;
 }
 
-// TODO fix anys
 export interface KeyRenderInstruction extends KeycapColor {
     modelIdentifier: string;
     keysize: number;
@@ -86,7 +85,7 @@ export interface FieldInfo {
 
 export interface SingleProperty {
     type: "normal";
-    value: string;
+    value: any; // TODO look into this
 }
 
 export const NO_SELECTION = "-- select an option --";

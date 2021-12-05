@@ -6,7 +6,7 @@ import { Filter, NumRangeFilter, SelectFilter } from "../../types";
 import "./ItemSelectionFilters.scss";
 
 interface ItemSelectionFiltersProps {
-    filters: Filter[]; // TODO
+    filters: Filter[];
     onUpdateNumericFilter: (fieldName: string, low: number, high: number) => void;
     onUpdateSelectionFilter: (fieldName: string, option: string) => void;
 }

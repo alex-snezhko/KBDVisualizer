@@ -71,8 +71,8 @@ export function loadTexture(gl: WebGLRenderingContext, imgPath: string) {
 export function renderObject(gl: WebGLRenderingContext, progInfo: WebGLProgramInfo, buffers: WebGLBufferInfo, uniformSetters: (() => void)[]) {
     gl.useProgram(progInfo.program);
 
-    for (const attribName in progInfo.attribs) {
-        const attrib = progInfo.attribs[attribName];
+    for (const attribName in progInfo.attribsInfo) {
+        const attrib = progInfo.attribsInfo[attribName];
         gl.enableVertexAttribArray(attrib.loc);
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers[attrib.bufferName]!);
         gl.vertexAttribPointer(attrib.loc, ...attrib.vapParams);
@@ -83,12 +83,12 @@ export function renderObject(gl: WebGLRenderingContext, progInfo: WebGLProgramIn
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.triangles);
     gl.drawElements(gl.TRIANGLES, buffers.numTriangles * 3, gl.UNSIGNED_SHORT, 0);
 
-    for (const attribName in progInfo.attribs) {
-        gl.disableVertexAttribArray(progInfo.attribs[attribName].loc);
+    for (const attribName in progInfo.attribsInfo) {
+        gl.disableVertexAttribArray(progInfo.attribsInfo[attribName].loc);
     }
 }
 
-export function setupShaders(gl: WebGLRenderingContext, progsInfo: WebGLProgramsInfo) {
+export function setupShaders(gl: WebGLRenderingContext): WebGLProgramsInfo | undefined {
     // ------------------------------------------------------------------
     // define source to be shared between untextured and textured shaders
     // ------------------------------------------------------------------
@@ -286,47 +286,49 @@ export function setupShaders(gl: WebGLRenderingContext, progsInfo: WebGLPrograms
     ]) {
         gl.compileShader(shader);
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert("Shader compilation error: " + gl.getShaderInfoLog(shader));
+            alert("WebGL shader compilation error: " + gl.getShaderInfoLog(shader));
             gl.deleteShader(shader);
             return;
         }
     }
 
-    const { textured, untextured, selection } = progsInfo;
-
     // create shader program and link
-    untextured.program = gl.createProgram()!;
-    gl.attachShader(untextured.program, vShaderUntextured);
-    gl.attachShader(untextured.program, fShaderUntextured);
+    const untexturedProgram = gl.createProgram()!;
+    gl.attachShader(untexturedProgram, vShaderUntextured);
+    gl.attachShader(untexturedProgram, fShaderUntextured);
 
-    textured.program = gl.createProgram()!;
-    gl.attachShader(textured.program, vShaderTextured);
-    gl.attachShader(textured.program, fShaderTextured);
+    const texturedProgram = gl.createProgram()!;
+    gl.attachShader(texturedProgram, vShaderTextured);
+    gl.attachShader(texturedProgram, fShaderTextured);
 
-    selection.program = gl.createProgram()!;
-    gl.attachShader(selection.program, vShaderSelection);
-    gl.attachShader(selection.program, fShaderSelection);
+    const selectionProgram = gl.createProgram()!;
+    gl.attachShader(selectionProgram, vShaderSelection);
+    gl.attachShader(selectionProgram, fShaderSelection);
 
-    for (const program of [untextured.program, textured.program, selection.program]) {
+    for (const program of [untexturedProgram, texturedProgram, selectionProgram]) {
         gl.linkProgram(program);
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            alert("Shader program linking error: " + gl.getProgramInfoLog(program));
+            alert("WebGL shader program linking error: " + gl.getProgramInfoLog(program));
             return;
         }
     }
 
-    function assignLocations(progInfo: WebGLProgramInfo, attribs: Record<string, Omit<AttribInfo, "loc">>, uniforms: string[]) {
+    function assignLocations(program: WebGLProgram, attribs: Record<string, Omit<AttribInfo, "loc">>, uniforms: string[]) {
+        const attribsInfo: Record<string, AttribInfo> = {};
         for (const attribName in attribs) {
             const attribInfo = attribs[attribName];
-            progInfo.attribs[attribName] = {
-                loc: gl.getAttribLocation(progInfo.program, attribName),
+            attribsInfo[attribName] = {
+                loc: gl.getAttribLocation(program, attribName),
                 ...attribInfo
             };
         }
 
+        const uniformLocs: Record<string, WebGLUniformLocation> = {};
         for (const uniformName of uniforms) {
-            progInfo.uniformLocs[uniformName] = gl.getUniformLocation(progInfo.program, uniformName)!;
+            uniformLocs[uniformName] = gl.getUniformLocation(program, uniformName)!;
         }
+
+        return { attribsInfo, uniformLocs };
     }
 
     // vapParams: the parameters that will be passed into gl.vertexAttribPointer when buffer binding
@@ -334,21 +336,35 @@ export function setupShaders(gl: WebGLRenderingContext, progsInfo: WebGLPrograms
     const N_INFO: Omit<AttribInfo, "loc"> = { bufferName: "normals", vapParams: [3, gl.FLOAT, false, 0, 0] };
     const UV_INFO: Omit<AttribInfo, "loc"> = { bufferName: "uvs", vapParams: [2, gl.FLOAT, false, 0, 0] };
 
-    assignLocations(
-        untextured,
-        { aVertexPosition: V_INFO, aVertexNormal: N_INFO },
-        ["uColor", "uEyePosition", "uModelMat", "uMVPMat"]
-    );
+    const untextured: WebGLProgramInfo = {
+        program: untexturedProgram,
+        buffers: {},
+        ...assignLocations(
+            untexturedProgram,
+            { aVertexPosition: V_INFO, aVertexNormal: N_INFO },
+            ["uColor", "uEyePosition", "uModelMat", "uMVPMat"]
+        )
+    };
 
-    assignLocations(
-        textured,
-        { aVertexPosition: V_INFO, aVertexNormal: N_INFO, aVertexUV: UV_INFO },
-        ["uColor", "uEyePosition", "uModelMat", "uMVPMat", "uTexture", "uTextureColor", "uIsBlinking", "uBlinkProportion"]
-    );
+    const textured: WebGLProgramInfo = {
+        program: texturedProgram,
+        buffers: {},
+        ...assignLocations(
+            texturedProgram,
+            { aVertexPosition: V_INFO, aVertexNormal: N_INFO, aVertexUV: UV_INFO },
+            ["uColor", "uEyePosition", "uModelMat", "uMVPMat", "uTexture", "uTextureColor", "uIsBlinking", "uBlinkProportion"]
+        )
+    };
 
-    assignLocations(
-        selection,
-        { aVertexPosition: V_INFO },
-        ["uModelMat", "uMVPMat", "uObjectId"]
-    );
+    const selection: WebGLProgramInfo = {
+        program: selectionProgram,
+        buffers: {},
+        ...assignLocations(
+            selectionProgram,
+            { aVertexPosition: V_INFO },
+            ["uModelMat", "uMVPMat", "uObjectId"]
+        )
+    };
+
+    return { untextured, textured, selection };
 }
