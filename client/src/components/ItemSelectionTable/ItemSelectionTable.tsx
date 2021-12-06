@@ -62,7 +62,8 @@ function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelect }: ItemSele
         const selections: Record<string, SelectionPropertyOption> = {};
         for (const fieldInfo of extraFieldInfo) {
             const fieldData = item[fieldInfo.name] as ItemProperty;
-            if (fieldData.type === "selection") {
+            const isSelectionProperty = typeof fieldData === "object" && "type" in fieldData && fieldData.type === "selection";
+            if (isSelectionProperty) {
                 selections[fieldInfo.name] = NO_SELECTION;
             }
         }
@@ -137,13 +138,10 @@ function ItemSelectionCell({ item, selections, fieldInfo, onSelectOption }: Item
     // the actual data of this item
     const data = item[fieldName] as ItemProperty;
 
-    if (data === undefined) {
-        return null;
-    }
-
     let content;
-    if (data.type === "normal") {
-        content = fieldInfo.display(data.value);
+    const isSimpleProperty = !(typeof data === "object" && "type" in data);
+    if (isSimpleProperty) {
+        content = fieldInfo.display(data.toString());
     } else if (data.type === "multiple") {
         content = data.values.join(", ");
     } else if (data.type === "selection") {

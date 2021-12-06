@@ -6,9 +6,15 @@ import { renderObject, loadTexture, loadGLBuffers, setupShaders, rotateView } fr
 import { ACCENTS, ALPHAS, SPECIAL_KEYCAP_IDENTIFIERS, SPECIAL_NUM_UNITS } from "../../utils/keyboardComponents";
 
 import "./KeyboardRender.scss";
-import { Eye, KeyboardInfo, KeycapColor, KeycapsInfo, KeyRenderInstruction, WebGLProgramsInfo, ValidSelectedItems, SingleProperty } from "../../types";
+import { Eye, KeyboardInfo, KeycapColor, KeycapsInfo, KeyRenderInstruction, WebGLProgramsInfo, ValidSelectedItems, Color } from "../../types";
 
-const toColor = (hex: string) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)].map(h => Number("0x" + h) / 255);
+function toColor(hex: string): Color {
+    const num = (h: string) => Number("0x" + h) / 255;
+    const r = num(hex.slice(1, 3));
+    const g = num(hex.slice(3, 5));
+    const b = num(hex.slice(5));
+    return [r, g, b];
+} 
 
 // To-do list:
 // different cases
@@ -37,15 +43,19 @@ const toColor = (hex: string) => [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5)
 
 // TODO refactor this clusterfuck of a file
 
+interface KeysInSet {
+    alphasInSet: Set<string>;
+    modsInSet: Set<string>;
+    accentsInSet: Set<string>;
+}
+
 interface KbdRenderData {
     eye: Eye;
     keyboardInfo: KeyboardInfo;
     keycapsInfo: KeycapsInfo;
     progsInfo: WebGLProgramsInfo;
 
-    alphasInSet: Set<string>;
-    modsInSet: Set<string>;
-    accentsInSet: Set<string>;
+    keysInSet: KeysInSet;
 
     keyRenderInstructions: KeyRenderInstruction[];
     // colors of keycaps from set, to be reverted to upon cancel of customization
@@ -60,8 +70,8 @@ interface KeyboardRenderState {
     increasing: boolean;
     highlightKeys: boolean;
     fullCustom: boolean;
-    keycapColor: string;
-    legendColor: string;
+    selectedKeycapColor: string;
+    selectedLegendColor: string;
 }
 
 interface KeyboardRenderProps {
@@ -83,8 +93,8 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
 
             highlightKeys: false,
             fullCustom: false,
-            keycapColor: "#000000",
-            legendColor: "#ffffff"
+            selectedKeycapColor: "#000000",
+            selectedLegendColor: "#ffffff"
         };
 
         this.handleCanvasClick = this.handleCanvasClick.bind(this);
@@ -96,8 +106,9 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         this.handleResetKeycaps = this.handleResetKeycaps.bind(this);
     }
 
-    getKeycapColorOptions(key: string, keycapsInfo: KeycapsInfo) {
-        const { alphasInSet, modsInSet, accentsInSet } = this.kbdRenderData;
+    getKeycapColorOptions(key: string, keycapsInfo: KeycapsInfo, keysInSet: KeysInSet) {
+        const { alphasInSet, modsInSet, accentsInSet } = keysInSet;
+
         // keep a list of all possible color options available for this keycap
         const colorOptions = [];
     
@@ -193,8 +204,8 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
 
             const stabOffset = STAB_OFFSETS[instr.keysize];
             if (stabOffset) {
-                const colorArr = this.props.selectedItems["Stabilizers"]["color_arr"] as SingleProperty;
-                const color = (colorArr.value as number[]).slice(0, 3);
+                const colorArr = this.props.selectedItems["Stabilizers"]["color_arr"] as Color;
+                const color = colorArr.slice(0, 3);
                 const renderStab = (offset: vec3) => {
                     const offsetMat = mat4.fromTranslation(mat4.create(), offset);
                     const transformation = mat4.multiply(mat4.create(), offsetMat, instr.transformation);
@@ -211,8 +222,8 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
             }
     
             // render keyswitch
-            const colorArr = this.props.selectedItems["Switches"]["color_arr"] as SingleProperty;
-            const color = (colorArr.value as number[]).slice(0, 3);
+            const colorArr = this.props.selectedItems["Switches"]["color_arr"] as Color;
+            const color = colorArr.slice(0, 3);
             renderObject(gl, progsInfo.untextured, progsInfo.untextured.buffers["switch"], [
                 () => gl.uniform3f(utUniformLoc("uEyePosition"), eye.position[0], eye.position[1], eye.position[2]),
                 () => gl.uniformMatrix4fv(utUniformLoc("uMVPMat"), false, modelViewProjMat),
@@ -301,8 +312,8 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
                 const key = this.kbdRenderData.objectIdToKey[objectId];
 
                 if (this.state.fullCustom) {
-                    key.keycapColor = toColor(this.state.keycapColor);
-                    key.legendColor = toColor(this.state.legendColor);
+                    key.keycapColor = toColor(this.state.selectedKeycapColor);
+                    key.legendColor = toColor(this.state.selectedLegendColor);
                 } else {
                     key.optionSelected = (key.optionSelected + 1) % key.colorOptions.length;
 
@@ -364,12 +375,12 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
     }
 
     handleColorMultiple(which: "alphas" | "mods" | "accents") {
-        const { alphasInSet, modsInSet, accentsInSet } = this.kbdRenderData;
+        const { alphasInSet, modsInSet, accentsInSet } = this.kbdRenderData.keysInSet;
         const keys = { "alphas": alphasInSet, "mods": modsInSet, "accents": accentsInSet }[which];
         for (const keyName of keys) {
             const keyObj = this.kbdRenderData.keyNameToKeyObj[keyName];
-            keyObj.keycapColor = toColor(this.state.keycapColor);
-            keyObj.legendColor = toColor(this.state.legendColor);
+            keyObj.keycapColor = toColor(this.state.selectedKeycapColor);
+            keyObj.legendColor = toColor(this.state.selectedLegendColor);
         }
 
         this.renderScene();
@@ -393,6 +404,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         const { gl } = this;
 
         const keyRenderInstructions: KeyRenderInstruction[] = [];
+        const keysInSet = { alphasInSet: new Set<string>(), modsInSet: new Set<string>(), accentsInSet: new Set<string>() };
         const keyNameToKeyObj: Record<string, KeyRenderInstruction> = {};
         const objectIdToKey: Record<number, KeyRenderInstruction> = {};
         // ---------------------------------------------------------------------------
@@ -455,7 +467,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
                     transformation: finalTransformationMat,
                     legendTexture: texture,
                     objectId,
-                    ...this.getKeycapColorOptions(key, keycapsInfo),
+                    ...this.getKeycapColorOptions(key, keycapsInfo, keysInSet),
                 };
     
                 objectIdToKey[objectId] = keycapObj;
@@ -488,7 +500,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
             console.error(`Error fetching some or all resources requested: ${err}`);
         }
 
-        return { keyRenderInstructions, keyNameToKeyObj, objectIdToKey };
+        return { keyRenderInstructions, keysInSet, keyNameToKeyObj, objectIdToKey };
     }
 
     async componentDidMount() {
@@ -532,11 +544,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         };
         const originalKeycapColors = keyRenderInstructions.map(({ keycapColor, legendColor }) => ({ keycapColor, legendColor }));
         
-        this.kbdRenderData = {
-            eye, progsInfo, keyboardInfo, keycapsInfo, keyRenderInstructions, originalKeycapColors, 
-            alphasInSet: new Set(), modsInSet: new Set(), accentsInSet: new Set(), tick: null,
-            ...rest
-        };
+        this.kbdRenderData = { eye, progsInfo, keyboardInfo, keycapsInfo, keyRenderInstructions, originalKeycapColors, tick: null, ...rest };
 
         window.addEventListener("resize", this.handleResizeCanvas);
         canvas.addEventListener("wheel", this.handleCanvasWheel);
@@ -575,13 +583,13 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
                             <button onClick={this.handleResetKeycaps}>Reset</button>
                             <div>
                                 {/* <div className="color-picker"> */}
-                                <input type="color" id="keycap-color" value={this.state.keycapColor}
-                                    onChange={e => this.setState({ keycapColor: e.target.value })} />
+                                <input type="color" id="keycap-color" value={this.state.selectedKeycapColor}
+                                    onChange={e => this.setState({ selectedKeycapColor: e.target.value })} />
                                 <label htmlFor="keycap-color">Keycap Color</label>
                                 {/* </div> */}
                                 {/* <div className="color-picker"> */}
-                                <input type="color" id="legend-color" value={this.state.legendColor}
-                                    onChange={e => this.setState({ legendColor: e.target.value })} />
+                                <input type="color" id="legend-color" value={this.state.selectedLegendColor}
+                                    onChange={e => this.setState({ selectedLegendColor: e.target.value })} />
                                 <label htmlFor="legend-color">Legend Color</label>
                                 {/* </div> */}
                             </div>

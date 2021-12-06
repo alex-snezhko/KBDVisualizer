@@ -78,7 +78,7 @@ export function ItemSelection({ onSelect }: ItemSelectionProps) {
                     return { ...filter, value: filter.value.map(option => ({ option, selected: true })) };
                 case "selectionAllOf":
                     return { ...filter, value: filter.value.map(option => ({ option, selected: false })) };
-                default:
+                case "numeric":
                     return filter;
                 }
             });
@@ -88,24 +88,17 @@ export function ItemSelection({ onSelect }: ItemSelectionProps) {
 
     // update items
     useEffect(() => {
-        (async () => {
-            // TODO make this cleaner
-            if (!filters) {
-                return;
+        const urlParams: Record<string, string> = { sortBy };
+        for (const filter of filters) {
+            if (filter.filterType === "numeric") {
+                urlParams[filter.fieldName] = `${filter.value.low},${filter.value.high}`;
+            } else {
+                urlParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(selected => selected.option).join(",");
             }
+        }
 
-            const urlParams: Record<string, string> = { sortBy };
-            for (const filter of filters) {
-                if (filter.filterType === "numeric") {
-                    urlParams[filter.fieldName] = `${filter.value.low},${filter.value.high}`;
-                } else {
-                    urlParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(selected => selected.option).join(",");
-                }
-            }
-
-            const fetchedItems = await fetchItems(itemType, urlParams);
-            setItems(fetchedItems);
-        })();
+        fetchItems(itemType, urlParams)
+            .then(setItems);
     }, [filters, sortBy]);
 
     if (items.length === 0) {

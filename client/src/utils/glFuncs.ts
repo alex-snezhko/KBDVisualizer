@@ -61,9 +61,8 @@ export function loadTexture(gl: WebGLRenderingContext, imgPath: string) {
             console.error(`Unable to fetch image ${imgPath}`);
             resolve(img);
         };
-        // TODO
-        // import(`@assets/${imgPath}`)
-        //     .then(({ default: src }) => img.src = src);
+        import(`@assets/${imgPath}`)
+            .then(({ default: src }) => img.src = src);
     });
 
     return { loadTexturePromise, texture };

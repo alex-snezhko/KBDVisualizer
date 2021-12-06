@@ -36,6 +36,13 @@ export interface WebGLProgramsInfo {
     selection: WebGLProgramInfo;
 }
 
+export type Color = [number, number, number];
+
+export interface KeycapColor {
+    keycapColor: Color;
+    legendColor: Color;
+}
+
 export interface KeyRenderInstruction extends KeycapColor {
     modelIdentifier: string;
     keysize: number;
@@ -64,11 +71,6 @@ export interface KeyboardInfo {
     }[];
 }
 
-export interface KeycapColor {
-    keycapColor: number[];
-    legendColor: number[];
-}
-
 export interface KeycapsInfo {
     font: "standard";
     alphas: KeycapColor;
@@ -80,13 +82,14 @@ export interface KeycapsInfo {
 
 export interface FieldInfo {
     name: string;
-    display: (x: string) => string
+    display: (x: string) => string;
 }
 
-export interface SingleProperty {
-    type: "normal";
-    value: any; // TODO look into this
-}
+// export interface SingleProperty {
+//     type: "normal";
+//     value: any; // TODO look into this
+// }
+export type SimpleProperty = string | number | Color;
 
 export const NO_SELECTION = "-- select an option --";
 
@@ -107,7 +110,7 @@ export interface MultipleProperty {
     values: string[];
 }
 
-export type ItemProperty = SingleProperty | SelectionProperty | MultipleProperty;
+export type ItemProperty = SimpleProperty | SelectionProperty | MultipleProperty;
 
 export interface Item {
     name: string;

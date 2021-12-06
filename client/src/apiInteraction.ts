@@ -1,15 +1,21 @@
+import axios from "axios";
+
 import { FilterRange, GroupBuyItem, Item, KeyboardInfo, KeycapsInfo, ObjectModel, SelectedItems } from "./types";
 
-const apiBaseUrl = process.env.NODE_ENV === "development" ?
-    "http://localhost:3000" :
-    "https://kbd-visualizer.herokuapp.com";
+const apiBaseUrl = process.env.NODE_ENV === "production"
+    ? "https://kbd-visualizer.herokuapp.com"
+    : "http://localhost:3000";
 
 async function fetchJson<T>(route: string, urlParams?: Record<string, string>): Promise<T> {
-    const res = await fetch(apiBaseUrl + route + new URLSearchParams(urlParams).toString());
-    if (!res.ok) {
-        throw new Error(`Failed to execute fetch to URL ${apiBaseUrl}${route}. ${res.status}: ${res.statusText}`);
+    const res = await axios.get<T>(route, {
+        baseURL: apiBaseUrl,
+        params: urlParams,
+        timeout: 1500
+    });
+    if (res.status !== 200) {
+        throw new Error(`Fetch to URL ${apiBaseUrl}${route} unsuccessful. ${res.status}: ${res.statusText}`);
     }
-    return await (res.json() as Promise<T>);
+    return res.data;
 }
 
 
