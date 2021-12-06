@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+// const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -14,11 +15,6 @@ module.exports = {
   devtool: 'inline-source-map',
   module: {
     rules: [
-      {
-        test: /\.jsx?$/,
-        exclude: /node_modules/,
-        use: ['source-map-loader']
-      },
       {
         test: /\.tsx?$/,
         exclude: /node_modules/,
@@ -54,14 +50,21 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.scss'],
     alias: {
-      '@resources': path.resolve(__dirname, 'resources')
+      '@assets': path.resolve(__dirname, 'assets')
     }
   },
   plugins: [
-    new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'src', 'index.html') }),
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, 'public', 'index.html'),
+      favicon: path.resolve(__dirname, 'public', 'favicon.ico')
+    }),
     new MiniCssExtractPlugin({
       filename: '[name].css',
       chunkFilename: '[id].css'
-    })
-  ]
+    }),
+    // new BundleAnalyzerPlugin()
+  ],
+  devServer: {
+    historyApiFallback: true
+  }
 };

@@ -2,22 +2,34 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "command": "npm start",
-            "name": "Run npm start",
+            "type": "node",
             "request": "launch",
-            "type": "node-terminal"
+            "name": "Run API",
+            "cwd": "${workspaceFolder}/server",
+            "program": "${workspaceFolder}/server/server.ts",
+            // "preLaunchTask": "npm run build",
+            "outFiles": [
+                "${cwd}/dist/**/*.js",
+                "!**/node_modules/**"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
         },
         {
             "type": "pwa-chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
             "url": "http://localhost:8080",
-            "webRoot": "${workspaceFolder}",
+            "webRoot": "${workspaceFolder}/src",
             "sourceMaps": true,
             "skipFiles": [
                 "${workspaceRoot}/node_modules/**/*.js",
                 "<node_internals>/**/*.js"
-            ]
+            ],
+            "sourceMapPathOverrides": {
+                "webpack://${workspaceFolderBasename}/*": "${workspaceFolder}/*"
+            }
         },
         {
             "type": "firefox",

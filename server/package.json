@@ -4,8 +4,13 @@
   "description": "KBDVisualizer server-side code",
   "main": "api.js",
   "scripts": {
-    "start": "node api.ts",
-    "dev": "nodemon api.ts"
+    "build": "tsc",
+    "start": "node dist/server.ts",
+    "dev": "nodemon server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexsnezhko3/KBDVisualizer.git"
   },
   "author": "Alex Snezhko",
   "license": "ISC",

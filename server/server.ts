@@ -30,7 +30,7 @@ app.get("/activeGroupBuys", async (req, res) => {
 
 app.get("/models/:modelPath(*)", (req, res) => {
     const { modelPath } = req.params;
-    res.sendFile(path.resolve(__dirname, `resources/models/${modelPath}.json`));
+    res.sendFile(path.resolve(__dirname, `assets/models/${modelPath}.json`));
 });
 
 app.get("*", (req, res) => {

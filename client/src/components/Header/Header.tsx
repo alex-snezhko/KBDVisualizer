@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-import keyboardIcon from "@resources/keyboard.png";
+import keyboardIcon from "@assets/keyboard.png";
 import "./Header.scss";
 
 export const Header = () => (

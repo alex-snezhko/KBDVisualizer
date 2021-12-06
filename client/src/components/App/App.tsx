@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
-import { Login } from "../Login/Login";
-import { SignUp } from "../SignUp/SignUp";
+// import { Login } from "../Login/Login";
+// import { SignUp } from "../SignUp/SignUp";
 import { Header } from "../Header/Header";
 import { GroupBuys } from "../GroupBuys/GroupBuys";
 import { ItemSelection } from "../ItemSelection/ItemSelection";
@@ -26,7 +26,7 @@ const emptyItems: SelectedItems = {
 // TODO decide on "part" or "item"
 
 export function App() {
-    const [selectedItems, setSelectedItems] = useState<SelectedItems>(emptyItems);
+    const [selectedItems, setSelectedItems] = useState(emptyItems);
     // TODO
     // const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit"].concat(ALL_PARTS).reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
 
@@ -100,8 +100,8 @@ export function App() {
                             (partType: ItemType, item: Item) => setSelectedItems({ ...selectedItems, [partType]: item })
                         } />}
                     />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<SignUp />} />
+                    {/* <Route path="/login" element={<Login />} /> */}
+                    {/* <Route path="/signup" element={<SignUp />} /> */}
                 </Routes>
             </main>
         </Router>
