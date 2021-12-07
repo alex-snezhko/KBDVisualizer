@@ -24,7 +24,7 @@ export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }: Sele
         </thead>
         <tbody>
             {/* TODO put Kit back once working properly */}
-            {/* {["Kit"].concat(ALL_PARTS).map(itemType => ( */}
+            {/* {["Kit", ...ALL_PARTS].map(itemType => ( */}
             {ALL_PARTS.map(itemType => {
                 const selectedItem = selectedItems[itemType];
                 return selectedItem && (

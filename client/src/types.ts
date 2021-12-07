@@ -61,6 +61,7 @@ export interface ObjectModel {
     triangles: number[][];
 }
 
+// TODO export from backend
 export interface KeyboardInfo {
     incline: number;
     color: number[];

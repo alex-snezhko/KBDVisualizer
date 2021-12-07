@@ -28,7 +28,7 @@ const emptyItems: SelectedItems = {
 export function App() {
     const [selectedItems, setSelectedItems] = useState(emptyItems);
     // TODO
-    // const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit"].concat(ALL_PARTS).reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
+    // const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit", ...ALL_PARTS].reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
 
     // TODO generate random config button
     useEffect(() => {

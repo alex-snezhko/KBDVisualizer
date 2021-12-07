@@ -2,15 +2,16 @@ import axios from "axios";
 
 import { FilterRange, GroupBuyItem, Item, KeyboardInfo, KeycapsInfo, ObjectModel, SelectedItems } from "./types";
 
-const apiBaseUrl = process.env.NODE_ENV === "production"
-    ? "https://kbd-visualizer.herokuapp.com"
-    : "http://localhost:3000";
+const isDevelopment = process.env.NODE_ENV !== "production";
+const apiBaseUrl = isDevelopment
+    ? "http://localhost:3000"
+    : "https://kbd-visualizer.herokuapp.com";
 
 async function fetchJson<T>(route: string, urlParams?: Record<string, string>): Promise<T> {
     const res = await axios.get<T>(route, {
         baseURL: apiBaseUrl,
         params: urlParams,
-        timeout: 1500
+        timeout: isDevelopment ? undefined : 1500
     });
     if (res.status !== 200) {
         throw new Error(`Fetch to URL ${apiBaseUrl}${route} unsuccessful. ${res.status}: ${res.statusText}`);
@@ -23,7 +24,8 @@ export const fetchKeyboardInfo = (name: string) => fetchJson<KeyboardInfo>(`/inf
 export const fetchKeycapsInfo = (name: string) => fetchJson<KeycapsInfo>(`/info/keycapsInfo/${encodeURIComponent(name)}`);
 
 export const fetchFilterRanges = (partType: string) => fetchJson<FilterRange[]>(`/items/${partType}/filterRanges`);
-export const fetchItems = (partType: string, urlParams: Record<string, string>) => fetchJson<Item[]>(`/items/${partType.toLowerCase()}/find`, urlParams);
+export const fetchItems = (partType: string, sortBy: string, filters: Record<string, string>) =>
+    fetchJson<Item[]>(`/items/${partType.toLowerCase()}/find`, { sortBy, ...filters });
 export const fetchItem = (partType: string, name: string) => fetchJson<Item>(`/items/${partType.toLowerCase()}/byname/${name}`);
 export const fetchRandomItemConfig = () => fetchJson<SelectedItems>("/items/randomConfig");
 

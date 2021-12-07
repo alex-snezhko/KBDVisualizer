@@ -16,7 +16,7 @@ export const ItemSelectionTable = ({ itemType, displayedItems, extraFieldInfo, o
         <table>
             <thead>
                 <tr>
-                    {["Name", "Base Price"].concat(extraFieldInfo.map(fieldInfo => displayName(fieldInfo.name)))
+                    {["Name", "Base Price", ...extraFieldInfo.map(fieldInfo => displayName(fieldInfo.name))]
                         .map(fieldName => <th key={fieldName}>{fieldName}</th>)
                     }
                 </tr>
@@ -150,7 +150,7 @@ function ItemSelectionCell({ item, selections, fieldInfo, onSelectOption }: Item
                 value={displayOption(selections[fieldName])}
                 onChange={handleSelectionChange}
             >
-                {[NO_SELECTION as SelectionPropertyOption].concat(data.options).map(opt => {
+                {[NO_SELECTION as SelectionPropertyOption, ...data.options].map(opt => {
                     const displayed = displayOption(opt);
                     return <option key={displayed} value={displayed}>{displayed}</option>;
                 })}

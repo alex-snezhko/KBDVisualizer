@@ -16,7 +16,7 @@ function getExtraFieldInfo(itemType: ItemType): FieldInfo[] {
     const g = (name: string) => ({ name, display: (x: string) => x + "g" });
 
     return {
-        "Kit": ["form_factor"].concat(ALL_PARTS).map(part => std(part)),
+        "Kit": ["form_factor", ...ALL_PARTS].map(part => std(part)),
         "Case": [std("form_factor"), std("material"), std("color"), std("mount_method")],
         "Plate": [std("form_factor"), std("material")],
         "PCB": [std("form_factor"), std("hot_swap"), std("backlight")],
@@ -88,16 +88,16 @@ export function ItemSelection({ onSelect }: ItemSelectionProps) {
 
     // update items
     useEffect(() => {
-        const urlParams: Record<string, string> = { sortBy };
+        const filterParams: Record<string, string> = {};
         for (const filter of filters) {
             if (filter.filterType === "numeric") {
-                urlParams[filter.fieldName] = `${filter.value.low},${filter.value.high}`;
+                filterParams[filter.fieldName] = `${filter.value.low},${filter.value.high}`;
             } else {
-                urlParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(selected => selected.option).join(",");
+                filterParams[filter.fieldName] = filter.value.filter(opt => opt.selected).map(selected => selected.option).join(",");
             }
         }
 
-        fetchItems(itemType, urlParams)
+        fetchItems(itemType, sortBy, filterParams)
             .then(setItems);
     }, [filters, sortBy]);
 
