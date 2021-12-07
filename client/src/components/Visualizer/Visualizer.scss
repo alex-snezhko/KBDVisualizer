@@ -3,20 +3,28 @@
 \* ----------------------------------------------- */
 @use "../../styles/styles.scss";
 
+#randomize-button {
+    @include styles.rounded-button(#d38a03);
+    display: block;
+    font-size: large;
+    padding: 6px 60px;
+    margin: 0 auto;
+}
+
 #selected-items-container {
     display: flex;
     // align-items: stretch;
     height: 100%;
     // width: 100%;
     // min-width: 1000px;
+}
 
-    & > *:last-child {
-        // flex-grow: 100;
-        width: 100%;
-        padding: 30px;
-        min-width: 400px;
-        // height: 100%;
-    }
+#render-container {
+    // flex-grow: 100;
+    width: 100%;
+    padding: 30px;
+    min-width: 400px;
+    // height: 100%;
 }
 
 #collapse-selected-items {

@@ -32,9 +32,12 @@ export function App() {
 
     // TODO generate random config button
     useEffect(() => {
-        fetchRandomItemConfig()
-        .then(items => setSelectedItems(items));
+        fetchRandomItemConfig().then(setSelectedItems);
     }, []);
+
+    function handleRandomize() {
+        fetchRandomItemConfig().then(setSelectedItems);
+    }
 
     function handleSelectItem(item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) {
         // TODO actually look up and get references to items if this is a kit
@@ -62,6 +65,10 @@ export function App() {
 
     }
 
+    function handleSelectGBItem(partType: ItemType, item: Item) {
+        setSelectedItems({ ...selectedItems, [partType]: item });
+    }
+
     function handleRemoveItem(itemType: ItemType) {
         // const filters = { ...compatibilityFilters };
         // for (const field in filters) {
@@ -87,18 +94,17 @@ export function App() {
                             selectedItems={selectedItems}
                             partsInKit={partsInKit}
                             onDelete={handleRemoveItem}
+                            onRandomize={handleRandomize}
                         />}
                     />
                     <Route path="/select-item/:itemType" element={
                         <ItemSelection
                             // compatibilityFilters={compatibilityFilters[match.params.itemType]}
-                            onSelect={handleSelectItem}
+                            onSelectItem={handleSelectItem}
                         />}
                     />
                     <Route path="/group-buys" element={
-                        <GroupBuys onSelectItem={
-                            (partType: ItemType, item: Item) => setSelectedItems({ ...selectedItems, [partType]: item })
-                        } />}
+                        <GroupBuys onSelectItem={handleSelectGBItem} />}
                     />
                     {/* <Route path="/login" element={<Login />} /> */}
                     {/* <Route path="/signup" element={<SignUp />} /> */}

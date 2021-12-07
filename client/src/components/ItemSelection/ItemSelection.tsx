@@ -16,7 +16,7 @@ function getExtraFieldInfo(itemType: ItemType): FieldInfo[] {
     const g = (name: string) => ({ name, display: (x: string) => x + "g" });
 
     return {
-        "Kit": ["form_factor", ...ALL_PARTS].map(part => std(part)),
+        "Kit": ["form_factor", ...ALL_PARTS].map(std),
         "Case": [std("form_factor"), std("material"), std("color"), std("mount_method")],
         "Plate": [std("form_factor"), std("material")],
         "PCB": [std("form_factor"), std("hot_swap"), std("backlight")],
@@ -29,10 +29,10 @@ function getExtraFieldInfo(itemType: ItemType): FieldInfo[] {
 const isItemType = (s: string): s is ItemType => (ALL_PARTS as string[]).includes(s);
 
 interface ItemSelectionProps {
-    onSelect: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
+    onSelectItem: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
 }
 
-export function ItemSelection({ onSelect }: ItemSelectionProps) {
+export function ItemSelection({ onSelectItem }: ItemSelectionProps) {
     const { itemType } = useParams();
     if (itemType === undefined || !isItemType(itemType)) {
         return null;
@@ -126,7 +126,9 @@ export function ItemSelection({ onSelect }: ItemSelectionProps) {
                     </select>
                 </div>
 
-                <ItemSelectionTable itemType={itemType} displayedItems={items} extraFieldInfo={extraFieldInfo} onSelect={onSelect} />
+                {items.length === 0
+                    ? <h3>No Items Found To Match Filters</h3>
+                    : <ItemSelectionTable itemType={itemType} displayedItems={items} extraFieldInfo={extraFieldInfo} onSelectItem={onSelectItem} />}
             </div>
         </React.Fragment>
     );

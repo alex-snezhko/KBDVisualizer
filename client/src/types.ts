@@ -86,10 +86,6 @@ export interface FieldInfo {
     display: (x: string) => string;
 }
 
-// export interface SingleProperty {
-//     type: "normal";
-//     value: any; // TODO look into this
-// }
 export type SimpleProperty = string | number | Color;
 
 export const NO_SELECTION = "-- select an option --";

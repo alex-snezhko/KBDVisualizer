@@ -8,30 +8,29 @@ interface ItemSelectionTableProps {
     itemType: ItemType;
     displayedItems: Item[];
     extraFieldInfo: FieldInfo[];
-    onSelect: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
+    onSelectItem: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
 }
 
-export const ItemSelectionTable = ({ itemType, displayedItems, extraFieldInfo, onSelect }: ItemSelectionTableProps) => (
-    displayedItems.length === 0 ? <h3>No Items Found To Match Filters</h3> : 
-        <table>
-            <thead>
-                <tr>
-                    {["Name", "Base Price", ...extraFieldInfo.map(fieldInfo => displayName(fieldInfo.name))]
-                        .map(fieldName => <th key={fieldName}>{fieldName}</th>)
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                {displayedItems.map(item =>
-                    <ItemSelectionRow
-                        key={item.name}
-                        item={item}
-                        itemType={itemType}
-                        extraFieldInfo={extraFieldInfo}
-                        onSelect={onSelect}
-                    />)}
-            </tbody>
-        </table>
+export const ItemSelectionTable = ({ itemType, displayedItems, extraFieldInfo, onSelectItem }: ItemSelectionTableProps) => (
+    <table>
+        <thead>
+            <tr>
+                {["Name", "Base Price", ...extraFieldInfo.map(({ name }) => displayName(name))]
+                    .map(fieldName => <th key={fieldName}>{fieldName}</th>)
+                }
+            </tr>
+        </thead>
+        <tbody>
+            {displayedItems.map(item =>
+                <ItemSelectionRow
+                    key={item.name}
+                    item={item}
+                    itemType={itemType}
+                    extraFieldInfo={extraFieldInfo}
+                    onSelectItem={onSelectItem}
+                />)}
+        </tbody>
+    </table>
 );
 
 // function that properly displays option text
@@ -54,10 +53,10 @@ interface ItemSelectionRowProps {
     item: Item;
     itemType: ItemType;
     extraFieldInfo: FieldInfo[];
-    onSelect: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
+    onSelectItem: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
 }
 
-function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelect }: ItemSelectionRowProps) {
+function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelectItem }: ItemSelectionRowProps) {
     function initSelections() {
         const selections: Record<string, SelectionPropertyOption> = {};
         for (const fieldInfo of extraFieldInfo) {
@@ -81,7 +80,7 @@ function ItemSelectionRow({ item, itemType, extraFieldInfo, onSelect }: ItemSele
         if (!allFieldsSelected(selections)) {
             alert("Please select a value for all options for this item");
         } else {
-            onSelect(item, selections, itemType);
+            onSelectItem(item, selections, itemType);
         }
     }
     

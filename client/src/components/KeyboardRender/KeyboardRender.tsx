@@ -173,7 +173,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
     }
 
     renderScene() {
-        const { gl, kbdRenderData: { eye, progsInfo } } = this;
+        const { gl, kbdRenderData: { eye, progsInfo, keyRenderInstructions } } = this;
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
@@ -190,7 +190,7 @@ export class KeyboardRender extends React.Component<KeyboardRenderProps, Keyboar
         ]);
     
         // render keys
-        for (const instr of this.kbdRenderData.keyRenderInstructions) {
+        for (const instr of keyRenderInstructions) {
             const modelViewProjMat = mat4.multiply(mat4.create(), viewProjMat, instr.transformation);
 
             const STAB_OFFSETS: Record<number, number> = {

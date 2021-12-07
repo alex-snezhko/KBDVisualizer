@@ -12,9 +12,10 @@ interface VisualizerProps {
     selectedItems: SelectedItems;
     partsInKit: ItemType[];
     onDelete: (itemType: ItemType) => void;
+    onRandomize: () => void;
 }
 
-export function Visualizer({ selectedItems, partsInKit, onDelete }: VisualizerProps) {
+export function Visualizer({ selectedItems, partsInKit, onDelete, onRandomize }: VisualizerProps) {
     const [collapsed, setCollapsed] = useState(false);
 
     const totalPrice = ALL_PARTS.reduce((total, part) => {
@@ -28,6 +29,7 @@ export function Visualizer({ selectedItems, partsInKit, onDelete }: VisualizerPr
         <div id="selected-items-container">
             {!collapsed && (
                 <div>
+                    <button id="randomize-button" onClick={onRandomize}>Randomize Configuration</button>
                     <SelectedItemsTable
                         partsInKit={partsInKit}
                         selectedItems={selectedItems}
@@ -46,7 +48,7 @@ export function Visualizer({ selectedItems, partsInKit, onDelete }: VisualizerPr
                 <div className="vertical-line" />
             </div>
 
-            <div>
+            <div id="render-container">
                 {!allPartsSelected
                     ? <h3>Select all parts to view keyboard render</h3>
                     : <KeyboardRender selectedItems={selectedItems as ValidSelectedItems} />}
