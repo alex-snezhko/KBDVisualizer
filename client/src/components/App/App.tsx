@@ -14,10 +14,8 @@ import { fetchRandomItemConfig } from "../../apiInteraction";
 
 import "./App.scss";
 
-// TODO decide on "part" or "item"
-
 export function App() {
-    const [selectedItems, setSelectedItems] = useState({
+    const [selectedItems, setSelectedItems] = useState<SelectedItems>({
         "Case": null,
         "Plate": null,
         "PCB": null,
@@ -26,7 +24,7 @@ export function App() {
         "Keycaps": null
     });
     // TODO
-    // const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit", ...ALL_PARTS].reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
+    // const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit", ...ALL_ITEM_TYPES].reduce((o, itemType) => Object.assign(o, { [itemType]: [] }), {}));
 
     // TODO generate random config button
     useEffect(() => {
@@ -63,8 +61,8 @@ export function App() {
 
     }
 
-    function handleSelectGBItem(partType: ItemType, item: Item) {
-        setSelectedItems({ ...selectedItems, [partType]: item });
+    function handleSelectGBItem(itemType: ItemType, item: Item) {
+        setSelectedItems({ ...selectedItems, [itemType]: item });
     }
 
     function handleRemoveItem(itemType: ItemType) {
@@ -78,8 +76,8 @@ export function App() {
     }
 
     // TODO
-    // const partsInKit = selectedItems["Kit"] === null ? [] : ALL_PARTS.filter(part => selectedItems["Kit"][part] !== undefined);
-    const partsInKit: ItemType[] = [];
+    // const itemsInKit = selectedItems["Kit"] === null ? [] : ALL_ITEM_TYPES.filter(itemType => selectedItems["Kit"][itemType] !== undefined);
+    const itemsInKit: ItemType[] = [];
 
     return (
         <Router>
@@ -90,7 +88,7 @@ export function App() {
                     <Route path="/" element={
                         <Visualizer
                             selectedItems={selectedItems}
-                            partsInKit={partsInKit}
+                            itemsInKit={itemsInKit}
                             onDelete={handleRemoveItem}
                             onRandomize={handleRandomize}
                         />}

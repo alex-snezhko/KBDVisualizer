@@ -63,7 +63,9 @@ module.exports = {
       filename: '[name].css',
       chunkFilename: '[id].css'
     }),
-    new ESLintPlugin()
+    new ESLintPlugin({
+      extensions: ['.ts', '.tsx']
+    })
     // new BundleAnalyzerPlugin()
   ],
   devServer: {

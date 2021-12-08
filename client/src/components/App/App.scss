@@ -40,7 +40,7 @@ main {
     white-space: nowrap;
 }
 
-/* Style button for selecting a part */
+/* Style button for selecting an item */
 
 .blue-button {
     @include styles.rounded-button(#4bc);

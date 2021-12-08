@@ -1,16 +1,19 @@
+CREATE TYPE IF NOT EXISTS item_status AS ENUM ('Interest Check', 'Group Buy - Active', 'Group Buy - Closed', 'Restocking');
+
 CREATE TABLE IF NOT EXISTS keyboard_kits (
     id              SERIAL PRIMARY KEY,
     name            VARCHAR (30) UNIQUE NOT NULL,
     image           VARCHAR NOT NULL,
     link            VARCHAR NOT NULL,
-    price           FLOAT NOT NULL,
+    price           FLOAT,
+    status          item_status NOT NULL,
     form_factor     VARCHAR (20) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS kit_parts (
+CREATE TABLE IF NOT EXISTS kit_items (
     item_id     INT NOT NULL,
-    part_type   VARCHAR (20) NOT NULL CHECK (part_type = 'case' OR part_type = 'plate' OR part_type = 'pcb'),
-    part_desc   VARCHAR (20) NOT NULL,
+    item_type   VARCHAR (20) NOT NULL CHECK (item_type IN ('case', 'plate', 'pcb')),
+    item_desc   VARCHAR (20) NOT NULL,
     color_arr   VARCHAR (40),
     extra_price FLOAT NOT NULL,
     FOREIGN KEY(item_id) REFERENCES keyboard_kits(id)
@@ -21,7 +24,8 @@ CREATE TABLE IF NOT EXISTS cases (
     name            VARCHAR (60) UNIQUE NOT NULL,
     image           VARCHAR NOT NULL,
     link            VARCHAR NOT NULL,
-    price           FLOAT NOT NULL,
+    price           FLOAT,
+    status          item_status NOT NULL,
     form_factor     VARCHAR (20) NOT NULL,
     mount_method    VARCHAR (20) NOT NULL,
     material        VARCHAR (20) NOT NULL
@@ -32,6 +36,7 @@ CREATE TABLE IF NOT EXISTS case_colors (
     color       VARCHAR (20) NOT NULL,
     color_arr   FLOAT[] NOT NULL,
     extra_price FLOAT NOT NULL,
+    PRIMARY KEY(item_id, color),
     FOREIGN KEY(item_id) REFERENCES cases(id)
 );
 
@@ -40,9 +45,10 @@ CREATE TABLE IF NOT EXISTS keycap_sets (
     name        VARCHAR (60) UNIQUE NOT NULL,
     image       VARCHAR NOT NULL,
     link        VARCHAR NOT NULL,
-    price       FLOAT NOT NULL,
-    legends     VARCHAR (20) CHECK (legends = 'Doubleshot' OR legends = 'Dye-sublimated'),
-    material    VARCHAR (20) CHECK (material = 'ABS' OR material = 'PBT')
+    price       FLOAT,
+    status          item_status NOT NULL,
+    legends     VARCHAR (20) CHECK (legends IN ('Doubleshot', 'Dye-sublimated')),
+    material    VARCHAR (20) CHECK (material IN ('ABS', 'PBT'))
 );
 
 CREATE TABLE IF NOT EXISTS keycap_colors (
@@ -57,8 +63,9 @@ CREATE TABLE IF NOT EXISTS switches (
     name            VARCHAR (30) UNIQUE NOT NULL,
     image           VARCHAR NOT NULL,
     link            VARCHAR NOT NULL,
-    price           FLOAT NOT NULL,
-    tactility       VARCHAR (20) CHECK (tactility = 'Linear' OR tactility = 'Tactile' OR tactility = 'Clicky' OR tactility = 'Silent Linear' OR tactility = 'Silent Tactile'),
+    price           FLOAT,
+    status          item_status NOT NULL,
+    tactility       VARCHAR (20) CHECK (tactility IN ('Linear', 'Tactile', 'Clicky', 'Silent Linear', 'Silent Tactile')),
     spring_weight   INT NOT NULL,
     act_dist        FLOAT NOT NULL,
     bot_dist        FLOAT NOT NULL,
@@ -70,7 +77,8 @@ CREATE TABLE IF NOT EXISTS plates (
     name            VARCHAR (30) UNIQUE NOT NULL,
     image           VARCHAR NOT NULL,
     link            VARCHAR NOT NULL,
-    price           FLOAT NOT NULL,
+    price           FLOAT,
+    status          item_status NOT NULL,
     form_factor     VARCHAR (20) NOT NULL,
     material        VARCHAR (20) NOT NULL
 );
@@ -80,9 +88,9 @@ CREATE TABLE IF NOT EXISTS pcbs (
     name            VARCHAR (30) UNIQUE NOT NULL,
     image           VARCHAR NOT NULL,
     link            VARCHAR NOT NULL,
-    price           FLOAT NOT NULL,
+    price           FLOAT,
     form_factor     VARCHAR (20) NOT NULL,
-    hot_swap        VARCHAR (3) NOT NULL CHECK (hot_swap = 'Yes' OR hot_swap = 'No'),
+    hot_swap        VARCHAR (3) NOT NULL CHECK (hot_swap IN ('Yes', 'No')),
     backlight       VARCHAR (20) NOT NULL
 );
 
@@ -91,8 +99,8 @@ CREATE TABLE IF NOT EXISTS stabilizers (
     name            VARCHAR (60) UNIQUE NOT NULL,
     image           VARCHAR NOT NULL,
     link            VARCHAR NOT NULL,
-    price           FLOAT NOT NULL,
-    mount_method    VARCHAR (20) NOT NULL CHECK (mount_method = 'PCB Screw-in' OR mount_method = 'PCB Clip-in' OR mount_method = 'Plate-mount'),
+    price           FLOAT,
+    mount_method    VARCHAR (20) NOT NULL CHECK (mount_method IN ('PCB Screw-in', 'PCB Clip-in', 'Plate-mount')),
     color_arr       FLOAT[] NOT NULL
 );
 
@@ -110,8 +118,8 @@ CREATE TABLE IF NOT EXISTS groupbuys (
     name        VARCHAR (60) PRIMARY KEY UNIQUE NOT NULL,
     image       VARCHAR NOT NULL,
     link        VARCHAR NOT NULL,
-    part_type   VARCHAR (20) CHECK (part_type = 'Keycaps' OR part_type = 'Switches' OR part_type = 'Keyboard'),
+    item_type   VARCHAR (20) CHECK (item_type IN ('Keycaps', 'Switches', 'Keyboard')),
     start_date  DATE NOT NULL,
     end_date    DATE NOT NULL,
-    price       FLOAT NOT NULL
+    price       FLOAT
 );

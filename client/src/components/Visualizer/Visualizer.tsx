@@ -3,27 +3,27 @@ import React, { useState } from "react";
 import { SelectedItemsTable } from "../SelectedItemsTable/SelectedItemsTable";
 import { KeyboardRender } from "../KeyboardRender/KeyboardRender";
 
-import { ALL_PARTS, money } from "../../utils/shared";
+import { ALL_ITEM_TYPES, money } from "../../utils/shared";
 import { SelectedItems, ItemType, ValidSelectedItems } from "../../types";
 
 import "./Visualizer.scss";
 
 interface VisualizerProps {
     selectedItems: SelectedItems;
-    partsInKit: ItemType[];
+    itemsInKit: ItemType[];
     onDelete: (itemType: ItemType) => void;
     onRandomize: () => void;
 }
 
-export function Visualizer({ selectedItems, partsInKit, onDelete, onRandomize }: VisualizerProps) {
+export function Visualizer({ selectedItems, itemsInKit, onDelete, onRandomize }: VisualizerProps) {
     const [collapsed, setCollapsed] = useState(false);
 
-    const totalPrice = ALL_PARTS.reduce((total, part) => {
-        const selectedItem = selectedItems[part];
+    const totalPrice = ALL_ITEM_TYPES.reduce((total, itemType) => {
+        const selectedItem = selectedItems[itemType];
         return total + (selectedItem !== null ? selectedItem.price : 0);
     }, 0);
 
-    const allPartsSelected = ALL_PARTS.every(part => selectedItems[part]);
+    const allItemsSelected = ALL_ITEM_TYPES.every(itemType => selectedItems[itemType]);
 
     return (
         <div id="selected-items-container">
@@ -31,7 +31,7 @@ export function Visualizer({ selectedItems, partsInKit, onDelete, onRandomize }:
                 <div>
                     <button id="randomize-button" onClick={onRandomize}>Randomize Configuration</button>
                     <SelectedItemsTable
-                        partsInKit={partsInKit}
+                        itemsInKit={itemsInKit}
                         selectedItems={selectedItems}
                         onDelete={onDelete}
                     />
@@ -49,8 +49,8 @@ export function Visualizer({ selectedItems, partsInKit, onDelete, onRandomize }:
             </div>
 
             <div id="render-container">
-                {!allPartsSelected
-                    ? <h3>Select all parts to view keyboard render</h3>
+                {!allItemsSelected
+                    ? <h3>Select a complete keyboard configuration to view render</h3>
                     : <KeyboardRender selectedItems={selectedItems as ValidSelectedItems} />}
             </div>
         </div>

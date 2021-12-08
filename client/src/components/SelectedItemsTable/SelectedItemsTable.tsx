@@ -2,17 +2,17 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Item, SelectedItems, ItemType } from "../../types";
 
-import { ALL_PARTS, money } from "../../utils/shared";
+import { ALL_ITEM_TYPES, money } from "../../utils/shared";
 
 import "./SelectedItemsTable.scss";
 
 interface SelectedItemsTableProps {
-    partsInKit: ItemType[];
+    itemsInKit: ItemType[];
     selectedItems: SelectedItems;
     onDelete: (itemType: ItemType) => void;
 }
 
-export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }: SelectedItemsTableProps) => (
+export const SelectedItemsTable = ({ itemsInKit, selectedItems, onDelete }: SelectedItemsTableProps) => (
     <table id="selected-item-table">
         <thead>
             <tr>
@@ -24,14 +24,14 @@ export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }: Sele
         </thead>
         <tbody>
             {/* TODO put Kit back once working properly */}
-            {/* {["Kit", ...ALL_PARTS].map(itemType => ( */}
-            {ALL_PARTS.map(itemType => {
+            {/* {["Kit", ...ALL_ITEM_TYPES].map(itemType => ( */}
+            {ALL_ITEM_TYPES.map(itemType => {
                 const selectedItem = selectedItems[itemType];
                 return selectedItem && (
                     <SelectedItemTableRow
                         key={itemType}
                         itemType={itemType}
-                        isPartInKit={partsInKit.includes(itemType)}
+                        isItemInKit={itemsInKit.includes(itemType)}
                         item={selectedItem}
                         onDelete={onDelete}
                     />
@@ -43,22 +43,22 @@ export const SelectedItemsTable = ({ partsInKit, selectedItems, onDelete }: Sele
 
 interface SelectedItemTableRowProps {
     itemType: ItemType;
-    isPartInKit: boolean;
+    isItemInKit: boolean;
     item: Item;
     onDelete: (itemType: ItemType) => void;
 }
 
-const SelectedItemTableRow = ({ itemType, isPartInKit, item, onDelete }: SelectedItemTableRowProps) => (
-    <tr className={isPartInKit ? "part-in-kit" : undefined}>
+const SelectedItemTableRow = ({ itemType, isItemInKit, item, onDelete }: SelectedItemTableRowProps) => (
+    <tr className={isItemInKit ? "item-in-kit" : undefined}>
         <td className="item-select-cell">
             <Link to={`select-item/${itemType}`}>
-                <button disabled={isPartInKit} className={`${/* TODO itemType === "Kit"  ? "orange": */"blue"}-button`}>
+                <button disabled={isItemInKit} className={`${/* TODO itemType === "Kit"  ? "orange": */"blue"}-button`}>
                     {itemType}
                 </button>
             </Link>
         </td>
         <td className="item-name-cell">
-            {isPartInKit ? "Included in kit" :
+            {isItemInKit ? "Included in kit" :
                 item &&
                 <a href={item.link} target="_blank" rel="noreferrer">
                     <div className="selected-item-image-container item-image-container">

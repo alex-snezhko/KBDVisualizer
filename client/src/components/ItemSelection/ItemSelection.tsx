@@ -4,14 +4,15 @@ import { useParams } from "react-router-dom";
 import { ItemSelectionTable } from "../ItemSelectionTable/ItemSelectionTable";
 import { ItemSelectionFilters } from "../ItemSelectionFilters/ItemSelectionFilters";
 
-import { fetchFilterRanges, fetchItemQuantity, fetchItems, fetchItemTypeInfo } from "../../apiInteraction";
+import { fetchFilterRanges, fetchItemQuantity, fetchItems } from "../../apiInteraction";
 
 import "./ItemSelection.scss";
 import { FieldInfo, Filter, Item, ItemType, NumRangeFilter, SelectFilter, ValidSelectionPropertyOption } from "../../types";
-import { ALL_PARTS } from "../../utils/shared";
+import { ALL_ITEM_TYPES } from "../../utils/shared";
 import { ItemSelectionPagination } from "../ItemSelectionPagination/ItemSelectionPagination";
+import { ItemSelectionSearch } from "../ItemSelectionSearch/ItemSelectionSearch";
 
-const isItemType = (s: string): s is ItemType => (ALL_PARTS as string[]).includes(s);
+const isItemType = (s: string): s is ItemType => (ALL_ITEM_TYPES as string[]).includes(s);
 
 interface ItemSelectionProps {
     onSelectItem: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
@@ -33,7 +34,7 @@ function getExtraFieldInfo(itemType: ItemType): FieldInfo[] {
     const g = (name: string) => ({ name, display: (x: string) => x + "g" });
 
     return {
-        "Kit": ["form_factor", ...ALL_PARTS].map(std),
+        "Kit": ["form_factor", ...ALL_ITEM_TYPES].map(std),
         "Case": [std("form_factor"), std("material"), std("color"), std("mount_method")],
         "Plate": [std("form_factor"), std("material")],
         "PCB": [std("form_factor"), std("hot_swap"), std("backlight")],
@@ -55,7 +56,7 @@ function getFilterParams(filters: Filter[]) {
     return filterParams;
 }
 
-function useFilters(itemType: ItemType) {
+function useFilters(itemType: ItemType): [Filter[] | undefined, (fieldName: string, low: number, high: number) => void, (fieldName: string, option: string) => void] {
     const [filters, setFilters] = useState<Filter[]>();
 
     function handleUpdateNumericFilter(fieldName: string, low: number, high: number) {
@@ -114,6 +115,7 @@ function ItemSelectionValid({ itemType, onSelectItem }: ItemSelectionValidProps)
     // const [filters, setFilters] = useState<Filter[]>();
     const [filters, setNumericFilter, setSelectionFilter] = useFilters(itemType);
     const [sortBy, setSortBy] = useState("alpha");
+    const [searchQuery, setSearchQuery] = useState("");
     const [numAllItems, setNumAllItems] = useState(0);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [pageNum, setPageNum] = useState(1);
@@ -124,10 +126,14 @@ function ItemSelectionValid({ itemType, onSelectItem }: ItemSelectionValidProps)
 
     // update items
     useEffect(() => {
+        if (filters === undefined) {
+            return;
+        }
+
         const filterParams = getFilterParams(filters);
-        fetchItems(itemType, sortBy, filterParams, itemsPerPage, pageNum)
+        fetchItems(itemType, searchQuery, sortBy, filterParams, itemsPerPage, pageNum)
             .then(setDisplayedItems);
-    }, [filters, sortBy, itemsPerPage, pageNum]);
+    }, [itemType, searchQuery, filters, sortBy, itemsPerPage, pageNum]);
 
     if (displayedItems === undefined) {
         return null;
@@ -138,23 +144,25 @@ function ItemSelectionValid({ itemType, onSelectItem }: ItemSelectionValidProps)
     return (
         <React.Fragment>
             <ItemSelectionFilters
-                filters={filters}
+                filters={filters!}
                 onUpdateNumericFilter={setNumericFilter}
                 onUpdateSelectionFilter={setSelectionFilter}
             />
 
             <div id="item-listing">
                 {/* TODO {props.compatibilityFilters.length !== 0 &&
-                    <h4 className="compatibility-message">Note: Only items compatible with currently selected parts are shown</h4>} */}
+                    <h4 className="compatibility-message">Note: Only items compatible with currently selected items are shown</h4>} */}
 
                 <div className="sort-by">
-                    Sort By:
+                    Sort By
                     <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
                         <option value="alpha">Name (Alphabetical)</option>
                         <option value="low-high">Price (Low to High)</option>
                         <option value="high-low">Price (High to Low)</option>
                     </select>
                 </div>
+
+                <ItemSelectionSearch onSearch={setSearchQuery} />
 
                 {displayedItems.length === 0
                     ? <h3>No Items Found To Match Filters</h3>
@@ -170,15 +178,9 @@ function ItemSelectionValid({ itemType, onSelectItem }: ItemSelectionValidProps)
                                 currPage={pageNum}
                                 itemsPerPage={itemsPerPage}
                                 numAllItems={numAllItems}
-                                onSwitchPages={(switchTo: number) => setPageNum(switchTo)}
+                                onSetItemsPerPage={setItemsPerPage}
+                                onSwitchPages={setPageNum}
                             />
-                            <p>Items Per Page</p>
-                            <select onChange={e => setItemsPerPage(parseInt(e.target.value))}>
-                                <option value={10}>10</option>
-                                <option value={25}>25</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
-                            </select>
                         </React.Fragment>
                     )}
             </div>

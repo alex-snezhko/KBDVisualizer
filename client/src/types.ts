@@ -166,20 +166,15 @@ export interface SelectFilterRange {
 
 export type FilterRange = NumRangeFilterRange | SelectFilterRange;
 
-export interface ItemTypeInfo {
-    itemQuantity: number;
-    filterRanges: FilterRange[];
-}
-
 export interface GroupBuyItem {
     name: string;
     link: string;
     image: string;
-    // itemType: string; // TODO partType
+    // itemType: string; // TODO itemType
     price: number;
     startDate: Date;
     endDate: Date; // TODO change from end_date and start_date
     end_date: string;
     start_date: string;
-    part_type: ItemType;
+    item_type: ItemType;
 }

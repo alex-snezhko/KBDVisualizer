@@ -2,7 +2,7 @@ import { ItemType } from "../types";
 
 export const money = (num: number) => "$" + num.toFixed(2);
 
-export const ALL_PARTS: ItemType[] = ["Case", "Plate", "PCB", "Stabilizers", "Switches", "Keycaps"];
+export const ALL_ITEM_TYPES: ItemType[] = ["Case", "Plate", "PCB", "Stabilizers", "Switches", "Keycaps"];
 
 export const displayName = (name: string) => (
     {
@@ -11,7 +11,7 @@ export const displayName = (name: string) => (
         "bot_dist": "Bottom-out Distance",
         "hot_swap": "Hot-swap"
     }[name] || name.split("_")
-                   .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                   .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                    .join(" ")
 );
 

@@ -1,8 +1,8 @@
 @use "../../styles/styles.scss";
 
 #selected-item-table {
-    /* Special class for selected parts that are in a kit */
-    .part-in-kit td {
+    /* Special class for selected items that are in a kit */
+    .item-in-kit td {
         color: darkgray
     }
 }
@@ -11,7 +11,7 @@
     @include styles.bordered-img-container(100px !important, 66px !important);
 }
 
-/* Style button for deleting a chosen part */
+/* Style button for deleting a chosen item */
 .delete-button {
     border-radius: 15px;
     border-width: 0;

@@ -48,11 +48,11 @@ function GBItem({ item, onSelectItem }: GroupBuyItemProps) {
     const hoursLeft = Math.floor(hoursDiff % 24);
 
     async function handleSelectItem() {
-        const partType = item["part_type"];
+        const itemType = item["item_type"];
         const name = item.name;
 
-        const chosenItem = await fetchItem(partType, name);
-        onSelectItem(partType, chosenItem);
+        const chosenItem = await fetchItem(itemType, name);
+        onSelectItem(itemType, chosenItem);
     }
 
     const startDate = new Date(item["start_date"]).toLocaleDateString("en-US");
@@ -70,7 +70,7 @@ function GBItem({ item, onSelectItem }: GroupBuyItemProps) {
             </a>
             <hr />
             <ul className="gb-info">
-                <li><b>Item type:</b> {item["part_type"]}</li>
+                <li><b>Item type:</b> {item["item_type"]}</li>
                 <li><b>Base price:</b> {money(item.price)}</li>
                 <li><b>Start date:</b> {startDate}</li>
                 <li><b>End date:</b> {endDate}</li>

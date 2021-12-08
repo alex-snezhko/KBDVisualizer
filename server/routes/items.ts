@@ -113,7 +113,7 @@ const tablesInfo: Record<ItemType, TableInfo> = {
     }
 };
 
-function constructFilters(filterArgs: Record<string, string>, tableInfo: TableInfo) {
+function constructWhereClause(filterArgs: Record<string, string>, tableInfo: TableInfo) {
     const { itemFilters, collectionData } = tableInfo;
 
     const filterQueryParams = [];
@@ -121,11 +121,15 @@ function constructFilters(filterArgs: Record<string, string>, tableInfo: TableIn
 
     for (const [fieldName, filterValue] of Object.entries(filterArgs)) {
         const filterValueArr = filterValue.split(",");
-        const filterType = itemFilters.find(x => x.fieldName === fieldName)!.filterType;
+        const filter = itemFilters.find(x => x.fieldName === fieldName);
+        if (filter === undefined) {
+            return;
+        }
+        const filterType = filter.filterType;
 
         const beginQueryParamNum = filterQueryParams.length + 1;
         if (filterType === "numeric") {
-            const filterValueNums = filterValueArr.map(x => Number(x));
+            const filterValueNums = filterValueArr.map(Number);
             filterValueNums.sort((a, b) => a - b);
             const [low, high] = filterValueNums;
 
@@ -169,15 +173,10 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
     const tableInfo = tablesInfo[itemType];
     const { table, fields, itemFilters, collectionData } = tableInfo;
 
-    // GET /items/{itemType}/info
-    // Returns info for an item type, such as quantity of items and filter ranges based on value ranges of items
-    //  - response: {
-    //      "itemQuantity": quanity of items
-    //      "filterRanges": ranges for filters
-    //    }
-    router.get(`/${itemType}/info`, async (req, res) => {
-        const { rows: [{ quant: itemQuantity }] } = await db.query(`SELECT COUNT(*) AS quant FROM ${table}`);
-
+    // GET /items/{itemType}/filterRanges
+    // Returns ranges of values of items for an item type to fill initial filter values
+    //  - response: ranges for filters
+    router.get(`/${itemType}/filterRanges`, async (req, res) => {
         const filterRanges = [];
         for (const { fieldName, filterType } of itemFilters) {
             let value;
@@ -196,7 +195,15 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
             filterRanges.push({ fieldName, filterType, value });
         }
 
-        res.json({ itemQuantity, filterRanges });
+        res.json(filterRanges);
+    });
+
+    // GET /items/{itemType}/quantity
+    // Returns total item quantity for an item type
+    //  - response: number of items
+    router.get(`/${itemType}/quantity`, async (req, res) => {
+        const { rows: [{ quantity }] } = await db.query(`SELECT COUNT(*) AS quantity FROM ${table}`);
+        res.json({ quantity: parseInt(quantity) });
     });
     
     // GET /items/{itemType}/find
@@ -206,7 +213,7 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
     //      - sortBy: what to sort by: price asc/desc or name by default
     //      - [filterArgs]: key: fieldName; value: range of acceptable values
     router.get(`/${itemType}/find`, async (req, res) => {
-        const { sortBy, ...filterArgs } = req.query as Record<string, string>;
+        const { sortBy, itemsPerPage, pageNum, ...filterArgs } = req.query as Record<string, string>;
 
         // const tablesToUse = [table, ...Object.values(collectionData).map(x => x.collectionTable)].join(", ");
         const collectionTableJoins = Object.values(collectionData).map(({ collectionTable }) => `JOIN ${collectionTable} ON item_id = id`);
@@ -220,18 +227,27 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
         });
         const fieldsToUse = [...fields, ...collectionFields].join(", ");
 
-        const { whereClause, filterQueryParams } = constructFilters(filterArgs, tableInfo);
+        const where = constructWhereClause(filterArgs, tableInfo);
+        if (where === undefined) {
+            return res.send(400);
+        }
+        const { whereClause, filterQueryParams } = where;
         
         const orderByString = {
             "low-high": "price",
             "high-low": "price DESC"
         }[sortBy] || "name";
 
+        const limit = parseInt(itemsPerPage);
+        const offset = limit * (parseInt(pageNum) - 1);
         const { rows } = await db.query(
            `SELECT ${fieldsToUse} FROM ${tablesToUse}
             ${whereClause}
             GROUP BY ${fields.join(", ")}
-            ORDER BY ${orderByString}`, filterQueryParams
+            ORDER BY ${orderByString}
+            LIMIT $${filterQueryParams.length + 1}
+            OFFSET $${filterQueryParams.length + 2}`,
+            [...filterQueryParams, limit, offset]
         );
 
         res.send(rows);
