@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
 // const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -62,6 +63,7 @@ module.exports = {
       filename: '[name].css',
       chunkFilename: '[id].css'
     }),
+    new ESLintPlugin()
     // new BundleAnalyzerPlugin()
   ],
   devServer: {

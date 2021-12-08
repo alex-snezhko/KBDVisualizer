@@ -52,6 +52,8 @@ function getActiveGroupBuys(data: string) {
 async function scrapeGroupBuys() {
     await db.query("DELETE FROM groupbuys WHERE end_date > CURRENT_DATE");
 
+    // change status of all groupbuy active to closed if needed
+
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     const MECHGB_URL = "https://www.mechgroupbuys.com";

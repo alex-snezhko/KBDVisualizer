@@ -14,19 +14,17 @@ import { fetchRandomItemConfig } from "../../apiInteraction";
 
 import "./App.scss";
 
-const emptyItems: SelectedItems = {
-    "Case": null,
-    "Plate": null,
-    "PCB": null,
-    "Stabilizers": null,
-    "Switches": null,
-    "Keycaps": null
-};
-
 // TODO decide on "part" or "item"
 
 export function App() {
-    const [selectedItems, setSelectedItems] = useState(emptyItems);
+    const [selectedItems, setSelectedItems] = useState({
+        "Case": null,
+        "Plate": null,
+        "PCB": null,
+        "Stabilizers": null,
+        "Switches": null,
+        "Keycaps": null
+    });
     // TODO
     // const [compatibilityFilters, setCompatibilityFilters] = useState(["Kit", ...ALL_PARTS].reduce((o, part) => Object.assign(o, { [part]: [] }), {}));
 

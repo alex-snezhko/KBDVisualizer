@@ -166,6 +166,11 @@ export interface SelectFilterRange {
 
 export type FilterRange = NumRangeFilterRange | SelectFilterRange;
 
+export interface ItemTypeInfo {
+    itemQuantity: number;
+    filterRanges: FilterRange[];
+}
+
 export interface GroupBuyItem {
     name: string;
     link: string;

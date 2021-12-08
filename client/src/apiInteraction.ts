@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { FilterRange, GroupBuyItem, Item, KeyboardInfo, KeycapsInfo, ObjectModel, SelectedItems } from "./types";
+import { FilterRange, GroupBuyItem, Item, ItemTypeInfo, KeyboardInfo, KeycapsInfo, ObjectModel, SelectedItems } from "./types";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const apiBaseUrl = isDevelopment
@@ -23,10 +23,12 @@ async function fetchJson<T>(route: string, urlParams?: Record<string, string>): 
 export const fetchKeyboardInfo = (name: string) => fetchJson<KeyboardInfo>(`/info/keyboardInfo/${encodeURIComponent(name)}`);
 export const fetchKeycapsInfo = (name: string) => fetchJson<KeycapsInfo>(`/info/keycapsInfo/${encodeURIComponent(name)}`);
 
-export const fetchFilterRanges = (partType: string) => fetchJson<FilterRange[]>(`/items/${partType}/filterRanges`);
-export const fetchItems = (partType: string, sortBy: string, filters: Record<string, string>) =>
-    fetchJson<Item[]>(`/items/${partType.toLowerCase()}/find`, { sortBy, ...filters });
-export const fetchItem = (partType: string, name: string) => fetchJson<Item>(`/items/${partType.toLowerCase()}/byname/${name}`);
+// export const fetchItemTypeInfo = (itemType: string) => fetchJson<ItemTypeInfo>(`/items/${itemType}/info`);
+export const fetchItemQuantity = (itemType: string) => fetchJson<number>(`/items/${itemType}/quantity`);
+export const fetchFilterRanges = (itemType: string) => fetchJson<FilterRange[]>(`/items/${itemType}/filterRanges`);
+export const fetchItems = (itemType: string, sortBy: string, filters: Record<string, string>, quantity: number, pageNum: number) =>
+    fetchJson<Item[]>(`/items/${itemType.toLowerCase()}/find`, { sortBy, ...filters, quantity: quantity.toString(), pageNum: pageNum.toString() });
+export const fetchItem = (itemType: string, name: string) => fetchJson<Item>(`/items/${itemType.toLowerCase()}/byname/${name}`);
 export const fetchRandomItemConfig = () => fetchJson<SelectedItems>("/items/randomConfig");
 
 export const fetchActiveGroupBuys = () => fetchJson<GroupBuyItem[]>("/activeGroupBuys");

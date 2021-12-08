@@ -7,7 +7,7 @@ type ItemType = "kit" | "case" | "keycaps" | "pcb" | "plate" | "stabilizers" | "
 
 interface TableInfo {
     table: string;
-    fields: ["name", "image", "link", "price", ...string[]]
+    fields: ["name", "image", "link", "price", "status", ...string[]]
     itemFilters: {
         fieldName: string;
         filterType: "numeric" | "selectionOneOf" | "selectionAllOf";
@@ -21,7 +21,7 @@ interface TableInfo {
     }>
 }
 
-const defaultFields: ["name", "image", "link", "price"] = ["name", "image", "link", "price"];
+const defaultFields: ["name", "image", "link", "price", "status"] = ["name", "image", "link", "price", "status"];
 
 const tablesInfo: Record<ItemType, TableInfo> = {
     "kit": {
@@ -65,7 +65,7 @@ const tablesInfo: Record<ItemType, TableInfo> = {
             "color": {
                 collectionTable: "keycap_colors",
                 collectionFieldName: "color",
-                allCollectionFields: ["color", "color_arr", "extra_price"]
+                allCollectionFields: ["color"]
             }
         }
     },
@@ -169,10 +169,15 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
     const tableInfo = tablesInfo[itemType];
     const { table, fields, itemFilters, collectionData } = tableInfo;
 
-    // GET /items/{itemType}/filterRanges
-    // Returns ranges for all filters on item type based on ranges of data in tables
-    //  - response: ranges for filters
-    router.get(`/${itemType}/filterRanges`, async (req, res) => {
+    // GET /items/{itemType}/info
+    // Returns info for an item type, such as quantity of items and filter ranges based on value ranges of items
+    //  - response: {
+    //      "itemQuantity": quanity of items
+    //      "filterRanges": ranges for filters
+    //    }
+    router.get(`/${itemType}/info`, async (req, res) => {
+        const { rows: [{ quant: itemQuantity }] } = await db.query(`SELECT COUNT(*) AS quant FROM ${table}`);
+
         const filterRanges = [];
         for (const { fieldName, filterType } of itemFilters) {
             let value;
@@ -191,7 +196,7 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
             filterRanges.push({ fieldName, filterType, value });
         }
 
-        res.json(filterRanges);
+        res.json({ itemQuantity, filterRanges });
     });
     
     // GET /items/{itemType}/find
