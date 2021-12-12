@@ -4,12 +4,10 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 // import { Login } from "../Login/Login";
 // import { SignUp } from "../SignUp/SignUp";
 import { Header } from "../Header/Header";
-import { GroupBuys } from "../GroupBuys/GroupBuys";
+import { ActiveGroupBuys, InterestChecks } from "../GroupBuys/GroupBuys";
 import { ItemSelection } from "../ItemSelection/ItemSelection";
 import { Visualizer } from "../Visualizer/Visualizer";
-
 import { Item, SelectedItems, ItemType, ValidSelectionPropertyOption } from "../../types";
-
 import { fetchRandomItemConfig } from "../../apiInteraction";
 
 import "./App.scss";
@@ -100,7 +98,10 @@ export function App() {
                         />}
                     />
                     <Route path="/group-buys" element={
-                        <GroupBuys onSelectItem={handleSelectGBItem} />}
+                        <ActiveGroupBuys onSelectItem={handleSelectGBItem} />}
+                    />
+                    <Route path="/interest-checks" element={
+                        <InterestChecks onSelectItem={handleSelectGBItem} />}
                     />
                     {/* <Route path="/login" element={<Login />} /> */}
                     {/* <Route path="/signup" element={<SignUp />} /> */}

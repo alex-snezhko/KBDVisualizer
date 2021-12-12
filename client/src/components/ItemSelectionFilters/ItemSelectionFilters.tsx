@@ -15,10 +15,9 @@ export const ItemSelectionFilters = ({ filters, onUpdateNumericFilter, onUpdateS
     <div id="filters-box">
         <h2>Filters</h2>
 
-        {filters.map(filter =>
-            filter.filterType === "numeric"
-                ? <NumericRangeFilter key={filter.fieldName} filter={filter} onUpdateFilter={onUpdateNumericFilter} />
-                : <SelectionFilter key={filter.fieldName} filter={filter} onUpdateFilter={onUpdateSelectionFilter} />
+        {filters.map(filter => filter.filterType === "numeric"
+            ? <NumericRangeFilter key={filter.fieldName} filter={filter} onUpdateFilter={onUpdateNumericFilter} />
+            : <SelectionFilter key={filter.fieldName} filter={filter} onUpdateFilter={onUpdateSelectionFilter} />
         )}
     </div>
 );
@@ -73,7 +72,7 @@ function SelectionFilter({ filter, onUpdateFilter }: SelectionFilterProps) {
 
     return (
         <div>
-            <h4>{displayName(fieldName)} <em>({filterType === "selectionAllOf" ? "Match all" : "Match any"})</em></h4>
+            <h4>{displayName(fieldName)} {filterType === "selectionAllOf" && <em>Match all</em>}</h4>
             {value.map(({ option, selected }) =>
                 <div key={option}>
                     <input

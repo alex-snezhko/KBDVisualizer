@@ -1,8 +1,12 @@
 @use "../../styles/styles.scss";
 
 #filters-box {
-    width: 200px;
-    float: left;
+    width: 220px;
+    margin-right: 20px;
+
+    h2 {
+        margin-top: 0;
+    }
 
     .numeric-range-input {
         margin: 3px;

@@ -3,8 +3,27 @@
 \* ------------------------------------- */
 @use "../../styles/styles.scss";
 
+#item-selection {
+    display: flex;
+}
+
+#back-button {
+    @include styles.rounded-button(orange);
+
+    display: inline-block;
+    color: black;
+    margin-bottom: 20px;
+}
+
+#items-top-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
 #item-listing {
-    margin-left: 220px;
+    flex-grow: 1;
+    // margin-left: 220px;
 
     table {
         width: 100%;
@@ -12,7 +31,6 @@
 }
 
 .sort-by {
-    margin-top: 30px;
     margin-left: 10px;
 
     select {

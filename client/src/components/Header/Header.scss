@@ -6,17 +6,6 @@ header {
     display: flex;
     align-items: center;
 
-    #keyboard-icon {
-        height: 45px;
-    }
-
-    h1 {
-        font-family: "Righteous", sans-serif;
-        margin: 0 0 0 30px;
-        color: styles.$theme-color-1;
-        font-size: 50px;
-    }
-
     #header-inner {
         display: flex;
         align-items: center;
@@ -27,6 +16,23 @@ header {
     #header-visualizer {
         color: styles.$theme-color-2;
     }
+}
+
+#title {
+    display: flex;
+    align-items: center;
+
+    h1 {
+        display: inline-block;
+        font-family: "Righteous", sans-serif;
+        margin: 0 0 0 30px;
+        color: styles.$theme-color-1;
+        font-size: 50px;
+    }
+}
+
+#keyboard-icon {
+    height: 45px;
 }
 
 nav {
@@ -46,8 +52,4 @@ nav {
             opacity: 0.8;
         }
     }
-}
-
-.active-page-link {
-    color: styles.$theme-color-1;
 }

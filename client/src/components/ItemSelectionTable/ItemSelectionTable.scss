@@ -1,0 +1,20 @@
+.item-status {
+    border-radius: 18px;
+    padding: 3px 10px;
+
+    &.interest-check {
+        background-color: rgb(255, 246, 121);
+    }
+
+    &.group-buy-active {
+        background-color: rgb(175, 253, 247);
+    }
+
+    &.group-buy-closed {
+        background-color: rgb(240, 186, 186);
+    }
+
+    &.restocking {
+        background-color: rgb(177, 235, 172);
+    }
+}

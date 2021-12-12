@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import { ItemSelectionTable } from "../ItemSelectionTable/ItemSelectionTable";
 import { ItemSelectionFilters } from "../ItemSelectionFilters/ItemSelectionFilters";
-
-import { fetchFilterRanges, fetchItemQuantity, fetchItems } from "../../apiInteraction";
-
-import "./ItemSelection.scss";
-import { FieldInfo, Filter, Item, ItemType, NumRangeFilter, SelectFilter, ValidSelectionPropertyOption } from "../../types";
-import { ALL_ITEM_TYPES } from "../../utils/shared";
 import { ItemSelectionPagination } from "../ItemSelectionPagination/ItemSelectionPagination";
 import { ItemSelectionSearch } from "../ItemSelectionSearch/ItemSelectionSearch";
+
+import { fetchItems } from "../../apiInteraction";
+import { FieldInfo, Filter, Item, ItemType, ValidSelectionPropertyOption } from "../../types";
+import { ALL_ITEM_TYPES } from "../../utils/shared";
+import useFilters from "../../hooks/useFilters";
+
+import "./ItemSelection.scss";
 
 const isItemType = (s: string): s is ItemType => (ALL_ITEM_TYPES as string[]).includes(s);
 
@@ -29,18 +30,19 @@ export function ItemSelection(props: ItemSelectionProps) {
 }
 
 function getExtraFieldInfo(itemType: ItemType): FieldInfo[] {
-    const std = (name: string) => ({ name, display: (x: string) => x });
-    const mm = (name: string) => ({ name, display: (x: string) => parseInt(x).toFixed(1) + " mm" });
-    const g = (name: string) => ({ name, display: (x: string) => x + "g" });
+    const std = (name: string): FieldInfo => ({ name, display: (x: string) => x, type: "single" });
+    const mult = (name: string): FieldInfo => ({ name, display: (x: string) => x, type: "multiple" });
+    const mm = (name: string): FieldInfo => ({ name, display: (x: string) => parseInt(x).toFixed(1) + " mm", type: "single" });
+    const g = (name: string): FieldInfo => ({ name, display: (x: string) => x + "g", type: "single" });
 
     return {
         "Kit": ["form_factor", ...ALL_ITEM_TYPES].map(std),
-        "Case": [std("form_factor"), std("material"), std("color"), std("mount_method")],
-        "Plate": [std("form_factor"), std("material")],
-        "PCB": [std("form_factor"), std("hot_swap"), std("backlight")],
+        "Case": ["form_factor", "material", "color", "mount_method"].map(std),
+        "Plate": ["form_factor", "material"].map(std),
+        "PCB": ["form_factor", "hot_swap", "backlight"].map(std),
         "Stabilizers": [std("mount_method")],
         "Switches": [std("tactility"), g("spring_weight"), mm("act_dist"), mm("bot_dist")],
-        "Keycaps": [std("color"), std("material"), std("legends")]
+        "Keycaps": [mult("color"), std("material"), std("legends")]
     }[itemType] || [];
 }
 
@@ -56,54 +58,6 @@ function getFilterParams(filters: Filter[]) {
     return filterParams;
 }
 
-function useFilters(itemType: ItemType): [Filter[] | undefined, (fieldName: string, low: number, high: number) => void, (fieldName: string, option: string) => void] {
-    const [filters, setFilters] = useState<Filter[]>();
-
-    function handleUpdateNumericFilter(fieldName: string, low: number, high: number) {
-        const newFilters = [...filters!];
-        const numericFilter = newFilters.find((f): f is NumRangeFilter => f.filterType === "numeric" && f.fieldName === fieldName)!;
-
-        numericFilter.value.low = low;
-        numericFilter.value.high = high;
-        setFilters(newFilters);
-    }
-
-    function handleUpdateSelectionFilter(fieldName: string, option: string) {
-        const newFilters = [...filters!];
-        const selectionFilter = newFilters.find((f): f is SelectFilter =>
-            (f.filterType === "selectionAllOf" || f.filterType === "selectionOneOf") && f.fieldName === fieldName
-        )!;
-        const selections = [...selectionFilter.value];
-        const selection = selections.find(opt => opt.option === option)!;
-        selection.selected = !selection.selected;
-        selectionFilter.value = selections;
-        
-        setFilters(newFilters);
-    }
-
-    useEffect(() => {
-        (async () => {
-            const filterRanges = await fetchFilterRanges(itemType);
-
-            // indicate that all selection options are unselected
-            const filters = filterRanges.map(filter => {
-                switch (filter.filterType) {
-                    case "selectionOneOf":
-                        return { ...filter, value: filter.value.map(option => ({ option, selected: true })) };
-                    case "selectionAllOf":
-                        return { ...filter, value: filter.value.map(option => ({ option, selected: false })) };
-                    case "numeric":
-                        return filter;
-                }
-            });
-            setFilters(filters);
-        })();
-    }, [itemType]);
-
-    return [filters, handleUpdateNumericFilter, handleUpdateSelectionFilter];
-}
-
-
 interface ItemSelectionValidProps {
     itemType: ItemType;
     onSelectItem: (item: Item, selections: Record<string, ValidSelectionPropertyOption>, itemType: ItemType) => void;
@@ -116,16 +70,12 @@ function ItemSelectionValid({ itemType, onSelectItem }: ItemSelectionValidProps)
     const [filters, setNumericFilter, setSelectionFilter] = useFilters(itemType);
     const [sortBy, setSortBy] = useState("alpha");
     const [searchQuery, setSearchQuery] = useState("");
-    const [numAllItems, setNumAllItems] = useState(0);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [pageNum, setPageNum] = useState(1);
 
-    useEffect(() => {
-        fetchItemQuantity(itemType).then(setNumAllItems);
-    }, [itemType]);
-
     // update items
     useEffect(() => {
+        // TODO figure out why sometimes not rendering
         if (filters === undefined) {
             return;
         }
@@ -142,27 +92,35 @@ function ItemSelectionValid({ itemType, onSelectItem }: ItemSelectionValidProps)
     const extraFieldInfo = getExtraFieldInfo(itemType);
     
     return (
-        <React.Fragment>
-            <ItemSelectionFilters
-                filters={filters!}
-                onUpdateNumericFilter={setNumericFilter}
-                onUpdateSelectionFilter={setSelectionFilter}
-            />
+        <div id="item-selection">
+            <div>
+                <Link to="/" id="back-button">&larr; Go Back</Link>
+
+                <ItemSelectionFilters
+                    filters={filters!}
+                    onUpdateNumericFilter={setNumericFilter}
+                    onUpdateSelectionFilter={setSelectionFilter}
+                />
+            </div>
 
             <div id="item-listing">
                 {/* TODO {props.compatibilityFilters.length !== 0 &&
                     <h4 className="compatibility-message">Note: Only items compatible with currently selected items are shown</h4>} */}
 
-                <div className="sort-by">
-                    Sort By
-                    <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                        <option value="alpha">Name (Alphabetical)</option>
-                        <option value="low-high">Price (Low to High)</option>
-                        <option value="high-low">Price (High to Low)</option>
-                    </select>
-                </div>
+                <div id="items-top-bar">
+                    <div className="sort-by">
+                        Sort By
+                        <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                            <option value="alpha">Name (Alphabetical)</option>
+                            <option value="low-high">Price (Low to High)</option>
+                            <option value="high-low">Price (High to Low)</option>
+                        </select>
+                    </div>
 
-                <ItemSelectionSearch onSearch={setSearchQuery} />
+                    <div>
+                        <ItemSelectionSearch onSearch={setSearchQuery} />
+                    </div>
+                </div>
 
                 {displayedItems.length === 0
                     ? <h3>No Items Found To Match Filters</h3>
@@ -175,15 +133,15 @@ function ItemSelectionValid({ itemType, onSelectItem }: ItemSelectionValidProps)
                                 onSelectItem={onSelectItem}
                             />
                             <ItemSelectionPagination
+                                itemType={itemType}
                                 currPage={pageNum}
                                 itemsPerPage={itemsPerPage}
-                                numAllItems={numAllItems}
                                 onSetItemsPerPage={setItemsPerPage}
                                 onSwitchPages={setPageNum}
                             />
                         </React.Fragment>
                     )}
             </div>
-        </React.Fragment>
+        </div>
     );
 }

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { FilterRange, GroupBuyItem, Item, KeyboardInfo, KeycapsInfo, ObjectModel, SelectedItems } from "./types";
+import { ActiveGroupBuyItem, FilterRange, GroupBuyItem, Item, KeyboardInfo, KeycapsInfo, ObjectModel, SelectedItems } from "./types";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const apiBaseUrl = isDevelopment
@@ -30,7 +30,8 @@ export const fetchItems = (itemType: string, searchQuery: string, sortBy: string
 export const fetchItem = (itemType: string, name: string) => fetchJson<Item>(`/items/${itemType.toLowerCase()}/byname/${name}`);
 export const fetchRandomItemConfig = () => fetchJson<SelectedItems>("/items/randomConfig");
 
-export const fetchActiveGroupBuys = () => fetchJson<GroupBuyItem[]>("/activeGroupBuys");
+export const fetchActiveGroupBuys = () => fetchJson<ActiveGroupBuyItem[]>("/activeGroupBuys");
+export const fetchInterestChecks = () => fetchJson<GroupBuyItem[]>("/interestChecks");
 
 export const fetchCaseModel = (caseName: string) => fetchJson<ObjectModel>(`/models/cases/${caseName}`);
 export const fetchKeycapModel = (keycapProfile: string, keycapName: string) => fetchJson<ObjectModel>(`/models/keycaps/${keycapProfile}/${keycapName}`);

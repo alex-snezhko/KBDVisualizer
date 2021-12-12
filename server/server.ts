@@ -28,7 +28,16 @@ app.use("/items", itemsRoutes);
 app.use("/models", modelsRoutes);
 
 app.get("/activeGroupBuys", async (req, res) => {
-    const { rows } = await db.query("SELECT * FROM groupbuys ORDER BY end_date");
+    const { rows } = await db.query(
+       "SELECT name, image, link, item_type, start_date, end_date, price FROM groupbuys ORDER BY end_date"
+    );
+    res.send(rows);
+});
+
+app.get("/interestChecks", async (req, res) => {
+    const { rows } = await db.query(
+       "SELECT name, image, link, item_type FROM interest_checks"
+    );
     res.send(rows);
 });
 

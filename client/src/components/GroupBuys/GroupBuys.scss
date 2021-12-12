@@ -1,21 +1,23 @@
 @use "../../styles/styles.scss";
 
+.gb-ic-link {
+    color: black;
+    font-size: x-large;
+    font-weight: bold;
+    margin-right: 30px;
+}
+
 #group-buys-listing {
     display: flex;
     flex-wrap: wrap;
 }
 
 .group-buy-item {
-    width: 300px;
+    width: 530px;
     margin: 10px;
     padding: 20px;
     border: 1px solid styles.$light-border-color;
     background-color: #f0f8f8;
-
-    a {
-        color: styles.$theme-color-1;
-        font-size: 20px;
-    }
 
     button {
         @include styles.rounded-button(styles.$theme-color-1);
@@ -23,28 +25,46 @@
     }
 }
 
+.gb-image-and-info {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+}
+
 .gb-image-container {
-    @include styles.bordered-img-container(300px, 200px);
-    // img {
-    //     object-fit: contain;
-    //     height: 100%;
-    //     width: 100%;
-    // }
-    // width: 100%;
+    @include styles.bordered-img-container(240px, 160px);
+    display: block;
+    float: left;
+}
+
+.gb-name-and-select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .gb-item-name {
-    margin-bottom: 10px;
-    font-size: 20px;
+    color: styles.$theme-color-1;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 24px;
 }
 
 .gb-info {
+    flex-grow: 1;
+    margin: 0;
+    margin-left: 20px;
     list-style-type: none;
     padding: 0;
     text-align: right;
+    font-size: 18px;
+
     b {
         float: left;
     }
 }
 
-
+.info-icon {
+    vertical-align: middle;
+    margin-right: 8px;
+}

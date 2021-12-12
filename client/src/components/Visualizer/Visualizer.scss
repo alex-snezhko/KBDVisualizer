@@ -4,10 +4,11 @@
 @use "../../styles/styles.scss";
 
 #randomize-button {
-    @include styles.rounded-button(#d38a03);
+    @include styles.rounded-button(#e49709);
     display: block;
     font-size: large;
-    padding: 6px 60px;
+    width: 100%;
+    // padding: 6px 60px;
     margin: 0 auto;
 }
 

@@ -123,3 +123,10 @@ CREATE TABLE IF NOT EXISTS groupbuys (
     end_date    DATE NOT NULL,
     price       FLOAT
 );
+
+CREATE TABLE IF NOT EXISTS interest_checks (
+    name        VARCHAR (60) PRIMARY KEY UNIQUE NOT NULL,
+    image       VARCHAR NOT NULL,
+    link        VARCHAR NOT NULL,
+    item_type   VARCHAR (20) CHECK (item_type IN ('Keycaps', 'Switches', 'Keyboard'))
+);

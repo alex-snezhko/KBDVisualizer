@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 import keyboardIcon from "@assets/keyboard.png";
 import "./Header.scss";
@@ -7,8 +7,10 @@ import "./Header.scss";
 export const Header = () => (
     <header>
         <div id="header-inner">
-            <img src={keyboardIcon} alt="Keyboard Icon" id="keyboard-icon" />
-            <h1>KBD<span id="header-visualizer">VISUALIZER</span></h1>
+            <Link to="/" id="title">
+                <img src={keyboardIcon} alt="Keyboard Icon" id="keyboard-icon" />
+                <h1>KBD<span id="header-visualizer">VISUALIZER</span></h1>
+            </Link>
             <nav>
                 <div>
                     <NavLink to="/" end className={({ isActive }) => isActive ? "active-page-link" : ""}>

@@ -7,12 +7,12 @@ const getModel = (modelPath: string) => path.resolve(__dirname, "..", `../assets
 
 router.get("/cases/:caseName", (req, res) => {
     const { caseName } = req.params;
-    res.sendFile(getModel(caseName));
+    res.sendFile(getModel(`cases/${caseName}`));
 });
 
 router.get("/keycaps/:keycapProfile/:keycapName", (req, res) => {
     const { keycapProfile, keycapName } = req.params;
-    res.sendFile(getModel(`${keycapProfile}/${keycapName}`));
+    res.sendFile(getModel(`keycaps/${keycapProfile}/${keycapName}`));
 });
 
 router.get("/switch", (req, res) => {

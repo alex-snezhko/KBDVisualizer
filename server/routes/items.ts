@@ -42,7 +42,7 @@ const tablesInfo: Record<ItemType, TableInfo> = {
             { fieldName: "form_factor", filterType: "selectionOneOf" },
             { fieldName: "mount_method", filterType: "selectionOneOf" },
             { fieldName: "material", filterType: "selectionOneOf" },
-            { fieldName: "color", filterType: "selectionAllOf" }
+            { fieldName: "color", filterType: "selectionOneOf" }
         ],
         collectionData: {
             "color": {
@@ -113,11 +113,15 @@ const tablesInfo: Record<ItemType, TableInfo> = {
     }
 };
 
-function constructWhereClause(filterArgs: Record<string, string>, tableInfo: TableInfo) {
+function constructWhereClause(searchQuery: string, filterArgs: Record<string, string>, tableInfo: TableInfo) {
     const { itemFilters, collectionData } = tableInfo;
 
+    const filterTexts: string[] = [];
     const filterQueryParams = [];
-    const filterTexts = [];
+    if (searchQuery !== "") {
+        filterTexts.push("name LIKE $1");
+        filterQueryParams.push(`%${searchQuery}%`);
+    }
 
     for (const [fieldName, filterValue] of Object.entries(filterArgs)) {
         const filterValueArr = filterValue.split(",");
@@ -163,9 +167,9 @@ function constructWhereClause(filterArgs: Record<string, string>, tableInfo: Tab
         }
     }
 
-    const whereClause = filterTexts.length ? ("WHERE " + filterTexts.map(x => `(${x})`).join(" AND ")) : "";
+    const whereCondition = filterTexts.map(x => `(${x})`).join(" AND ");
 
-    return { whereClause, filterQueryParams };
+    return { whereCondition, filterQueryParams };
 }
 
 
@@ -213,7 +217,7 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
     //      - sortBy: what to sort by: price asc/desc or name by default
     //      - [filterArgs]: key: fieldName; value: range of acceptable values
     router.get(`/${itemType}/find`, async (req, res) => {
-        const { sortBy, itemsPerPage, pageNum, ...filterArgs } = req.query as Record<string, string>;
+        const { searchQuery, sortBy, itemsPerPage, pageNum, ...filterArgs } = req.query as Record<string, string>;
 
         // const tablesToUse = [table, ...Object.values(collectionData).map(x => x.collectionTable)].join(", ");
         const collectionTableJoins = Object.values(collectionData).map(({ collectionTable }) => `JOIN ${collectionTable} ON item_id = id`);
@@ -227,11 +231,11 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
         });
         const fieldsToUse = [...fields, ...collectionFields].join(", ");
 
-        const where = constructWhereClause(filterArgs, tableInfo);
+        const where = constructWhereClause(searchQuery, filterArgs, tableInfo);
         if (where === undefined) {
-            return res.send(400);
+            return res.status(400).send("Invalid filter type");
         }
-        const { whereClause, filterQueryParams } = where;
+        const { whereCondition, filterQueryParams } = where;
         
         const orderByString = {
             "low-high": "price",
@@ -241,8 +245,9 @@ for (const itemType of ["case", "keycaps", "pcb", "plate", "stabilizers", "switc
         const limit = parseInt(itemsPerPage);
         const offset = limit * (parseInt(pageNum) - 1);
         const { rows } = await db.query(
-           `SELECT ${fieldsToUse} FROM ${tablesToUse}
-            ${whereClause}
+           `SELECT ${fieldsToUse}
+            FROM ${tablesToUse}
+            WHERE ${whereCondition}
             GROUP BY ${fields.join(", ")}
             ORDER BY ${orderByString}
             LIMIT $${filterQueryParams.length + 1}

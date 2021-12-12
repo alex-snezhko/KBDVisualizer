@@ -84,6 +84,7 @@ export interface KeycapsInfo {
 export interface FieldInfo {
     name: string;
     display: (x: string) => string;
+    type: "single" | "multiple";
 }
 
 export type SimpleProperty = string | number | Color;
@@ -91,21 +92,15 @@ export type SimpleProperty = string | number | Color;
 export const NO_SELECTION = "-- select an option --";
 
 export interface ValidSelectionPropertyOption {
-    optionText: string;
+    value: string;
     extra: number;
 }
 
 export type SelectionPropertyOption = ValidSelectionPropertyOption | typeof NO_SELECTION;
 
-export interface SelectionProperty {
-    type: "selection";
-    options: SelectionPropertyOption[];
-}
+export type SelectionProperty = SelectionPropertyOption[];
 
-export interface MultipleProperty {
-    type: "multiple";
-    values: string[];
-}
+export type MultipleProperty = string[];
 
 export type ItemProperty = SimpleProperty | SelectionProperty | MultipleProperty;
 
@@ -114,6 +109,7 @@ export interface Item {
     link: string;
     image: string;
     price: number;
+    status: "Interest Check" | "Group Buy - Active" | "Group Buy - Closed" | "Restocking";
     [property: string]: string | number | ItemProperty;
     // properties: Record<string, ItemProperty>;
 }
@@ -166,15 +162,20 @@ export interface SelectFilterRange {
 
 export type FilterRange = NumRangeFilterRange | SelectFilterRange;
 
+// includes interest checks
 export interface GroupBuyItem {
     name: string;
     link: string;
     image: string;
+    // TODO
+    item_type: string;
+}
+
+export interface ActiveGroupBuyItem extends GroupBuyItem {
     // itemType: string; // TODO itemType
     price: number;
-    startDate: Date;
-    endDate: Date; // TODO change from end_date and start_date
+    // startDate: Date;
+    // endDate: Date; // TODO change from end_date and start_date
     end_date: string;
     start_date: string;
-    item_type: ItemType;
 }

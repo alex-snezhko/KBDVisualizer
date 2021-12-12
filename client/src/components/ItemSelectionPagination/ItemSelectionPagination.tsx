@@ -1,17 +1,25 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { fetchItemQuantity } from "../../apiInteraction";
+import { ItemType } from "../../types";
 
 import "./ItemSelectionPagination.scss";
 
 interface ItemSelectionPaginationProps {
+    itemType: ItemType;
     currPage: number;
     itemsPerPage: number;
-    numAllItems: number;
     onSetItemsPerPage: (numItems: number) => void;
     onSwitchPages: (switchTo: number) => void;
 }
 
-export function ItemSelectionPagination({ currPage, itemsPerPage, numAllItems, onSetItemsPerPage, onSwitchPages }: ItemSelectionPaginationProps) {
+export function ItemSelectionPagination({ itemType, currPage, itemsPerPage, onSetItemsPerPage, onSwitchPages }: ItemSelectionPaginationProps) {
+    const [numAllItems, setNumAllItems] = useState(0);
+
+    useEffect(() => {
+        fetchItemQuantity(itemType).then(setNumAllItems);
+    }, [itemType]);
+
     const numPages = Math.ceil(numAllItems / itemsPerPage);
     const pageRange = [...Array(numPages).keys()].map(x => x + 1);
 

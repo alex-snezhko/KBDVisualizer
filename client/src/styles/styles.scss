@@ -15,6 +15,30 @@ $body-background-color: #fcfcf8;
     transform: translate(-50%, -50%);
 }
 
+@mixin icon-text-input-container($input-width, $font-size) {
+    position: relative;
+
+    .text-input-icon {
+        position: absolute;
+        font-size: $font-size;
+        top: 50%;
+        left: $font-size * 0.6;
+        transform: translateY(-50%);
+        text-align: center;
+        color: #888;
+    }
+
+    input {
+        @include standard-rounded-border;
+        width: $input-width;
+        box-sizing: border-box;
+        text-indent: 30px;
+        padding: 5px;
+        font-size: $font-size;
+        font-family: $main-font;
+    }
+}
+
 @mixin centered-inline {
     display: inline-block;
     vertical-align: middle;
